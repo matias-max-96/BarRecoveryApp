@@ -1,0 +1,472 @@
+    BarRecoveryApp.sln
+ 
+ Models/
+ ├── Base
+ │    ├── EntityBase.cs
+ │    └── CatalogBase.cs
+ │
+ ├── Enums
+ │    ├── UserRoleCode.cs
+ │    ├── BarStatus.cs
+ │    ├── AttributeDataType.cs
+ │    ├── SyncStatus.cs
+ │    └── SyncOperationType.cs
+ │
+ ├── Security
+ │    ├── Role.cs
+ │    ├── Permission.cs
+ │    ├── RolePermission.cs
+ │    ├── User.cs
+ │    └── AuditLog.cs
+ │
+ ├── Catalogs
+ │    ├── Plant.cs
+ │    ├── BarType.cs
+ │    ├── Activity.cs
+ │    ├── Supply.cs
+ │    ├── BarRecoveryPolicy.cs
+ │    └── BarAttributeDefinition.cs
+ │
+ ├── Operations
+ │    ├── Bar.cs
+ │    ├── BarAttributeValue.cs
+ │    ├── RecoveryRecord.cs
+ │    ├── RecoveryRecordSupply.cs
+ │    ├── QualityInspection.cs
+ │    ├── Shipment.cs
+ │    ├── ShipmentBar.cs
+ │    ├── SyncQueueItem.cs
+ │    └── SyncState.cs
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<--------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<<<<<<<--------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>
+                              Modelo funcional definitivo (actualizado)
+<<<<<<<<<<<<<<<<<<<<<<<<<<<--------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<<<<<<<--------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>
+      
+1) Catálogos maestros administrables
+
+<<<<<----->>>>>
+    Plantas
+<<<<<----->>>>>
+Debe ser posible:
+
+crear nuevas plantas
+editar nombre/código
+activar/desactivar
+
+ANA
+Viñales
+Valdivia
+Santa Fe
+MAPA
+(Pero mañana podrían existir más, sin modificar la estructura.)
+
+<<<<<----->>>>>
+ Tipos de barra
+<<<<<----->>>>>
+Debe ser posible:
+
+crear nuevos tipos
+editar nombre/código
+activar/desactivar
+
+Ejemplos:
+
+60
+90
+MAPA (Pero el sistema debe soportar, por ejemplo: 75, Especial A, Especial B, Especial C o cualquier cosa que ocurra en medio de)
+
+<<<<<----->>>>>
+  Actividades
+<<<<<----->>>>>
+Administrables por el administrador:
+
+soldar
+rectificar
+trabajo en rectificadora
+limpieza
+orden
+otras futuras
+
+<<<<<----->>>>>
+    Insumos
+<<<<<----->>>>>
+Administrables por el administrador:
+
+nombre
+unidad
+activo/inactivo
+
+<<<<<--------------------------->>>>>
+  Definiciones de atributos técnicos
+<<<<<--------------------------->>>>>
+Administrables por el administrador:
+
+largo
+ancho
+alto
+ángulo
+peso
+y cualquier otra característica futura
+
+
+2) Modelo principal
+
+<<<<<----->>>>>
+     Barra
+<<<<<----->>>>>
+Una barra debe quedar definida por:
+
+Identificador único
+Planta
+Tipo de barra
+Estado actual
+Cantidad de recuperaciones
+Atributos técnicos dinámicos
+
+Importante
+La clasificación queda así:
+
+Barra = Identificador + Planta + TipoBarra
+
+3) Estructura de entidades recomendada
+
+<<<<<----->>>>>
+     Plant
+<<<<<----->>>>>
+Catálogo abierto y extensible.
+Campos:
+Id
+Code
+Name
+IsActive
+CreatedAtUtc
+UpdatedAtUtc
+
+<<<<<----->>>>>
+    BarType
+<<<<<----->>>>>
+También extensible.
+Campos:
+Id
+Code
+Name
+Description
+IsActive
+CreatedAtUtc
+UpdatedAtUtc
+
+<<<<<----->>>>>
+      Bar
+<<<<<----->>>>>
+Representa la barra física real.
+Campos:
+Id
+Barcode o BarNumber
+PlantId
+BarTypeId
+CurrentStatus
+RecoveryCount
+IsDisposed
+CreatedAtUtc
+UpdatedAtUtc
+
+<<<<<---------------->>>>>
+   CurrentStatus sugerido
+<<<<<---------------->>>>>
+Campos:
+Created
+InRecovery
+PendingQuality
+Approved
+Rejected
+ReadyToShip
+Shipped
+Disposed
+
+Esto ayuda para calidad, trazabilidad y exportación.
+
+4) Atributos técnicos dinámicos 
+
+Aquí dejamos el diseño fino.
+
+<<<<<------------------->>>>>
+   BarAttributeDefinitions
+<<<<<------------------->>>>>
+Define qué atributos existen en el sistema.
+Id
+Code
+Name
+DataType
+Unit
+IsRequired
+IsActive
+AppliesToBarTypeId (nullable)
+AppliesToPlantId (nullable)
+DisplayOrder
+CreatedAtUtc
+UpdatedAtUtc
+
+
+Significado de los campos clave
+DataType
+Permite definir el tipo de dato:
+
+Text
+Number
+Decimal
+Integer
+Date
+Boolean
+
+Unit
+Ejemplos:
+
+mm
+cm
+kg
+°
+m
+
+AppliesToBarTypeId
+Si tiene valor, el atributo aplica a un tipo concreto.
+Ejemplo:
+
+“Ángulo especial” solo para barras tipo MAPA.
+
+AppliesToPlantId
+Si tiene valor, el atributo aplica a una planta concreta.
+Ejemplo:
+
+“Peso nominal cliente interno” solo para planta ANA.
+
+Si ambos son null
+El atributo aplica a todas las barras.
+
+<<<<<------------>>>>>
+   BarAttributeValues
+<<<<<------------>>>>>
+Guarda el valor real de cada atributo en cada barra.
+Campos:
+Id
+BarId
+AttributeDefinitionId
+ValueText
+ValueNumber
+ValueDate
+ValueBool
+UpdatedAtUtc
+
+
+Regla práctica de uso
+
+El administrador crea la definición del atributo.
+Control de calidad ingresa el valor del atributo en la barra cuando corresponda.
+Recuperación no necesita trabajar con estos atributos.
+
+
+5) Separación definitiva entre Recuperación y Calidad
+
+Esto también lo dejamos completamente cerrado.
+
+<<<<<------------>>>>>
+     Recuperación
+<<<<<------------>>>>>
+El operario/soldador:
+selecciona su nombre
+ingresa su pin
+selecciona la barra
+registra actividad
+registra insumos
+añade observación
+guarda
+
+Recuperación NO decide:
+
+si la barra quedó buena
+si se envía
+si se da de baja
+si sigue recuperable
+
+<<<<<------------>>>>>
+       Calidad
+<<<<<------------>>>>>
+Control de calidad:
+busca la barra
+consulta historial de recuperaciones
+ve atributos técnicos definidos por administrador
+rellena valores técnicos
+registra inspección
+decide:
+
+recuperable
+no recuperable
+dada de baja
+aprobada para envío
+
+
+
+Esto deja totalmente clara la responsabilidad de cada rol.
+
+6) Regla adicional nueva que acabas de definir
+Voy a dejarla como regla formal porque merece estar documentada:
+Regla 6 — Extensibilidad de catálogos maestros
+El sistema debe permitir agregar, modificar y desactivar:
+
+plantas
+tipos de barra
+actividades
+insumos
+atributos técnicos
+
+sin necesidad de cambiar el código fuente ni la estructura base del proceso operativo.
+Esta regla es muy importante porque te protege frente a crecimiento real del negocio.
+
+7) Tabla de políticas de recuperación (ajustada al nuevo modelo)
+Como ya no vamos con “formato”, la política debe depender de:
+
+planta
+tipo de barra
+
+BarRecoveryPolicies
+Campos:
+
+Id
+PlantId
+BarTypeId
+MaxRecoveries
+IsActive
+CreatedAtUtc
+UpdatedAtUtc
+
+Ejemplos:
+
+ANA + 60 → máximo 5
+Valdivia + 90 → máximo 4
+MAPA + MAPA → máximo 3
+
+Y mañana podrías agregar:
+
+Planta nueva + Tipo nuevo → política nueva
+
+Sin tocar código.
+
+8) Validaciones recomendadas
+En administración
+
+No permitir duplicar Code en plantas
+No permitir duplicar Code en tipos de barra
+No permitir duplicar Code en atributos
+Permitir desactivar, no borrar físicamente por defecto
+
+En atributos
+
+Si un atributo es IsRequired = true, Control de Calidad debe completarlo antes de cerrar inspección
+Si DataType = Number, no aceptar texto
+Si DataType = Boolean, ofrecer switch o checkbox
+
+En barras
+
+Toda barra debe tener:
+
+identificador
+planta
+tipo de barra
+
+
+
+Nunca se debe crear una barra sin esos tres datos.
+
+9) Propuesta de tablas finales ya muy aterrizada
+Maestros
+
+Plants
+BarTypes
+Roles
+Users
+Activities
+Supplies
+BarAttributeDefinitions
+BarRecoveryPolicies
+
+Operación
+
+Bars
+BarAttributeValues
+RecoveryRecords
+RecoveryRecordSupplies
+QualityInspections
+Shipments
+ShipmentBars
+
+Sincronización
+
+SyncQueue
+SyncState
+
+
+10) Recomendación de interfaz de administrador
+Yo añadiría un menú administrador con estas pantallas:
+
+Plantas
+Tipos de barra
+Actividades
+Insumos
+Atributos técnicos
+Políticas de recuperación
+Usuarios
+Exportaciones
+Sincronización
+
+Y dentro de Atributos técnicos, permitir:
+
+crear atributo
+definir unidad
+definir tipo de dato
+marcar obligatorio
+asociar a una planta concreta
+asociar a un tipo de barra concreto
+ordenar visualización
+
+
+11) Conclusión final de modelado
+Con lo que acabas de definir, el modelo correcto queda así:
+Clasificación de barra
+
+Planta (extensible)
+Tipo de barra (extensible)
+
+Cualidades técnicas
+
+dinámicas
+definidas por administrador
+cargadas por Control de Calidad
+opcionalmente vinculadas a planta o tipo de barra
+
+Roles separados
+
+Recuperación registra trabajo realizado
+Calidad valida resultado y estado final
+
+Escalabilidad
+El sistema queda preparado para crecer en:
+
+nuevas plantas
+nuevos tipos de barra
+nuevos atributos
+nuevas reglas
+nuevos usuarios
+
+sin reestructurar el proyecto.
+
+Plant
+BarType
+Bar
+BarAttributeDefinition
+BarAttributeValue
+Activity
+Supply
+RecoveryRecord
+QualityInspection
+BarRecoveryPolicy

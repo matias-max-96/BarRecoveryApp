@@ -1,0 +1,232 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\code\\Taller\\BarRecoveryApp\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|d:\\code\\taller\\barrecoveryapp\\barrecoveryapp\\models\\security\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|solutionrelative:barrecoveryapp\\models\\security\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|d:\\code\\taller\\barrecoveryapp\\barrecoveryapp\\models\\security\\rolepermission.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|solutionrelative:barrecoveryapp\\models\\security\\rolepermission.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|d:\\code\\taller\\barrecoveryapp\\barrecoveryapp\\models\\base\\entitybase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|solutionrelative:barrecoveryapp\\models\\base\\entitybase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|d:\\code\\taller\\barrecoveryapp\\barrecoveryapp\\models\\security\\permission.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|solutionrelative:barrecoveryapp\\models\\security\\permission.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|d:\\code\\taller\\barrecoveryapp\\barrecoveryapp\\models\\security\\role.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|solutionrelative:barrecoveryapp\\models\\security\\role.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|d:\\code\\taller\\barrecoveryapp\\barrecoveryapp\\models\\base\\catalogbase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|solutionrelative:barrecoveryapp\\models\\base\\catalogbase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|d:\\code\\taller\\barrecoveryapp\\barrecoveryapp\\models\\enums\\syncoperationtype.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|solutionrelative:barrecoveryapp\\models\\enums\\syncoperationtype.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|d:\\code\\taller\\barrecoveryapp\\barrecoveryapp\\models\\enums\\attributedatatype.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|solutionrelative:barrecoveryapp\\models\\enums\\attributedatatype.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|d:\\code\\taller\\barrecoveryapp\\barrecoveryapp\\models\\enums\\barstatus.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|solutionrelative:barrecoveryapp\\models\\enums\\barstatus.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|d:\\code\\taller\\barrecoveryapp\\barrecoveryapp\\models\\enums\\userrolecode.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|solutionrelative:barrecoveryapp\\models\\enums\\userrolecode.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|d:\\code\\taller\\barrecoveryapp\\barrecoveryapp\\models\\enums\\syncstatus.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|solutionrelative:barrecoveryapp\\models\\enums\\syncstatus.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|d:\\code\\taller\\barrecoveryapp\\barrecoveryapp\\flowchart.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{11098B4C-5952-9B51-1632-04FBD22E67D7}|BarRecoveryApp\\BarRecoveryApp.csproj|solutionrelative:barrecoveryapp\\flowchart.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{7d1a5679-04f2-3f4a-851f-855baa54731c}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{0672c6e1-9edf-3be9-8226-f0823640821e}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "User.cs",
+              "DocumentMoniker": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Security\\User.cs",
+              "RelativeDocumentMoniker": "BarRecoveryApp\\Models\\Security\\User.cs",
+              "ToolTip": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Security\\User.cs",
+              "RelativeToolTip": "BarRecoveryApp\\Models\\Security\\User.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-23T13:11:50.018Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "RolePermission.cs",
+              "DocumentMoniker": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Security\\RolePermission.cs",
+              "RelativeDocumentMoniker": "BarRecoveryApp\\Models\\Security\\RolePermission.cs",
+              "ToolTip": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Security\\RolePermission.cs",
+              "RelativeToolTip": "BarRecoveryApp\\Models\\Security\\RolePermission.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAxAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-23T13:08:54.034Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Permission.cs",
+              "DocumentMoniker": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Security\\Permission.cs",
+              "RelativeDocumentMoniker": "BarRecoveryApp\\Models\\Security\\Permission.cs",
+              "ToolTip": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Security\\Permission.cs",
+              "RelativeToolTip": "BarRecoveryApp\\Models\\Security\\Permission.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAA6AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-23T13:06:16.724Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Role.cs",
+              "DocumentMoniker": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Security\\Role.cs",
+              "RelativeDocumentMoniker": "BarRecoveryApp\\Models\\Security\\Role.cs",
+              "ToolTip": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Security\\Role.cs",
+              "RelativeToolTip": "BarRecoveryApp\\Models\\Security\\Role.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-23T13:04:49.964Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "CatalogBase.cs",
+              "DocumentMoniker": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Base\\CatalogBase.cs",
+              "RelativeDocumentMoniker": "BarRecoveryApp\\Models\\Base\\CatalogBase.cs",
+              "ToolTip": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Base\\CatalogBase.cs",
+              "RelativeToolTip": "BarRecoveryApp\\Models\\Base\\CatalogBase.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAABAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-23T12:58:04.205Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "EntityBase.cs",
+              "DocumentMoniker": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Base\\EntityBase.cs",
+              "RelativeDocumentMoniker": "BarRecoveryApp\\Models\\Base\\EntityBase.cs",
+              "ToolTip": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Base\\EntityBase.cs",
+              "RelativeToolTip": "BarRecoveryApp\\Models\\Base\\EntityBase.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAACrAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-23T12:39:04.71Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "SyncOperationType.cs",
+              "DocumentMoniker": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Enums\\SyncOperationType.cs",
+              "RelativeDocumentMoniker": "BarRecoveryApp\\Models\\Enums\\SyncOperationType.cs",
+              "ToolTip": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Enums\\SyncOperationType.cs",
+              "RelativeToolTip": "BarRecoveryApp\\Models\\Enums\\SyncOperationType.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-23T12:38:15.599Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "SyncStatus.cs",
+              "DocumentMoniker": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Enums\\SyncStatus.cs",
+              "RelativeDocumentMoniker": "BarRecoveryApp\\Models\\Enums\\SyncStatus.cs",
+              "ToolTip": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Enums\\SyncStatus.cs",
+              "RelativeToolTip": "BarRecoveryApp\\Models\\Enums\\SyncStatus.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-23T12:36:23.154Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "AttributeDataType.cs",
+              "DocumentMoniker": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Enums\\AttributeDataType.cs",
+              "RelativeDocumentMoniker": "BarRecoveryApp\\Models\\Enums\\AttributeDataType.cs",
+              "ToolTip": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Enums\\AttributeDataType.cs",
+              "RelativeToolTip": "BarRecoveryApp\\Models\\Enums\\AttributeDataType.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-22T21:00:16.909Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "BarStatus.cs",
+              "DocumentMoniker": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Enums\\BarStatus.cs",
+              "RelativeDocumentMoniker": "BarRecoveryApp\\Models\\Enums\\BarStatus.cs",
+              "ToolTip": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Enums\\BarStatus.cs",
+              "RelativeToolTip": "BarRecoveryApp\\Models\\Enums\\BarStatus.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-22T20:59:36.675Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "UserRoleCode.cs",
+              "DocumentMoniker": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Enums\\UserRoleCode.cs",
+              "RelativeDocumentMoniker": "BarRecoveryApp\\Models\\Enums\\UserRoleCode.cs",
+              "ToolTip": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\Models\\Enums\\UserRoleCode.cs",
+              "RelativeToolTip": "BarRecoveryApp\\Models\\Enums\\UserRoleCode.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-22T20:58:37.653Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "FlowChart.txt",
+              "DocumentMoniker": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\FlowChart.txt",
+              "RelativeDocumentMoniker": "BarRecoveryApp\\FlowChart.txt",
+              "ToolTip": "D:\\code\\Taller\\BarRecoveryApp\\BarRecoveryApp\\FlowChart.txt",
+              "RelativeToolTip": "BarRecoveryApp\\FlowChart.txt",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
+              "WhenOpened": "2026-06-22T20:46:46.285Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
