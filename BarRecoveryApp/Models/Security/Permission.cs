@@ -7,6 +7,6 @@ namespace BarRecoveryApp.Models.Security
     public class Permission : CatalogBase
     {
         [MaxLength(100)]
-        public string Module {  get; set; } = string.Empty
+        public string Module { get; set; } = string.Empty;
     }
 }

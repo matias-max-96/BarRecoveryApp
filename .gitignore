@@ -1,0 +1,58 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# NuGet
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+*.nupkg
+**/[Ss]taging/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# IDE
+.idea/
+*.swp
+*~.nib
+*.rsuser
+*.DotSettings.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# MAUI specific
+**/platforms/android/bin/
+**/platforms/android/obj/
+**/platforms/ios/bin/
+**/platforms/ios/obj/
+**/platforms/windows/bin/
+**/platforms/windows/obj/
+**/platforms/maccatalyst/bin/
+**/platforms/maccatalyst/obj/

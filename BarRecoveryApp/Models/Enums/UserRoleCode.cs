@@ -1,6 +1,4 @@
-﻿
-
-namespace BarRecoveryApp.Models.Enums
+﻿namespace BarRecoveryApp.Models.Enums
 {
     public enum UserRoleCode
     {

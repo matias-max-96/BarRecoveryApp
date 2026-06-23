@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace BarRecoveryApp.Models.Enums
+﻿namespace BarRecoveryApp.Models.Enums
 {
     public enum AttributeDataType
     {
