@@ -1,5 +1,4 @@
     BarRecoveryApp.sln
- 
  Models/
  ├── Base
  │    ├── EntityBase.cs

@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
+using BarRecoveryApp.Infrastructure.Persistence;
+using BarRecoveryApp.Infrastructure.Persistence.Seed;
 
 namespace BarRecoveryApp
 {
@@ -18,7 +20,10 @@ namespace BarRecoveryApp
 #if DEBUG
     		builder.Logging.AddDebug();
 #endif
-
+            //DB Init
+            builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
+            builder.Services.AddSingleton<IDatabaseSeeder,  DatabaseSeeder>();
+            //DB Seeder
             return builder.Build();
         }
     }

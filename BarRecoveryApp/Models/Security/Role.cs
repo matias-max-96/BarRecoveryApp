@@ -6,6 +6,6 @@ namespace BarRecoveryApp.Models.Security
     [Table("Roles")]
     public class Role : CatalogBase
     {
-        public bool IsSytemRole { get; set; } = false;
+        public bool IsSystemRole { get; set; } = false;
     }
 }
