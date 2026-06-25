@@ -1,5 +1,5 @@
 ﻿using BarRecoveryApp.Models.Base;
-using SQLite
+using SQLite;
 
 namespace BarRecoveryApp.Models.Operations
 {

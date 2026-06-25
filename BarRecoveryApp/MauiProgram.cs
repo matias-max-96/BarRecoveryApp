@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using BarRecoveryApp.Infrastructure.Persistence;
 using BarRecoveryApp.Infrastructure.Persistence.Seed;
+using BarRecoveryApp.Infrastructure.Persistence.Repositories;
+using BarRecoveryApp.ApplicationF.Services.Authentication;
 
 namespace BarRecoveryApp
 {
@@ -20,10 +22,13 @@ namespace BarRecoveryApp
 #if DEBUG
     		builder.Logging.AddDebug();
 #endif
-            //DB Init
+
             builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
             builder.Services.AddSingleton<IDatabaseSeeder,  DatabaseSeeder>();
-            //DB Seeder
+            builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
+            builder.Services.AddSingleton<ICurrentUserService, CurrentUserService>();
+            builder.Services.AddTransient<IAuthenticationService, AuthenticationService>();
+
             return builder.Build();
         }
     }
