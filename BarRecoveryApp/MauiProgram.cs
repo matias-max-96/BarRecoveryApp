@@ -3,6 +3,7 @@ using BarRecoveryApp.Infrastructure.Persistence;
 using BarRecoveryApp.Infrastructure.Persistence.Seed;
 using BarRecoveryApp.Infrastructure.Persistence.Repositories;
 using BarRecoveryApp.ApplicationF.Services.Authentication;
+using BarRecoveryApp.ViewModels;
 
 namespace BarRecoveryApp
 {
@@ -28,6 +29,7 @@ namespace BarRecoveryApp
             builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
             builder.Services.AddSingleton<ICurrentUserService, CurrentUserService>();
             builder.Services.AddTransient<IAuthenticationService, AuthenticationService>();
+            builder.Services.AddTransient<LoginViewModel>();
 
             return builder.Build();
         }

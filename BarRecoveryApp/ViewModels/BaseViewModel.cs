@@ -36,8 +36,6 @@ namespace BarRecoveryApp.ViewModels
             return true;
 
         }
-
-
         protected void OnPropertyChanged([CallerMemberName] string propertyName = "")
         {
             PropertyChanged?.Invoke(
