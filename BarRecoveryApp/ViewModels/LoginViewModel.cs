@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using BarRecoveryApp.ApplicationF.Services.Authentication;
+using BarRecoveryApp.ApplicationF.Services.Navigation;
 using BarRecoveryApp.Models.Security;
 using BarRecoveryApp.Views;
 
@@ -9,16 +10,22 @@ namespace BarRecoveryApp.ViewModels
     public class LoginViewModel : BaseViewModel
     {
         private readonly IAuthenticationService _authenticationService;
+        private readonly IRoleNavigationService _roleNavigationService;
 
         private User? _selectedUser;
         private string _pin = string.Empty;
         private string _errorMessage = string.Empty;
         private bool _hasError;
 
-        public LoginViewModel(IAuthenticationService authenticationService)
+        public LoginViewModel(
+            IAuthenticationService authenticationService,
+            IRoleNavigationService roleNavigationService)
         {
             _authenticationService = authenticationService
                 ?? throw new ArgumentNullException(nameof(authenticationService));
+
+            _roleNavigationService = roleNavigationService 
+                ?? throw new ArgumentNullException(nameof(roleNavigationService));
 
             Title = "Ingreso";
 
@@ -87,6 +94,9 @@ namespace BarRecoveryApp.ViewModels
 
                 Users.Clear();
 
+                SelectedUser = null; 
+                Pin = string.Empty;
+
                 var users = await _authenticationService.GetActiveUsersAsync();
 
                 foreach (var user in users)
@@ -146,10 +156,7 @@ namespace BarRecoveryApp.ViewModels
                     return;
                 }
 
-                await Shell.Current.DisplayAlertAsync(
-                    "Ingreso correcto",
-                    $"Bienvenido {result.User?.DisplayName}",
-                    "Aceptar");
+                await _roleNavigationService.NavigateToHomeAsync();
             }
             catch (Exception ex)
             {

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="BarRecoveryApp.Views.QualityHomePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Control de Calidad">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16">
+
+            <Label
+                Text="Menú Control de Calidad"
+                FontSize="28"
+                FontAttributes="Bold"
+                HorizontalOptions="Center" />
+
+            <Label
+                Text="Desde aquí se inspeccionan barras, se revisa el historial de recuperación y se aprueban barras para envío."
+                FontSize="15"
+                TextColor="Gray"
+                HorizontalTextAlignment="Center" />
+
+            <Button Text="Buscar barra" />
+            <Button Text="Nueva inspección" />
+            <Button Text="Historial de barra" />
+            <Button Text="Atributos técnicos" />
+            <Button Text="Envíos" />
+
+
+            <Button
+               Text="Cerrar sesión"
+                Clicked="OnLogoutClicked"
+                BackgroundColor="#DC3545"
+                TextColor="WhiteSmoke"/>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

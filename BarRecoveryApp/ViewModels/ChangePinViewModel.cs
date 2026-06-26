@@ -1,4 +1,5 @@
 ﻿using BarRecoveryApp.ApplicationF.Services.Authentication;
+using BarRecoveryApp.ApplicationF.Services.Navigation;
 
 namespace BarRecoveryApp.ViewModels
 { 
@@ -6,6 +7,7 @@ namespace BarRecoveryApp.ViewModels
     {
         private readonly IAuthenticationService _authenticationService;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IRoleNavigationService _roleNavigationService;
 
         private string _currentPin = string.Empty;
         private string _newPin = string.Empty;
@@ -15,13 +17,17 @@ namespace BarRecoveryApp.ViewModels
 
         public ChangePinViewModel(
             IAuthenticationService authenticationService,
-            ICurrentUserService currentUserService) 
+            ICurrentUserService currentUserService,
+            IRoleNavigationService roleNavigationService) 
         {
             _authenticationService = authenticationService
                 ?? throw new ArgumentNullException(nameof(authenticationService));
 
             _currentUserService = currentUserService 
                 ?? throw new ArgumentNullException(nameof(currentUserService));
+
+            _roleNavigationService = roleNavigationService
+                ?? throw new ArgumentNullException(nameof(roleNavigationService));
 
             Title = "Cambio de PIN";
 
@@ -145,9 +151,7 @@ namespace BarRecoveryApp.ViewModels
                     "El PIN fue cambiado correctamente",
                     "Aceptar");
 
-                /// MATIAS Y LA CONCHETUMARE QUE NO SE TE OLVIDE  CAMBIAR ESTA WEA PERRO QL
-                /// 
-                await Shell.Current.GoToAsync("//LoginPage");
+                await _roleNavigationService.NavigateToHomeAsync();
             }
             catch(Exception ex)
             {

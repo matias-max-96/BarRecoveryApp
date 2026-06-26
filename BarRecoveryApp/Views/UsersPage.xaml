@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="BarRecoveryApp.Views.UsersPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Usuarios">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16">
+
+            <Label
+                Text="Gestión de Usuarios"
+                FontSize="26"
+                FontAttributes="Bold"
+                HorizontalOptions="Center" />
+
+            <ActivityIndicator
+                IsRunning="{Binding IsBusy}"
+                IsVisible="{Binding IsBusy}"
+                HorizontalOptions="Center" />
+
+            <Frame
+                IsVisible="{Binding HasError}"
+                BackgroundColor="#FDECEC"
+                BorderColor="#D9534F"
+                Padding="12"
+                CornerRadius="8">
+
+                <Label
+                    Text="{Binding ErrorMessage}"
+                    TextColor="#B00020"
+                    FontAttributes="Bold" />
+            </Frame>
+
+            <Frame
+                IsVisible="{Binding HasSuccess}"
+                BackgroundColor="#E8F5E9"
+                BorderColor="#2E7D32"
+                Padding="12"
+                CornerRadius="8">
+
+                <Label
+                    Text="{Binding SuccessMessage}"
+                    TextColor="#2E7D32"
+                    FontAttributes="Bold" />
+            </Frame>
+
+            <Label
+                Text="Crear nuevo usuario"
+                FontSize="20"
+                FontAttributes="Bold" />
+
+            <Entry
+                Text="{Binding Username}"
+                Placeholder="Nombre de usuario ej: jperez" />
+
+            <Entry
+                Text="{Binding DisplayName}"
+                Placeholder="Nombre visible ej: Juan Pérez" />
+
+            <Picker
+                Title="Seleccione rol"
+                ItemsSource="{Binding Roles}"
+                SelectedItem="{Binding SelectedRole}"
+                ItemDisplayBinding="{Binding Name}" />
+
+            <Entry
+                Text="{Binding InitialPin}"
+                Placeholder="PIN inicial"
+                Keyboard="Numeric"
+                IsPassword="True"
+                MaxLength="6" />
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Button
+                    Grid.Column="0"
+                    Text="Limpiar"
+                    Command="{Binding ClearFormCommand}"
+                    BackgroundColor="#6C757D"
+                    TextColor="White" />
+
+                <Button
+                    Grid.Column="1"
+                    Text="Crear usuario"
+                    Command="{Binding CreateUserCommand}"
+                    BackgroundColor="#0D6EFD"
+                    TextColor="White" />
+            </Grid>
+
+            <BoxView HeightRequest="1" Color="#DDDDDD" Margin="0,12" />
+
+            <Label
+                Text="Usuarios existentes"
+                FontSize="20"
+                FontAttributes="Bold" />
+
+            <CollectionView
+                ItemsSource="{Binding Users}"
+                SelectedItem="{Binding SelectedUser}"
+                SelectionMode="Single">
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame
+                            Padding="12"
+                            Margin="0,4"
+                            BorderColor="#DDDDDD"
+                            CornerRadius="8">
+
+                            <VerticalStackLayout Spacing="4">
+                                <Label
+                                    Text="{Binding DisplayName}"
+                                    FontAttributes="Bold"
+                                    FontSize="16" />
+
+                                <Label
+                                    Text="{Binding Username}"
+                                    FontSize="13"
+                                    TextColor="Gray" />
+
+                                <Label
+                                    Text="{Binding IsActive, StringFormat='Activo: {0}'}"
+                                    FontSize="13" />
+                            </VerticalStackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Entry
+                Text="{Binding ResetPin}"
+                Placeholder="Nuevo PIN para usuario seleccionado"
+                Keyboard="Numeric"
+                IsPassword="True"
+                MaxLength="6" />
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Button
+                    Grid.Column="0"
+                    Text="Activar / Desactivar"
+                    Command="{Binding ToggleActiveCommand}"
+                    BackgroundColor="#FFC107"
+                    TextColor="Black" />
+
+                <Button
+                    Grid.Column="1"
+                    Text="Resetear PIN"
+                    Command="{Binding ResetPinCommand}"
+                    BackgroundColor="#198754"
+                    TextColor="White" />
+            </Grid>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

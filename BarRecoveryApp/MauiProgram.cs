@@ -7,6 +7,8 @@ using BarRecoveryApp.Infrastructure.Persistence.Repositories;
 using BarRecoveryApp.ApplicationF.Services.Authentication;
 using BarRecoveryApp.ViewModels;
 using BarRecoveryApp.Views;
+using BarRecoveryApp.ApplicationF.Services.Navigation;
+using BarRecoveryApp.ApplicationF.Services.Users;
 
 namespace BarRecoveryApp
 {
@@ -37,6 +39,8 @@ namespace BarRecoveryApp
             //Auth - User
             builder.Services.AddSingleton<ICurrentUserService, CurrentUserService>();
             builder.Services.AddTransient<IAuthenticationService, AuthenticationService>();
+            builder.Services.AddTransient<IRoleNavigationService, RoleNavigationService>();
+            builder.Services.AddTransient<IUserManagementService, UserManagementService>();
 
             //Login View Model
             builder.Services.AddTransient<LoginViewModel>();
@@ -45,6 +49,14 @@ namespace BarRecoveryApp
             //Change PIN
             builder.Services.AddTransient<ChangePinViewModel>();
             builder.Services.AddTransient<ChangePinPage>();
+
+            //Pages
+            builder.Services.AddTransient<AdminHomePage>();
+            builder.Services.AddTransient<QualityHomePage>();
+            builder.Services.AddTransient<RecoveryHomePage>();
+            //UserPage
+            builder.Services.AddTransient<UsersViewModel>();
+            builder.Services.AddTransient<UsersPage>();
 
             builder.Services.AddSingleton<AppShell>();
 

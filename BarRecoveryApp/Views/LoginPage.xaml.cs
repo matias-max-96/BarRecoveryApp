@@ -22,10 +22,7 @@ namespace BarRecoveryApp.Views
 
             try
             {
-                if (_viewModel.Users.Count == 0)
-                {
-                    _viewModel.LoadUsersCommand.Execute(null);
-                }
+                _viewModel.LoadUsersCommand.Execute(null);
             }
             catch (Exception ex)
             {

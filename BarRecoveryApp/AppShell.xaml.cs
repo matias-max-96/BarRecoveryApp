@@ -17,12 +17,36 @@ namespace BarRecoveryApp
             {
                 Title = "Login",
                 Route = nameof(LoginPage),
-                ContentTemplate = new DataTemplate(() =>
-                    _serviceProvider.GetRequiredService<LoginPage>())
+                ContentTemplate = new DataTemplate(() => _serviceProvider.GetRequiredService<LoginPage>())
+            });
+
+            Items.Add(new ShellContent
+            {
+                Title = "Administración",
+                Route = nameof(AdminHomePage),
+                ContentTemplate = new DataTemplate(() => _serviceProvider.GetRequiredService<AdminHomePage>())
+            });
+
+            Items.Add(new ShellContent
+            {
+                Title = "Control Calidad",
+                Route = nameof(QualityHomePage),
+                ContentTemplate = new DataTemplate(() => _serviceProvider.GetRequiredService<QualityHomePage>())
+            });
+
+            Items.Add(new ShellContent
+            {
+                Title = "Recuperación",
+                Route = nameof(RecoveryHomePage),
+                ContentTemplate = new DataTemplate(() => _serviceProvider.GetRequiredService<RecoveryHomePage>())
             });
 
             Routing.RegisterRoute(nameof(LoginPage), typeof(LoginPage));
             Routing.RegisterRoute(nameof(ChangePinPage), typeof(ChangePinPage));
+            Routing.RegisterRoute(nameof(AdminHomePage), typeof(AdminHomePage));
+            Routing.RegisterRoute(nameof(QualityHomePage), typeof(QualityHomePage));
+            Routing.RegisterRoute(nameof(RecoveryHomePage), typeof(RecoveryHomePage));
+            Routing.RegisterRoute(nameof(UsersPage), typeof(UsersPage));
         }
     }
 }
