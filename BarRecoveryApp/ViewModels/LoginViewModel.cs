@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using BarRecoveryApp.ApplicationF.Services.Authentication;
 using BarRecoveryApp.Models.Security;
+using BarRecoveryApp.Views;
 
 
 namespace BarRecoveryApp.ViewModels
@@ -141,11 +142,7 @@ namespace BarRecoveryApp.ViewModels
 
                 if (result.MustChangePin)
                 {
-                    await Shell.Current.DisplayAlertAsync(
-                        "Cambio de PIN requerido",
-                        "Debe cambiar su PIN antes de continuar.",
-                        "Aceptar");
-
+                    await Shell.Current.GoToAsync(nameof(ChangePinPage));
                     return;
                 }
 

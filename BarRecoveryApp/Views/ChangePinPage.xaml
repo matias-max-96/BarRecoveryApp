@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="BarRecoveryApp.Views.ChangePinPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Cambio de PIN">
+
+    <Grid
+        Padding="24"
+        RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*"
+        RowSpacing="16">
+
+        <VerticalStackLayout Grid.Row="0" Spacing="4">
+            <Label
+                Text="Cambio de PIN requerido"
+                FontSize="26"
+                FontAttributes="Bold"
+                HorizontalOptions="Center" />
+
+            <Label
+                Text="Debe cambiar el PIN inicial antes de continuar"
+                FontSize="15"
+                TextColor="Gray"
+                HorizontalTextAlignment="Center" />
+        </VerticalStackLayout>
+
+        <ActivityIndicator
+            Grid.Row="1"
+            IsRunning="{Binding IsBusy}"
+            IsVisible="{Binding IsBusy}"
+            HorizontalOptions="Center" />
+
+        <VerticalStackLayout Grid.Row="2" Spacing="6">
+            <Label
+                Text="PIN actual"
+                FontAttributes="Bold" />
+
+            <Entry
+                Text="{Binding CurrentPin}"
+                Placeholder="Ingrese PIN actual"
+                Keyboard="Numeric"
+                IsPassword="True"
+                MaxLength="6"
+                FontSize="22"
+                HorizontalTextAlignment="Center" />
+        </VerticalStackLayout>
+
+        <VerticalStackLayout Grid.Row="3" Spacing="6">
+            <Label
+                Text="Nuevo PIN"
+                FontAttributes="Bold" />
+
+            <Entry
+                Text="{Binding NewPin}"
+                Placeholder="Ingrese nuevo PIN"
+                Keyboard="Numeric"
+                IsPassword="True"
+                MaxLength="6"
+                FontSize="22"
+                HorizontalTextAlignment="Center" />
+        </VerticalStackLayout>
+
+        <VerticalStackLayout Grid.Row="4" Spacing="6">
+            <Label
+                Text="Confirmar nuevo PIN"
+                FontAttributes="Bold" />
+
+            <Entry
+                Text="{Binding ConfirmNewPin}"
+                Placeholder="Confirme nuevo PIN"
+                Keyboard="Numeric"
+                IsPassword="True"
+                MaxLength="6"
+                FontSize="22"
+                HorizontalTextAlignment="Center" />
+        </VerticalStackLayout>
+
+        <Frame
+            Grid.Row="5"
+            IsVisible="{Binding HasError}"
+            BackgroundColor="#FDECEC"
+            BorderColor="#D9534F"
+            Padding="12"
+            CornerRadius="8">
+
+            <Label
+                Text="{Binding ErrorMessage}"
+                TextColor="#B00020"
+                FontAttributes="Bold" />
+        </Frame>
+
+        <Grid
+            Grid.Row="6"
+            ColumnDefinitions="*,*"
+            ColumnSpacing="12"
+            VerticalOptions="Start">
+
+            <Button
+                Grid.Column="0"
+                Text="Limpiar"
+                Command="{Binding ClearCommand}"
+                BackgroundColor="#6C757D"
+                TextColor="White" />
+
+            <Button
+                Grid.Column="1"
+                Text="Cambiar PIN"
+                Command="{Binding ChangePinCommand}"
+                BackgroundColor="#0D6EFD"
+                TextColor="White" />
+        </Grid>
+
+    </Grid>
+
+</ContentPage>

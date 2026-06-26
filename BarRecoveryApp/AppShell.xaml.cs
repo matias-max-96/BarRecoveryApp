@@ -22,6 +22,7 @@ namespace BarRecoveryApp
             });
 
             Routing.RegisterRoute(nameof(LoginPage), typeof(LoginPage));
+            Routing.RegisterRoute(nameof(ChangePinPage), typeof(ChangePinPage));
         }
     }
 }

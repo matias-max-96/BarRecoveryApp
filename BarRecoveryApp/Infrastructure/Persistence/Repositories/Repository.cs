@@ -10,7 +10,8 @@ namespace BarRecoveryApp.Infrastructure.Persistence.Repositories
 
         public Repository(IDatabaseService databaseService)
         {
-            _databaseService = databaseService;
+            _databaseService = databaseService
+                ?? throw new ArgumentNullException(nameof(databaseService));
         }
         private async Task<SQLiteAsyncConnection> GetDbAsync()
         {

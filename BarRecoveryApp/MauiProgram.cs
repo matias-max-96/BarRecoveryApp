@@ -42,6 +42,10 @@ namespace BarRecoveryApp
             builder.Services.AddTransient<LoginViewModel>();
             builder.Services.AddTransient<LoginPage>();
 
+            //Change PIN
+            builder.Services.AddTransient<ChangePinViewModel>();
+            builder.Services.AddTransient<ChangePinPage>();
+
             builder.Services.AddSingleton<AppShell>();
 
             return builder.Build();
