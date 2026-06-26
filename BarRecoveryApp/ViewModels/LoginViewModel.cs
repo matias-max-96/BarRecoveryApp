@@ -16,7 +16,8 @@ namespace BarRecoveryApp.ViewModels
 
         public LoginViewModel(IAuthenticationService authenticationService)
         {
-            _authenticationService = authenticationService;
+            _authenticationService = authenticationService
+                ?? throw new ArgumentNullException(nameof(authenticationService));
 
             Title = "Ingreso";
 

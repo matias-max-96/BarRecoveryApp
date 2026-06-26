@@ -21,11 +21,16 @@ namespace BarRecoveryApp.ApplicationF.Services.Authentication
                     IRepository<RolePermission> rolePermissionRepository,
                     ICurrentUserService currentUserService)
         {
-            _userRepository = userRepository;
-            _roleRepository = roleRepository;
-            _permissionRepository = permissionRepository;
-            _rolePermissionRepository = rolePermissionRepository;
-            _currentUserService = currentUserService;
+            _userRepository = userRepository
+                ?? throw new ArgumentNullException(nameof(userRepository));
+            _roleRepository = roleRepository
+                ?? throw new ArgumentNullException(nameof(roleRepository));
+            _permissionRepository = permissionRepository
+                ?? throw new ArgumentNullException(nameof(permissionRepository));
+            _rolePermissionRepository = rolePermissionRepository
+                ?? throw new ArgumentNullException(nameof(rolePermissionRepository));
+            _currentUserService = currentUserService
+                ?? throw new ArgumentNullException(nameof(currentUserService));
         }
 
         public async Task<List<User>> GetActiveUsersAsync()

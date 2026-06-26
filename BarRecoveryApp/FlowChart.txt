@@ -1,45 +1,69 @@
     BarRecoveryApp.sln
  Models/
- ├── Base
- │    ├── EntityBase.cs
- │    └── CatalogBase.cs
+ ├── Base (✓)
+ │    ├── EntityBase.cs (✓)
+ │    └── CatalogBase.cs (✓)
  │
- ├── Enums
- │    ├── UserRoleCode.cs
- │    ├── BarStatus.cs
- │    ├── AttributeDataType.cs
- │    ├── SyncStatus.cs
- │    └── SyncOperationType.cs
+ ├── Enums (✓)
+ │    ├── UserRoleCode.cs (✓)
+ │    ├── BarStatus.cs (✓)
+ │    ├── AttributeDataType.cs (✓)
+ │    ├── SyncStatus.cs (✓)
+ │    └── SyncOperationType.cs (✓)
  │
- ├── Security
- │    ├── Role.cs
- │    ├── Permission.cs
- │    ├── RolePermission.cs
- │    ├── User.cs
- │    └── AuditLog.cs
+ ├── Security (✓)
+ │    ├── Role.cs (✓)
+ │    ├── Permission.cs (✓)
+ │    ├── RolePermission.cs (✓)
+ │    ├── User.cs (✓)
+ │    └── AuditLog.cs (✓)
  │
- ├── Catalogs
- │    ├── Plant.cs
- │    ├── BarType.cs
- │    ├── Activity.cs
- │    ├── Supply.cs
- │    ├── BarRecoveryPolicy.cs
- │    └── BarAttributeDefinition.cs
+ ├── Catalogs (✓)
+ │    ├── Plant.cs (✓)
+ │    ├── BarType.cs (✓)
+ │    ├── Activity.cs (✓)
+ │    ├── Supply.cs (✓)
+ │    ├── BarRecoveryPolicy.cs (✓)
+ │    └── BarAttributeDefinition.cs (✓)
  │
  ├── Operations
- │    ├── Bar.cs
- │    ├── BarAttributeValue.cs
- │    ├── RecoveryRecord.cs
- │    ├── RecoveryRecordSupply.cs
- │    ├── QualityInspection.cs
- │    ├── Shipment.cs
- │    ├── ShipmentBar.cs
- │    ├── SyncQueueItem.cs
- │    └── SyncState.cs
+ │    ├── Bar.cs (✓)
+ │    ├── BarAttributeValue.cs (✓)
+ │    ├── RecoveryRecord.cs (✓)
+ │    ├── RecoveryRecordSupply.cs (✓)
+ │    ├── QualityInspection.cs (✓)
+ │    ├── Shipment.cs (✓)
+ │    ├── ShipmentBar.cs (✓)
+ │    ├── SyncQueueItem.cs (✓)
+ │    └── SyncState.cs (✓)
+ |
+ ApplicationF (✓)
+ ├── Services (✓)
+ │    └── Authentication (✓)
+ |          ├── AuthenticationService.cs (✓)
+ │          ├── IAuthenticationService.cs (✓)
+ │          ├── CurrentUserService.cs (✓)
+ │          ├── ICurrentUserService.cs (✓)
+ │          ├── CurrentUserSession.cs (✓)
+ │          └── AuthResult.cs (✓)
+ │    
+ Infrastructure (✓)
+ ├── Persistence (✓)
+ │    │──DatabaseService.cs
+ │    │──IDatabaseService.cs
+ │    │── Repositories (✓)
+ |    │      ├── Repository.cs (✓)
+ │    │      └── IRepository.cs (✓)
+ │    │
+ │    │── Seed (✓)
+ │    │      ├── PinHashHelper.cs (✓)
+ │    │      ├── DatabaseSeeder.cs (✓)
+ │    │      └── IDatabaseSeeder.cs (✓)
+
 
 <<<<<<<<<<<<<<<<<<<<<<<<<<<--------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>
 <<<<<<<<<<<<<<<<<<<<<<<<<<<--------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>
-                              Modelo funcional definitivo (actualizado)
+                              Modelo funcional definitivo
 <<<<<<<<<<<<<<<<<<<<<<<<<<<--------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>
 <<<<<<<<<<<<<<<<<<<<<<<<<<<--------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>
       
@@ -59,7 +83,6 @@ Viñales
 Valdivia
 Santa Fe
 MAPA
-(Pero mañana podrían existir más, sin modificar la estructura.)
 
 <<<<<----->>>>>
  Tipos de barra
@@ -74,7 +97,7 @@ Ejemplos:
 
 60
 90
-MAPA (Pero el sistema debe soportar, por ejemplo: 75, Especial A, Especial B, Especial C o cualquier cosa que ocurra en medio de)
+MAPA
 
 <<<<<----->>>>>
   Actividades

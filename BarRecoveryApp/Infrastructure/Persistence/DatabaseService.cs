@@ -16,8 +16,7 @@ namespace BarRecoveryApp.Infrastructure.Persistence
         private bool _isInitialized;
 
         private static string DatabasePath =>
-                Path.Combine(FileSystem.AppDataDirectory, DatabaseFilename);
-
+            Path.Combine(FileSystem.AppDataDirectory, DatabaseFilename);
 
         private static readonly SQLiteOpenFlags Flags =
             SQLiteOpenFlags.ReadWrite |
@@ -36,21 +35,37 @@ namespace BarRecoveryApp.Infrastructure.Persistence
                 if (_isInitialized)
                     return;
 
+                System.Diagnostics.Debug.WriteLine($"Ruta SQLite: {DatabasePath}");
+
                 _database = new SQLiteAsyncConnection(DatabasePath, Flags);
 
                 await CreateTableAsync();
 
                 _isInitialized = true;
+
+                System.Diagnostics.Debug.WriteLine("Base de datos inicializada correctamente.");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("====================================");
+                System.Diagnostics.Debug.WriteLine("ERROR EN DatabaseService.InitAsync");
+                System.Diagnostics.Debug.WriteLine("====================================");
+                System.Diagnostics.Debug.WriteLine(ex.ToString());
+                System.Diagnostics.Debug.WriteLine("====================================");
+
+                throw;
             }
             finally
             {
                 _initSemaphore.Release();
             }
-        }                                                                                                                                                                                                                                                                                                        
+        }
+
         public string GetDatabasePath()
         {
             return DatabasePath;
         }
+
         public async Task<SQLiteAsyncConnection> GetConnectionAsync()
         {
             await InitAsync();
@@ -64,35 +79,60 @@ namespace BarRecoveryApp.Infrastructure.Persistence
         private async Task CreateTableAsync()
         {
             if (_database is null)
-                throw new InvalidOperationException("No existe conexión a la bse de datos de datos.");
+                throw new InvalidOperationException("No existe conexión a la base de datos.");
 
-            //Users / security
-            await _database.CreateTableAsync<Role>();
-            await _database.CreateTableAsync<Permission>();
-            await _database.CreateTableAsync<RolePermission>();
-            await _database.CreateTableAsync<User>();
-            await _database.CreateTableAsync<AuditLog>();
+            // Users / security
+            await SafeCreateTableAsync<Role>();
+            await SafeCreateTableAsync<Permission>();
+            await SafeCreateTableAsync<RolePermission>();
+            await SafeCreateTableAsync<User>();
+            await SafeCreateTableAsync<AuditLog>();
 
-            //Catalog
-            await _database.CreateTableAsync<Plant>();
-            await _database.CreateTableAsync<BarType>();
-            await _database.CreateTableAsync<Activity>();
-            await _database.CreateTableAsync<Supply>();
-            await _database.CreateTableAsync<BarRecoveryPolicy>();
-            await _database.CreateTableAsync<BarAttributeDefinition>();
+            // Catalog
+            await SafeCreateTableAsync<Plant>();
+            await SafeCreateTableAsync<BarType>();
+            await SafeCreateTableAsync<Activity>();
+            await SafeCreateTableAsync<Supply>();
+            await SafeCreateTableAsync<BarRecoveryPolicy>();
+            await SafeCreateTableAsync<BarAttributeDefinition>();
 
-            //Operation
-            await _database.CreateTableAsync<Bar>();
-            await _database.CreateTableAsync<BarAttributeValue>();
-            await _database.CreateTableAsync<RecoveryRecord>();
-            await _database.CreateTableAsync<RecoveryRecordSupply>();
-            await _database.CreateTableAsync<QualityInspection>();
-            await _database.CreateTableAsync<Shipment>();
-            await _database.CreateTableAsync<ShipmentBar>();
+            // Operation
+            await SafeCreateTableAsync<Bar>();
+            await SafeCreateTableAsync<BarAttributeValue>();
+            await SafeCreateTableAsync<RecoveryRecord>();
+            await SafeCreateTableAsync<RecoveryRecordSupply>();
+            await SafeCreateTableAsync<QualityInspection>();
+            await SafeCreateTableAsync<Shipment>();
+            await SafeCreateTableAsync<ShipmentBar>();
 
-            //DB future sync
-            await _database.CreateTableAsync<SyncQueueItem>();
-            await _database.CreateTableAsync<SyncState>();
+            // DB future sync
+            await SafeCreateTableAsync<SyncQueueItem>();
+            await SafeCreateTableAsync<SyncState>();
+        }
+
+        private async Task SafeCreateTableAsync<T>() where T : new()
+        {
+            if (_database is null)
+                throw new InvalidOperationException("No existe conexión a la base de datos.");
+
+            try
+            {
+                System.Diagnostics.Debug.WriteLine($"Creando tabla: {typeof(T).FullName}");
+
+                await _database.CreateTableAsync<T>();
+
+                System.Diagnostics.Debug.WriteLine($"Tabla creada correctamente: {typeof(T).FullName}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("====================================");
+                System.Diagnostics.Debug.WriteLine($"ERROR CREANDO TABLA: {typeof(T).FullName}");
+                System.Diagnostics.Debug.WriteLine("====================================");
+                System.Diagnostics.Debug.WriteLine(ex.ToString());
+                System.Diagnostics.Debug.WriteLine("====================================");
+
+                throw;
+            }
         }
     }
 }

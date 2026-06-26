@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="BarRecoveryApp.Views.LoginPage"
+             Title="Ingreso">
+
+
+    <Grid Padding="24"
+          RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, *"
+          RowSpacing="16">
+
+        <!-- Title -->
+        <VerticalStackLayout Grid.Row="0" Spacing="4">
+
+            <Label Text="recuperación de Barras"
+                   FontFamily="Rouben Regular"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"/>
+
+            <Label Text="Seleccione usuario e ingrese PIN"
+                   FontSize="16"
+                   TextColor="Gray"
+                   HorizontalOptions="Center"/>
+        </VerticalStackLayout>
+
+        <!-- Load Indicator -->
+        <ActivityIndicator
+            Grid.Row="1"
+            IsRunning="{Binding IsBusy}"
+            IsVisible="{Binding IsBusy}"
+            HorizontalOptions="Center"/>
+
+        <!-- User -->
+        <VerticalStackLayout Grid.Row="2"
+                             Spacing="6">
+            <Label Text="Usuario"
+                   FontFamily="Rouben Regular"
+                   FontAttributes="Bold"/>
+
+            <Picker
+                Title="Seleccione usuario"
+                ItemsSource="{Binding Users}"
+                SelectedItem="{Binding SelectedUser}"
+                ItemDisplayBinding="{Binding DisplayName}"/>
+        </VerticalStackLayout>
+
+        <!-- PIN -->
+        <VerticalStackLayout Grid.Row="3" Spacing="6">
+            <Label
+                Text="PIN"
+                FontAttributes="Bold" />
+
+            <Entry
+                Text="{Binding Pin}"
+                Placeholder="Ingrese PIN"
+                Keyboard="Numeric"
+                IsPassword="True"
+                MaxLength="6"
+                HorizontalTextAlignment="Center"
+                FontSize="24" />
+        </VerticalStackLayout>
+
+        <!-- Error -->
+        <Frame
+            Grid.Row="4"
+            IsVisible="{Binding HasError}"
+            BackgroundColor="#FDECEC"
+            BorderColor="#D9534F"
+            Padding="12"
+            CornerRadius="8">
+
+            <Label
+                Text="{Binding ErrorMessage}"
+                TextColor="#B00020"
+                FontAttributes="Bold" />
+        </Frame>
+
+        <!-- Button -->
+        <Grid
+            Grid.Row="5"
+            ColumnDefinitions="*,*"
+            ColumnSpacing="12">
+
+            <Button
+                Grid.Column="0"
+                Text="Limpiar"
+                Command="{Binding ClearPinCommand}"
+                BackgroundColor="#6C757D"
+                TextColor="White" />
+
+            <Button
+                Grid.Column="1"
+                Text="Ingresar"
+                Command="{Binding LoginCommand}"
+                BackgroundColor="#0D6EFD"
+                TextColor="White" />
+        </Grid>
+        
+        <!-- Help -->
+        <Label
+            Grid.Row="6"
+            Text="El acceso queda asociado al usuario seleccionado para mantener trazabilidad de las actividades."
+            TextColor="Gray"
+            FontSize="13"
+            HorizontalTextAlignment="Center"
+            VerticalOptions="End" />
+    </Grid>
+</ContentPage>
