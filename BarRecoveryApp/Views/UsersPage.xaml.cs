@@ -14,6 +14,11 @@ namespace BarRecoveryApp.Views
                 ?? throw new ArgumentNullException(nameof(viewModel));
 
             BindingContext = _viewModel;
+
+            UsersCollectionView.SelectionChanged += (s, e) =>
+            {
+                System.Diagnostics.Debug.WriteLine($"[SelectionChanged] Count={e.CurrentSelection?.Count}");
+            };
         }
 
         protected override void OnAppearing()

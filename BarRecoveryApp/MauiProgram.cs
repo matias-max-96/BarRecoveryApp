@@ -9,6 +9,7 @@ using BarRecoveryApp.ViewModels;
 using BarRecoveryApp.Views;
 using BarRecoveryApp.ApplicationF.Services.Navigation;
 using BarRecoveryApp.ApplicationF.Services.Users;
+using BarRecoveryApp.ApplicationF.Services.Catalogs;
 
 namespace BarRecoveryApp
 {
@@ -36,11 +37,13 @@ namespace BarRecoveryApp
             //Repositories
             builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
 
-            //Auth - User
+            //Services
             builder.Services.AddSingleton<ICurrentUserService, CurrentUserService>();
             builder.Services.AddTransient<IAuthenticationService, AuthenticationService>();
             builder.Services.AddTransient<IRoleNavigationService, RoleNavigationService>();
             builder.Services.AddTransient<IUserManagementService, UserManagementService>();
+            builder.Services.AddTransient<IPlantService, PlantService>();
+            builder.Services.AddTransient<IBarTypeService, BarTypeService>();
 
             //Login View Model
             builder.Services.AddTransient<LoginViewModel>();
@@ -57,7 +60,13 @@ namespace BarRecoveryApp
             //UserPage
             builder.Services.AddTransient<UsersViewModel>();
             builder.Services.AddTransient<UsersPage>();
-
+            //PlantsPage
+            builder.Services.AddTransient<PlantsViewModel>(); 
+            builder.Services.AddTransient<PlantsPage>();
+            //BarPage
+            builder.Services.AddTransient<BarTypesViewModel>();
+            builder.Services.AddTransient<BarTypesPage>();
+            //Appshell
             builder.Services.AddSingleton<AppShell>();
 
             return builder.Build();

@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
-    x:Class="BarRecoveryApp.Views.UsersPage"
+    x:Class="BarRecoveryApp.Views.PlantsPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    Title="Usuarios">
+    Title="Plantas">
 
     <ScrollView>
         <VerticalStackLayout Padding="24" Spacing="16">
 
             <Label
-                Text="Gestión de Usuarios"
+                Text="Gestión de Plantas"
                 FontSize="26"
                 FontAttributes="Bold"
                 HorizontalOptions="Center" />
@@ -18,30 +18,34 @@
                 IsRunning="{Binding IsBusy}"
                 IsVisible="{Binding IsBusy}"
                 HorizontalOptions="Center" />
+
+
             <Border
                 IsVisible="{Binding HasError}"
                 Padding="12"
                 Margin="0,4"
-                Stroke="#DDDDDD"
+                Stroke="#D9534F"
                 StrokeThickness="1"
                 BackgroundColor="White">
 
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="8"/>
                 </Border.StrokeShape>
+
                 <Label
                     Text="{Binding ErrorMessage}"
                     TextColor="#B00020"
                     FontAttributes="Bold" />
-            </Border>
 
+            </Border>
+            
             <Border
                 IsVisible="{Binding HasSuccess}"
                 Padding="12"
                 Margin="0,4"
                 Stroke="#2E7D32"
                 StrokeThickness="1"
-                BackgroundColor="#E8F5E9">
+                BackgroundColor="White">
 
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="8"/>
@@ -53,46 +57,39 @@
                     FontAttributes="Bold" />
 
             </Border>
-            
+
 
             <Label
-                Text="Crear nuevo usuario"
+                Text="Datos de planta"
                 FontSize="20"
                 FontAttributes="Bold" />
 
             <Entry
-                Text="{Binding Username}"
-                Placeholder="Nombre de usuario ej: jperez" />
+                Text="{Binding Code}"
+                Placeholder="Código ej: MAPA, ANA, SANTA_FE" />
 
             <Entry
-                Text="{Binding DisplayName}"
-                Placeholder="Nombre visible ej: Juan Pérez" />
+                Text="{Binding Name}"
+                Placeholder="Nombre ej: MAPA, ANA, Santa Fe" />
 
-            <Picker
-                Title="Seleccione rol"
-                ItemsSource="{Binding Roles}"
-                SelectedItem="{Binding SelectedRole}"
-                ItemDisplayBinding="{Binding Name}" />
-
-            <Entry
-                Text="{Binding InitialPin}"
-                Placeholder="PIN inicial"
-                Keyboard="Numeric"
-                IsPassword="True"
-                MaxLength="6" />
+            <Editor
+                Text="{Binding Description}"
+                Placeholder="Descripción"
+                AutoSize="TextChanges"
+                HeightRequest="80" />
 
             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                 <Button
                     Grid.Column="0"
-                    Text="Limpiar"
-                    Command="{Binding ClearFormCommand}"
+                    Text="Nueva"
+                    Command="{Binding NewCommand}"
                     BackgroundColor="#6C757D"
                     TextColor="White" />
 
                 <Button
                     Grid.Column="1"
-                    Text="Crear usuario"
-                    Command="{Binding CreateUserCommand}"
+                    Text="{Binding SaveButtonText}"
+                    Command="{Binding SaveCommand}"
                     BackgroundColor="#0D6EFD"
                     TextColor="White" />
             </Grid>
@@ -100,19 +97,21 @@
             <BoxView HeightRequest="1" Color="#DDDDDD" Margin="0,12" />
 
             <Label
-                Text="Usuarios existentes"
+                Text="Plantas existentes"
                 FontSize="20"
                 FontAttributes="Bold" />
 
             <CollectionView
-                x:Name="UsersCollectionView"
-                ItemsSource="{Binding Users}"
-                SelectedItem="{Binding SelectedUser, Mode=TwoWay}"
+                ItemsSource="{Binding Plants}"
+                SelectedItem="{Binding SelectedPlant}"
                 SelectionMode="Single">
 
+                
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
+
                         <Border
+                            IsVisible="{Binding HasError}"
                             Padding="12"
                             Margin="0,4"
                             Stroke="#DDDDDD"
@@ -120,51 +119,42 @@
                             BackgroundColor="White">
 
                             <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="8" />
+                                <RoundRectangle CornerRadius="8"/>
                             </Border.StrokeShape>
+
 
                             <VerticalStackLayout Spacing="4">
                                 <Label
-                                    Text="{Binding DisplayName}"
+                                    Text="{Binding Name}"
                                     FontAttributes="Bold"
                                     FontSize="16" />
 
                                 <Label
-                                    Text="{Binding Username}"
+                                    Text="{Binding Code}"
                                     FontSize="13"
                                     TextColor="Gray" />
 
                                 <Label
-                                    Text="{Binding IsActive, StringFormat='Activo: {0}'}"
+                                    Text="{Binding IsActive, StringFormat='Activa: {0}'}"
                                     FontSize="13" />
+
+                                <Label
+                                    Text="{Binding Description}"
+                                    FontSize="13"
+                                    TextColor="Gray" />
                             </VerticalStackLayout>
+
                         </Border>
+
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <Entry
-                Text="{Binding ResetPin}"
-                Placeholder="Nuevo PIN para usuario seleccionado"
-                Keyboard="Numeric"
-                IsPassword="True"
-                MaxLength="6" />
-
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                <Button
-                    Grid.Column="0"
-                    Text="Activar / Desactivar"
-                    Command="{Binding ToggleActiveCommand}"
-                    BackgroundColor="#FFC107"
-                    TextColor="Black" />
-
-                <Button
-                    Grid.Column="1"
-                    Text="Resetear PIN"
-                    Command="{Binding ResetPinCommand}"
-                    BackgroundColor="#198754"
-                    TextColor="White" />
-            </Grid>
+            <Button
+                Text="Activar / Desactivar seleccionada"
+                Command="{Binding ToggleActiveCommand}"
+                BackgroundColor="#FFC107"
+                TextColor="Black" />
 
         </VerticalStackLayout>
     </ScrollView>

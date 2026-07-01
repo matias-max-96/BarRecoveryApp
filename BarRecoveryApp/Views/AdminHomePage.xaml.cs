@@ -29,4 +29,12 @@ public partial class AdminHomePage : ContentPage
 
 		await _roleNavigationService.LogoutAndGoToLoginAsync();
 	}
+    private async void OnPlantsClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(PlantsPage));
+    }
+    private async void OnBarTypesClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(BarTypesPage));
+    }
 }

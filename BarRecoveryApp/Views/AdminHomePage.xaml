@@ -22,8 +22,10 @@
 
             <Button Text="Usuarios"
                     Clicked="OnUsersClicked"/>
-            <Button Text="Plantas"/>
-            <Button Text="Tipos de barras"/>
+            <Button Text="Plantas"
+                    Clicked="OnPlantsClicked"/>
+            <Button Text="Tipos de barras"
+                    Clicked="OnBarTypesClicked"/>
             <Button Text="Insumos"/>
             <Button Text="Atributos técnicos"/>
             <Button Text="Políticas de recuperación"/>

@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using BarRecoveryApp.ApplicationF.Services.Users;
 using BarRecoveryApp.Models.Security;
 
@@ -345,7 +346,10 @@ namespace BarRecoveryApp.ViewModels
 
         private bool CanSelectUser()
         {
-            return !IsBusy && SelectedUser is not null;
+            //return !IsBusy && SelectedUser is not null;
+            var result = !IsBusy && SelectedUser is not null;
+            System.Diagnostics.Debug.WriteLine($"[CanSelectUser] IsBusy={IsBusy}, SelectedUser={SelectedUser?.Username}, result={result}");
+            return result;
         }
 
         private bool CanResetPin()
