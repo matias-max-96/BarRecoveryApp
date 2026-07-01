@@ -37,4 +37,12 @@ public partial class AdminHomePage : ContentPage
     {
         await Shell.Current.GoToAsync(nameof(BarTypesPage));
     }
+    private async void OnActivitiesClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(ActivitiesPage));
+    }
+    private async void OnSuppliesClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(SuppliesPage));
+    }
 }

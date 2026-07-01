@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
-    x:Class="BarRecoveryApp.Views.BarTypesPage"
+    x:Class="BarRecoveryApp.Views.SuppliesPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    Title="Tipos de barra">
+    Title="Insumos">
 
     <ScrollView>
         <VerticalStackLayout Padding="24" Spacing="16">
 
             <Label
-                Text="Gestión de Tipos de Barra"
+                Text="Gestión de Insumos"
                 FontSize="26"
                 FontAttributes="Bold"
                 HorizontalOptions="Center" />
@@ -18,7 +18,6 @@
                 IsRunning="{Binding IsBusy}"
                 IsVisible="{Binding IsBusy}"
                 HorizontalOptions="Center" />
-
 
             <Border
                 IsVisible="{Binding HasError}"
@@ -29,49 +28,49 @@
                 BackgroundColor="White">
 
                 <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8"/>
+                    <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
 
                 <Label
                     Text="{Binding ErrorMessage}"
                     TextColor="#B00020"
                     FontAttributes="Bold" />
-                
             </Border>
-
 
             <Border
                 IsVisible="{Binding HasSuccess}"
                 Padding="12"
                 Margin="0,4"
-                Stroke="#D9534F"
+                Stroke="#2E7D32"
                 StrokeThickness="1"
                 BackgroundColor="White">
 
                 <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8"/>
+                    <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
 
                 <Label
                     Text="{Binding SuccessMessage}"
                     TextColor="#2E7D32"
                     FontAttributes="Bold" />
-
             </Border>
 
-
             <Label
-                Text="Datos del tipo de barra"
+                Text="Datos de insumo"
                 FontSize="20"
                 FontAttributes="Bold" />
 
             <Entry
                 Text="{Binding Code}"
-                Placeholder="Código ej: 60, 90, MAPA" />
+                Placeholder="Código ej: ELECTRODO, DISCO" />
 
             <Entry
                 Text="{Binding Name}"
-                Placeholder="Nombre ej: Barra 60, Barra MAPA" />
+                Placeholder="Nombre ej: Electrodo, Disco" />
+
+            <Entry
+                Text="{Binding Unit}"
+                Placeholder="Unidad ej: un, kg, m3, lt" />
 
             <Editor
                 Text="{Binding Description}"
@@ -98,18 +97,17 @@
             <BoxView HeightRequest="1" Color="#DDDDDD" Margin="0,12" />
 
             <Label
-                Text="Tipos de barra existentes"
+                Text="Insumos existentes"
                 FontSize="20"
                 FontAttributes="Bold" />
 
             <CollectionView
-                ItemsSource="{Binding BarTypes}"
-                SelectedItem="{Binding SelectedBarType}"
+                ItemsSource="{Binding Supplies}"
+                SelectedItem="{Binding SelectedSupply, Mode=TwoWay}"
                 SelectionMode="Single">
 
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-
                         <Border
                             Padding="12"
                             Margin="0,4"
@@ -118,9 +116,9 @@
                             BackgroundColor="White">
 
                             <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="8"/>
+                                <RoundRectangle CornerRadius="8" />
                             </Border.StrokeShape>
-                            
+
                             <VerticalStackLayout Spacing="4">
                                 <Label
                                     Text="{Binding Name}"
@@ -129,6 +127,11 @@
 
                                 <Label
                                     Text="{Binding Code}"
+                                    FontSize="13"
+                                    TextColor="Gray" />
+
+                                <Label
+                                    Text="{Binding Unit, StringFormat='Unidad: {0}'}"
                                     FontSize="13"
                                     TextColor="Gray" />
 

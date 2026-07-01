@@ -111,7 +111,6 @@
                     <DataTemplate>
 
                         <Border
-                            IsVisible="{Binding HasError}"
                             Padding="12"
                             Margin="0,4"
                             Stroke="#DDDDDD"

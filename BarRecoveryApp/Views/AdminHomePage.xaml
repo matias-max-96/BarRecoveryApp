@@ -26,7 +26,10 @@
                     Clicked="OnPlantsClicked"/>
             <Button Text="Tipos de barras"
                     Clicked="OnBarTypesClicked"/>
-            <Button Text="Insumos"/>
+            <Button Text="Actividades"
+                    Clicked="OnActivitiesClicked" />
+            <Button Text="Insumos"
+                    Clicked="OnSuppliesClicked"/>
             <Button Text="Atributos técnicos"/>
             <Button Text="Políticas de recuperación"/>
             <Button Text="Exportaciones"/>
