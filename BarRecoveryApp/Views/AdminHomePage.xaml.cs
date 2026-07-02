@@ -45,4 +45,12 @@ public partial class AdminHomePage : ContentPage
     {
         await Shell.Current.GoToAsync(nameof(SuppliesPage));
     }
+    private async void OnBarAttributeDefinitionsClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(BarAttributeDefinitionsPage));
+    }
+    private async void OnBarRecoveryPoliciesClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(BarRecoveryPoliciesPage));
+    }
 }

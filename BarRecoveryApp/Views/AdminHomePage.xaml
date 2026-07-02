@@ -30,8 +30,10 @@
                     Clicked="OnActivitiesClicked" />
             <Button Text="Insumos"
                     Clicked="OnSuppliesClicked"/>
-            <Button Text="Atributos técnicos"/>
-            <Button Text="Políticas de recuperación"/>
+            <Button Text="Atributos técnicos"
+                    Clicked="OnBarAttributeDefinitionsClicked"/>
+            <Button Text="Políticas de recuperación"
+                    Clicked="OnBarRecoveryPoliciesClicked"/>
             <Button Text="Exportaciones"/>
             <Button Text="Sincronización"/>
 

@@ -46,6 +46,8 @@ namespace BarRecoveryApp
             builder.Services.AddTransient<IBarTypeService, BarTypeService>();
             builder.Services.AddTransient<IActivityService, ActivityService>();
             builder.Services.AddTransient<ISupplyService, SupplyService>();
+            builder.Services.AddTransient<IBarAttributeDefinitionService, BarAttributeDefinitionService>();
+            builder.Services.AddTransient<IBarRecoveryPolicyService, BarRecoveryPolicyService>();
 
             //Login View Model
             builder.Services.AddTransient<LoginViewModel>();
@@ -74,6 +76,12 @@ namespace BarRecoveryApp
             //SuppliesPage
             builder.Services.AddTransient<SuppliesViewModel>();
             builder.Services.AddTransient<SuppliesPage>();
+            //BarAttributePage
+            builder.Services.AddTransient<BarAttributeDefinitionsViewModel>();
+            builder.Services.AddTransient<BarAttributeDefinitionsPage>();
+            //BarRecoveryPoliciesPage
+            builder.Services.AddTransient<BarRecoveryPoliciesViewModel>();
+            builder.Services.AddTransient<BarRecoveryPoliciesPage>();
             //Appshell
             builder.Services.AddSingleton<AppShell>();
 
