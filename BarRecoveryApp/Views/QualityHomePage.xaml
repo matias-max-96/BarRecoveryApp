@@ -19,9 +19,12 @@
                 FontSize="15"
                 TextColor="Gray"
                 HorizontalTextAlignment="Center" />
-
+            <Button
+                Text="Gestionar barras"
+                Clicked="OnBarsClicked" />
             <Button Text="Buscar barra" />
-            <Button Text="Nueva inspección" />
+            <Button Text="Nueva inspección" 
+                    Clicked="OnQualityInspectionClicked"/>
             <Button Text="Historial de barra" />
             <Button Text="Atributos técnicos" />
             <Button Text="Envíos" />

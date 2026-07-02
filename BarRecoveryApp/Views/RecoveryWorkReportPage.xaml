@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="BarRecoveryApp.Views.RecoveryWorkReportPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Registro de recuperación">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16">
+
+            <Label
+                Text="Registro de Recuperación"
+                FontSize="26"
+                FontAttributes="Bold"
+                HorizontalOptions="Center" />
+
+            <ActivityIndicator
+                IsRunning="{Binding IsBusy}"
+                IsVisible="{Binding IsBusy}"
+                HorizontalOptions="Center" />
+
+            <Border
+                IsVisible="{Binding HasError}"
+                Padding="12"
+                Stroke="#D9534F"
+                StrokeThickness="1"
+                BackgroundColor="White">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+                <Label
+                    Text="{Binding ErrorMessage}"
+                    TextColor="#B00020"
+                    FontAttributes="Bold" />
+            </Border>
+
+            <Border
+                IsVisible="{Binding HasSuccess}"
+                Padding="12"
+                Stroke="#2E7D32"
+                StrokeThickness="1"
+                BackgroundColor="White">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+                <Label
+                    Text="{Binding SuccessMessage}"
+                    TextColor="#2E7D32"
+                    FontAttributes="Bold" />
+            </Border>
+
+            <Label
+                Text="Datos del turno"
+                FontSize="20"
+                FontAttributes="Bold" />
+
+            <Entry
+                Text="{Binding WorkDate}"
+                IsReadOnly="True"
+                Placeholder="Fecha" />
+
+            <Entry
+                Text="{Binding ShiftName}"
+                Placeholder="Turno ej: Día, Noche, Tarde" />
+
+            <Entry
+                Text="{Binding BarsWorkedCount}"
+                Placeholder="Cantidad de barras trabajadas"
+                Keyboard="Numeric" />
+
+            <Label
+                Text="Actividades realizadas"
+                FontSize="20"
+                FontAttributes="Bold" />
+
+            <Picker
+                Title="Seleccione actividad"
+                ItemsSource="{Binding Activities}"
+                SelectedItem="{Binding SelectedActivity}"
+                ItemDisplayBinding="{Binding Name}" />
+
+            <Entry
+                Text="{Binding ActivityHours}"
+                Placeholder="Horas trabajadas"
+                Keyboard="Numeric" />
+
+            <Button
+                Text="Agregar actividad"
+                Command="{Binding AddActivityCommand}"
+                BackgroundColor="#0D6EFD"
+                TextColor="White" />
+
+            <CollectionView ItemsSource="{Binding WorkActivities}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border
+                            Padding="10"
+                            Margin="0,4"
+                            Stroke="#DDDDDD"
+                            StrokeThickness="1"
+                            BackgroundColor="White">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
+
+                            <Label Text="{Binding DisplayText}" />
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Label
+                Text="Insumos utilizados"
+                FontSize="20"
+                FontAttributes="Bold" />
+
+            <Picker
+                Title="Seleccione insumo"
+                ItemsSource="{Binding Supplies}"
+                SelectedItem="{Binding SelectedSupply}"
+                ItemDisplayBinding="{Binding Name}" />
+
+            <Entry
+                Text="{Binding SupplyQuantity}"
+                Placeholder="Cantidad utilizada"
+                Keyboard="Numeric" />
+
+            <Button
+                Text="Agregar insumo"
+                Command="{Binding AddSupplyCommand}"
+                BackgroundColor="#198754"
+                TextColor="White" />
+
+            <CollectionView ItemsSource="{Binding WorkSupplies}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border
+                            Padding="10"
+                            Margin="0,4"
+                            Stroke="#DDDDDD"
+                            StrokeThickness="1"
+                            BackgroundColor="White">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
+
+                            <Label Text="{Binding DisplayText}" />
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Editor
+                Text="{Binding Notes}"
+                Placeholder="Observaciones"
+                AutoSize="TextChanges"
+                HeightRequest="100" />
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+
+                <Button
+                    Grid.Column="0"
+                    Text="Limpiar"
+                    Command="{Binding ClearCommand}"
+                    BackgroundColor="#6C757D"
+                    TextColor="White" />
+
+                <Button
+                    Grid.Column="1"
+                    Text="Guardar"
+                    Command="{Binding SaveCommand}"
+                    BackgroundColor="#0D6EFD"
+                    TextColor="White" />
+
+            </Grid>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

@@ -10,6 +10,7 @@ using BarRecoveryApp.Views;
 using BarRecoveryApp.ApplicationF.Services.Navigation;
 using BarRecoveryApp.ApplicationF.Services.Users;
 using BarRecoveryApp.ApplicationF.Services.Catalogs;
+using BarRecoveryApp.ApplicationF.Services.Operations;
 
 namespace BarRecoveryApp
 {
@@ -48,6 +49,10 @@ namespace BarRecoveryApp
             builder.Services.AddTransient<ISupplyService, SupplyService>();
             builder.Services.AddTransient<IBarAttributeDefinitionService, BarAttributeDefinitionService>();
             builder.Services.AddTransient<IBarRecoveryPolicyService, BarRecoveryPolicyService>();
+            builder.Services.AddTransient<IBarService, BarService>();
+            builder.Services.AddTransient<IRecoveryService, RecoveryService>();
+            builder.Services.AddTransient<IRecoveryWorkReportService, RecoveryWorkReportService>();
+            builder.Services.AddTransient<IQualityInspectionService, QualityInspectionService>();
 
             //Login View Model
             builder.Services.AddTransient<LoginViewModel>();
@@ -82,6 +87,18 @@ namespace BarRecoveryApp
             //BarRecoveryPoliciesPage
             builder.Services.AddTransient<BarRecoveryPoliciesViewModel>();
             builder.Services.AddTransient<BarRecoveryPoliciesPage>();
+            //BarsPage
+            builder.Services.AddTransient<BarsViewModel>();
+            builder.Services.AddTransient<BarsPage>();
+            //RecoveveryRecordPage
+            builder.Services.AddTransient<RecoveryWorkReportViewModel>();
+            builder.Services.AddTransient<RecoveryWorkReportPage>();
+            //RecoveryWorkReportsHistoryPage
+            builder.Services.AddTransient<RecoveryWorkReportsHistoryViewModel>();
+            builder.Services.AddTransient<RecoveryWorkReportsHistoryPage>();
+            //QualityInsectionPage
+            builder.Services.AddTransient<QualityInspectionViewModel>();
+            builder.Services.AddTransient<QualityInspectionPage>();
             //Appshell
             builder.Services.AddSingleton<AppShell>();
 

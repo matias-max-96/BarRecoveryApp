@@ -25,4 +25,12 @@ public partial class QualityHomePage : ContentPage
 
         await _roleNavigationService.LogoutAndGoToLoginAsync();
     }
+    private async void OnBarsClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(BarsPage));
+    }
+    private async void OnQualityInspectionClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(QualityInspectionPage));
+    }
 }

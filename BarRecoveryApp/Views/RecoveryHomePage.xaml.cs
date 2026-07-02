@@ -23,4 +23,16 @@ public partial class RecoveryHomePage : ContentPage
 
         await _roleNavigationService.LogoutAndGoToLoginAsync();
     }
+    private async void OnRegisterRecoveryClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(RecoveryRecordPage));
+    }
+    private async void OnRecoveryWorkReportClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(RecoveryWorkReportPage));
+    }
+    private async void OnMyRecoveryReportsClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(RecoveryWorkReportsHistoryPage));
+    }
 }

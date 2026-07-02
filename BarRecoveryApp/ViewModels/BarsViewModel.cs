@@ -1,22 +1,19 @@
 ﻿using System.Collections.ObjectModel;
-using BarRecoveryApp.ApplicationF.Services.Catalogs;
+using BarRecoveryApp.ApplicationF.Services.Operations;
 using BarRecoveryApp.Models.Catalogs;
 using BarRecoveryApp.ViewModels.Items;
 
-
-
-
 namespace BarRecoveryApp.ViewModels
 {
-    public class BarRecoveryPoliciesViewModel : BaseViewModel
+    public class BarsViewModel : BaseViewModel
     {
-        private readonly IBarRecoveryPolicyService _service;
+        private readonly IBarService _barService;
 
-        private BarRecoveryPolicyItemViewModel? _selectedPolicy;
+        private BarItemViewModel? _selectedBar;
         private Plant? _selectedPlant;
         private BarType? _selectedBarType;
 
-        private string _maxRecoveries = "0";
+        private string _barNumber = string.Empty;
 
         private string _errorMessage = string.Empty;
         private bool _hasError;
@@ -24,38 +21,37 @@ namespace BarRecoveryApp.ViewModels
         private string _successMessage = string.Empty;
         private bool _hasSuccess;
 
-        public BarRecoveryPoliciesViewModel(
-            IBarRecoveryPolicyService service)
+        public BarsViewModel(IBarService barService)
         {
-            _service = service
-                ?? throw new ArgumentNullException(nameof(service));
+            _barService = barService
+                ?? throw new ArgumentNullException(nameof(barService));
 
-            Title = "Políticas de recuperación";
+            Title = "Barras";
 
-            Policies = new ObservableCollection<BarRecoveryPolicyItemViewModel>();
+            Bars = new ObservableCollection<BarItemViewModel>();
             Plants = new ObservableCollection<Plant>();
             BarTypes = new ObservableCollection<BarType>();
 
             LoadCommand = new RelayCommand(LoadAsync);
             SaveCommand = new RelayCommand(SaveAsync, CanSave);
-            ToggleActiveCommand = new RelayCommand(ToggleActiveAsync, CanSelectPolicy);
+            ToggleActiveCommand = new RelayCommand(ToggleActiveAsync, CanSelectBar);
             NewCommand = new RelayCommand(NewAsync);
         }
 
-        public ObservableCollection<BarRecoveryPolicyItemViewModel> Policies { get; }
+        public ObservableCollection<BarItemViewModel> Bars { get; }
 
         public ObservableCollection<Plant> Plants { get; }
 
         public ObservableCollection<BarType> BarTypes { get; }
 
-        public BarRecoveryPolicyItemViewModel? SelectedPolicy
+        public BarItemViewModel? SelectedBar
         {
-            get => _selectedPolicy;
+            get => _selectedBar;
             set
             {
-                if (SetProperty(ref _selectedPolicy, value))
+                if (SetProperty(ref _selectedBar, value))
                 {
-                    LoadSelectedPolicyToForm();
+                    LoadSelectedBarToForm();
                     ClearMessages();
                     RefreshCommands();
                 }
@@ -88,12 +84,12 @@ namespace BarRecoveryApp.ViewModels
             }
         }
 
-        public string MaxRecoveries
+        public string BarNumber
         {
-            get => _maxRecoveries;
+            get => _barNumber;
             set
             {
-                if (SetProperty(ref _maxRecoveries, value))
+                if (SetProperty(ref _barNumber, value))
                 {
                     ClearMessages();
                     RefreshCommands();
@@ -126,7 +122,7 @@ namespace BarRecoveryApp.ViewModels
         }
 
         public string SaveButtonText =>
-            SelectedPolicy is null ? "Crear política" : "Actualizar política";
+            SelectedBar is null ? "Crear barra" : "Actualizar barra";
 
         public RelayCommand LoadCommand { get; }
 
@@ -146,13 +142,13 @@ namespace BarRecoveryApp.ViewModels
                 IsBusy = true;
                 ClearMessages();
 
-                Policies.Clear();
+                Bars.Clear();
                 Plants.Clear();
                 BarTypes.Clear();
 
-                var policies = await _service.GetPoliciesAsync();
-                var plants = await _service.GetActivePlantsAsync();
-                var barTypes = await _service.GetActiveBarTypesAsync();
+                var bars = await _barService.GetBarsAsync();
+                var plants = await _barService.GetActivePlantsAsync();
+                var barTypes = await _barService.GetActiveBarTypesAsync();
 
                 foreach (var plant in plants)
                     Plants.Add(plant);
@@ -160,14 +156,14 @@ namespace BarRecoveryApp.ViewModels
                 foreach (var barType in barTypes)
                     BarTypes.Add(barType);
 
-                foreach (var policy in policies)
+                foreach (var bar in bars)
                 {
-                    var plant = plants.FirstOrDefault(x => x.Id == policy.PlantId);
-                    var barType = barTypes.FirstOrDefault(x => x.Id == policy.BarTypeId);
+                    var plant = plants.FirstOrDefault(x => x.Id == bar.PlantId);
+                    var barType = barTypes.FirstOrDefault(x => x.Id == bar.BarTypeId);
 
-                    Policies.Add(new BarRecoveryPolicyItemViewModel
+                    Bars.Add(new BarItemViewModel
                     {
-                        Policy = policy,
+                        Bar = bar,
                         PlantName = plant?.Name ?? "Planta no encontrada",
                         BarTypeName = barType?.Name ?? "Tipo no encontrado"
                     });
@@ -175,7 +171,7 @@ namespace BarRecoveryApp.ViewModels
             }
             catch (Exception ex)
             {
-                ShowError($"Error cargando políticas: {ex.Message}");
+                ShowError($"Error cargando barras: {ex.Message}");
             }
             finally
             {
@@ -191,7 +187,7 @@ namespace BarRecoveryApp.ViewModels
 
             if (!CanSave())
             {
-                ShowError("Debe seleccionar planta, tipo de barra y una cantidad máxima válida.");
+                ShowError("Debe ingresar número de barra, planta y tipo de barra.");
                 return;
             }
 
@@ -200,23 +196,21 @@ namespace BarRecoveryApp.ViewModels
                 IsBusy = true;
                 ClearMessages();
 
-                var maxRecoveriesValue = int.Parse(MaxRecoveries);
-
-                var saved = await _service.SavePolicyAsync(
-                    SelectedPolicy?.Policy.Id,
+                var saved = await _barService.SaveBarAsync(
+                    SelectedBar?.Bar.Id,
+                    BarNumber,
                     SelectedPlant!.Id,
-                    SelectedBarType!.Id,
-                    maxRecoveriesValue);
+                    SelectedBarType!.Id);
 
                 if (!saved)
                 {
-                    ShowError("No fue posible guardar la política. Verifique permisos o combinación duplicada.");
+                    ShowError("No fue posible guardar la barra. Verifique permisos o identificador duplicado.");
                     return;
                 }
 
-                ShowSuccess(SelectedPolicy is null
-                    ? "Política creada correctamente."
-                    : "Política actualizada correctamente.");
+                ShowSuccess(SelectedBar is null
+                    ? "Barra creada correctamente."
+                    : "Barra actualizada correctamente.");
 
                 ClearForm();
 
@@ -224,7 +218,7 @@ namespace BarRecoveryApp.ViewModels
             }
             catch (Exception ex)
             {
-                ShowError($"Error guardando política: {ex.Message}");
+                ShowError($"Error guardando barra: {ex.Message}");
             }
             finally
             {
@@ -235,7 +229,7 @@ namespace BarRecoveryApp.ViewModels
 
         private async Task ToggleActiveAsync()
         {
-            if (SelectedPolicy is null)
+            if (SelectedBar is null)
                 return;
 
             try
@@ -243,21 +237,21 @@ namespace BarRecoveryApp.ViewModels
                 IsBusy = true;
                 ClearMessages();
 
-                var newState = !SelectedPolicy.Policy.IsActive;
+                var newState = !SelectedBar.Bar.IsActive;
 
-                var changed = await _service.SetPolicyActiveStateAsync(
-                    SelectedPolicy.Policy.Id,
+                var changed = await _barService.SetBarActiveStateAsync(
+                    SelectedBar.Bar.Id,
                     newState);
 
                 if (!changed)
                 {
-                    ShowError("No fue posible cambiar el estado de la política.");
+                    ShowError("No fue posible cambiar el estado de la barra.");
                     return;
                 }
 
                 ShowSuccess(newState
-                    ? "Política activada correctamente."
-                    : "Política desactivada correctamente.");
+                    ? "Barra activada correctamente."
+                    : "Barra desactivada correctamente.");
 
                 ClearForm();
 
@@ -265,7 +259,7 @@ namespace BarRecoveryApp.ViewModels
             }
             catch (Exception ex)
             {
-                ShowError($"Error cambiando estado: {ex.Message}");
+                ShowError($"Error cambiando estado de barra: {ex.Message}");
             }
             finally
             {
@@ -286,32 +280,31 @@ namespace BarRecoveryApp.ViewModels
         private bool CanSave()
         {
             return !IsBusy
+                   && !string.IsNullOrWhiteSpace(BarNumber)
                    && SelectedPlant is not null
-                   && SelectedBarType is not null
-                   && int.TryParse(MaxRecoveries, out var value)
-                   && value >= 0;
+                   && SelectedBarType is not null;
         }
 
-        private bool CanSelectPolicy()
+        private bool CanSelectBar()
         {
-            return !IsBusy && SelectedPolicy is not null;
+            return !IsBusy && SelectedBar is not null;
         }
 
-        private void LoadSelectedPolicyToForm()
+        private void LoadSelectedBarToForm()
         {
-            if (SelectedPolicy is null)
+            if (SelectedBar is null)
             {
                 ClearFormFieldsOnly();
             }
             else
             {
+                BarNumber = SelectedBar.Bar.BarNumber;
+
                 SelectedPlant = Plants.FirstOrDefault(
-                    x => x.Id == SelectedPolicy.Policy.PlantId);
+                    x => x.Id == SelectedBar.Bar.PlantId);
 
                 SelectedBarType = BarTypes.FirstOrDefault(
-                    x => x.Id == SelectedPolicy.Policy.BarTypeId);
-
-                MaxRecoveries = SelectedPolicy.Policy.MaxRecoveries.ToString();
+                    x => x.Id == SelectedBar.Bar.BarTypeId);
             }
 
             OnPropertyChanged(nameof(SaveButtonText));
@@ -319,7 +312,7 @@ namespace BarRecoveryApp.ViewModels
 
         private void ClearForm()
         {
-            SelectedPolicy = null;
+            SelectedBar = null;
             ClearFormFieldsOnly();
 
             OnPropertyChanged(nameof(SaveButtonText));
@@ -327,9 +320,9 @@ namespace BarRecoveryApp.ViewModels
 
         private void ClearFormFieldsOnly()
         {
+            BarNumber = string.Empty;
             SelectedPlant = null;
             SelectedBarType = null;
-            MaxRecoveries = "0";
         }
 
         private void ShowError(string message)

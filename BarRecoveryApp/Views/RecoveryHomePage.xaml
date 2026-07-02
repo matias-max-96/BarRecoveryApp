@@ -20,8 +20,10 @@
                 TextColor="Gray"
                 HorizontalTextAlignment="Center" />
 
-            <Button Text="Registrar recuperación" />
-            <Button Text="Mis registros recientes" />
+            <Button Text="Registrar recuperación"
+                    Clicked="OnRecoveryWorkReportClicked"/>
+            <Button Text="Mis registros recientes"
+                    Clicked="OnMyRecoveryReportsClicked"/>
             <Button Text="Consultar barra" />
 
             <Button

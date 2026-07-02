@@ -34,6 +34,8 @@
                     Clicked="OnBarAttributeDefinitionsClicked"/>
             <Button Text="Políticas de recuperación"
                     Clicked="OnBarRecoveryPoliciesClicked"/>
+            <Button Text="Barras"
+                    Clicked="OnBarsClicked"/>
             <Button Text="Exportaciones"/>
             <Button Text="Sincronización"/>
 

@@ -7,6 +7,9 @@ namespace BarRecoveryApp.Models.Operations
     [Table("QualityInspections")]
     public class QualityInspection : EntityBase
     {
+        [Indexed]
+        [MaxLength(36)]
+        public string BarId { get; set; } = string.Empty;
 
         [Indexed]
         [MaxLength(36)]

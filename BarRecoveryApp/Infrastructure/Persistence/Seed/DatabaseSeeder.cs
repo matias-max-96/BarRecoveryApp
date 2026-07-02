@@ -102,23 +102,25 @@ namespace BarRecoveryApp.Infrastructure.Persistence.Seed
         {
             var permissions = new[]
             {
+            //User Seeds
             new PermissionSeed("USER_CREATE", "Crear usuarios", "Usuarios"),
             new PermissionSeed("USER_EDIT", "Editar usuarios", "Usuarios"),
             new PermissionSeed("USER_DISABLE", "Desactivar usuarios", "Usuarios"),
             new PermissionSeed("USER_RESET_PIN", "Resetear PIN", "Usuarios"),
             new PermissionSeed("ADMIN_MANAGE", "Gestionar administradores", "Usuarios"),
-
+            //Admin permissions seeds
             new PermissionSeed("PLANT_MANAGE", "Gestionar plantas", "Catálogos"),
             new PermissionSeed("BAR_TYPE_MANAGE", "Gestionar tipos de barra", "Catálogos"),
             new PermissionSeed("ACTIVITY_MANAGE", "Gestionar actividades", "Catálogos"),
             new PermissionSeed("SUPPLY_MANAGE", "Gestionar insumos", "Catálogos"),
             new PermissionSeed("ATTRIBUTE_MANAGE", "Gestionar atributos técnicos", "Catálogos"),
             new PermissionSeed("POLICY_MANAGE", "Gestionar políticas de recuperación", "Catálogos"),
-
+            //Quality User Seeds
             new PermissionSeed("RECOVERY_CREATE", "Registrar recuperación", "Recuperación"),
             new PermissionSeed("QUALITY_INSPECT", "Registrar inspección de calidad", "Calidad"),
+            new PermissionSeed("BAR_MANAGE", "Gestionar barras", "Barras"),
             new PermissionSeed("SHIPMENT_CREATE", "Crear envíos", "Envíos"),
-
+            //Admin Export seeds
             new PermissionSeed("EXPORT_EXCEL", "Exportar Excel", "Exportación"),
             new PermissionSeed("SYNC_RUN", "Ejecutar sincronización", "Sincronización"),
             new PermissionSeed("AUDIT_VIEW", "Ver auditoría", "Auditoría")
@@ -189,12 +191,14 @@ namespace BarRecoveryApp.Infrastructure.Persistence.Seed
                 "SUPPLY_MANAGE",
                 "ATTRIBUTE_MANAGE",
                 "POLICY_MANAGE",
+                "BAR_MANAGE",
                 "EXPORT_EXCEL",
                 "SYNC_RUN");
 
             // Control de Calidad.
             await AssignPermissionsAsync(db, qualityRole.Id,
                 "QUALITY_INSPECT",
+                "BAR_MANAGE",
                 "SHIPMENT_CREATE",
                 "EXPORT_EXCEL");
 
