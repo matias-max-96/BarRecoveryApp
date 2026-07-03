@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="BarRecoveryApp.Views.DashboardPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Resumen operacional">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16">
+
+            <Label
+                Text="Resumen Operacional"
+                FontSize="26"
+                FontAttributes="Bold"
+                HorizontalOptions="Center" />
+
+            <ActivityIndicator
+                IsRunning="{Binding IsBusy}"
+                IsVisible="{Binding IsBusy}"
+                HorizontalOptions="Center" />
+
+            <Border
+                IsVisible="{Binding HasError}"
+                Padding="12"
+                Stroke="#D9534F"
+                StrokeThickness="1"
+                BackgroundColor="White">
+
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+
+                <Label
+                    Text="{Binding ErrorMessage}"
+                    TextColor="#B00020"
+                    FontAttributes="Bold" />
+            </Border>
+
+            <Button
+                Text="Actualizar resumen"
+                Command="{Binding LoadCommand}"
+                BackgroundColor="#0D6EFD"
+                TextColor="White" />
+
+            <Label
+                Text="Barras"
+                FontSize="20"
+                FontAttributes="Bold" />
+
+            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="8">
+
+                <Border Grid.Row="0" Grid.Column="0" Padding="12" Stroke="#DDDDDD" StrokeThickness="1">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout>
+                        <Label Text="Total" FontAttributes="Bold" />
+                        <Label Text="{Binding TotalBars}" FontSize="22" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Row="0" Grid.Column="1" Padding="12" Stroke="#DDDDDD" StrokeThickness="1">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout>
+                        <Label Text="Activas" FontAttributes="Bold" />
+                        <Label Text="{Binding ActiveBars}" FontSize="22" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Row="1" Grid.Column="0" Padding="12" Stroke="#DDDDDD" StrokeThickness="1">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout>
+                        <Label Text="Listas para envío" FontAttributes="Bold" />
+                        <Label Text="{Binding ReadyToShipBars}" FontSize="22" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Row="1" Grid.Column="1" Padding="12" Stroke="#DDDDDD" StrokeThickness="1">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout>
+                        <Label Text="Enviadas" FontAttributes="Bold" />
+                        <Label Text="{Binding ShippedBars}" FontSize="22" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Row="2" Grid.Column="0" Padding="12" Stroke="#DDDDDD" StrokeThickness="1">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout>
+                        <Label Text="Retornadas" FontAttributes="Bold" />
+                        <Label Text="{Binding ReturnedBars}" FontSize="22" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Row="2" Grid.Column="1" Padding="12" Stroke="#DDDDDD" StrokeThickness="1">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout>
+                        <Label Text="Dadas de baja" FontAttributes="Bold" />
+                        <Label Text="{Binding DisposedBars}" FontSize="22" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Row="3" Grid.Column="0" Padding="12" Stroke="#DDDDDD" StrokeThickness="1">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout>
+                        <Label Text="Registros recuperación" FontAttributes="Bold" />
+                        <Label Text="{Binding TotalRecoveryReports}" FontSize="22" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Row="3" Grid.Column="1" Padding="12" Stroke="#DDDDDD" StrokeThickness="1">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout>
+                        <Label Text="Envíos / retornos" FontAttributes="Bold" />
+                        <Label Text="{Binding TotalShipments, StringFormat='Env: {0}'}" />
+                        <Label Text="{Binding TotalReturns, StringFormat='Ret: {0}'}" />
+                    </VerticalStackLayout>
+                </Border>
+
+            </Grid>
+
+            <Label
+                Text="Barras por estado"
+                FontSize="20"
+                FontAttributes="Bold" />
+
+            <CollectionView ItemsSource="{Binding BarsByStatus}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border
+                            Padding="12"
+                            Margin="0,4"
+                            Stroke="#DDDDDD"
+                            StrokeThickness="1"
+                            BackgroundColor="White">
+
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
+
+                            <Label Text="{Binding DisplayText}" />
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Label
+                Text="Barras por planta"
+                FontSize="20"
+                FontAttributes="Bold" />
+
+            <CollectionView ItemsSource="{Binding BarsByPlant}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border
+                            Padding="12"
+                            Margin="0,4"
+                            Stroke="#DDDDDD"
+                            StrokeThickness="1"
+                            BackgroundColor="White">
+
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
+
+                            <VerticalStackLayout Spacing="4">
+                                <Label
+                                    Text="{Binding PlantName}"
+                                    FontAttributes="Bold"
+                                    FontSize="16" />
+
+                                <Label
+                                    Text="{Binding TotalBars, StringFormat='Total: {0}'}"
+                                    FontSize="13"
+                                    TextColor="Gray" />
+
+                                <Label
+                                    Text="{Binding ReadyToShipBars, StringFormat='Listas para envío: {0}'}"
+                                    FontSize="13"
+                                    TextColor="Gray" />
+
+                                <Label
+                                    Text="{Binding ShippedBars, StringFormat='Enviadas: {0}'}"
+                                    FontSize="13"
+                                    TextColor="Gray" />
+
+                                <Label
+                                    Text="{Binding ReturnedBars, StringFormat='Retornadas: {0}'}"
+                                    FontSize="13"
+                                    TextColor="Gray" />
+
+                                <Label
+                                    Text="{Binding DisposedBars, StringFormat='Dadas de baja: {0}'}"
+                                    FontSize="13"
+                                    TextColor="Gray" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

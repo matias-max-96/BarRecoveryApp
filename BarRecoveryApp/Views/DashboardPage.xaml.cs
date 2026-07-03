@@ -2,11 +2,11 @@ using BarRecoveryApp.ViewModels;
 
 namespace BarRecoveryApp.Views
 {
-    public partial class UsersPage : ContentPage
+    public partial class DashboardPage : ContentPage
     {
-        private readonly UsersViewModel _viewModel;
+        private readonly DashboardViewModel _viewModel;
 
-        public UsersPage(UsersViewModel viewModel)
+        public DashboardPage(DashboardViewModel viewModel)
         {
             InitializeComponent();
 
@@ -20,10 +20,7 @@ namespace BarRecoveryApp.Views
         {
             base.OnAppearing();
 
-            if (_viewModel.Users.Count == 0)
-            {
-                _viewModel.LoadCommand.Execute(null);
-            }
+            _viewModel.LoadCommand.Execute(null);
         }
     }
 }

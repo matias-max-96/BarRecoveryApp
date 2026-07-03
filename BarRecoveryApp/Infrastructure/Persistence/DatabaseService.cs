@@ -35,24 +35,14 @@ namespace BarRecoveryApp.Infrastructure.Persistence
                 if (_isInitialized)
                     return;
 
-                System.Diagnostics.Debug.WriteLine($"Ruta SQLite: {DatabasePath}");
-
                 _database = new SQLiteAsyncConnection(DatabasePath, Flags);
 
                 await CreateTableAsync();
 
                 _isInitialized = true;
-
-                System.Diagnostics.Debug.WriteLine("Base de datos inicializada correctamente.");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("====================================");
-                System.Diagnostics.Debug.WriteLine("ERROR EN DatabaseService.InitAsync");
-                System.Diagnostics.Debug.WriteLine("====================================");
-                System.Diagnostics.Debug.WriteLine(ex.ToString());
-                System.Diagnostics.Debug.WriteLine("====================================");
-
                 throw;
             }
             finally
@@ -120,20 +110,10 @@ namespace BarRecoveryApp.Infrastructure.Persistence
 
             try
             {
-                System.Diagnostics.Debug.WriteLine($"Creando tabla: {typeof(T).FullName}");
-
                 await _database.CreateTableAsync<T>();
-
-                System.Diagnostics.Debug.WriteLine($"Tabla creada correctamente: {typeof(T).FullName}");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("====================================");
-                System.Diagnostics.Debug.WriteLine($"ERROR CREANDO TABLA: {typeof(T).FullName}");
-                System.Diagnostics.Debug.WriteLine("====================================");
-                System.Diagnostics.Debug.WriteLine(ex.ToString());
-                System.Diagnostics.Debug.WriteLine("====================================");
-
                 throw;
             }
         }

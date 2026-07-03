@@ -12,16 +12,12 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
         private readonly IRepository<Bar> _barRepository;
         private readonly IRepository<ActivityModel> _activityRepository;
         private readonly IRepository<Supply> _supplyRepository;
-        //private readonly IRepository<RecoveryRecord> _recoveryRecordRepository;
-        //private readonly IRepository<RecoveryRecordSupply> _recoveryRecordSupplyRepository;
         private readonly ICurrentUserService _currentUserService;
 
         public RecoveryService(
             IRepository<Bar> barRepository,
             IRepository<ActivityModel> activityRepository,
             IRepository<Supply> supplyRepository,
-            //IRepository<RecoveryRecord> recoveryRecordRepository,
-            //IRepository<RecoveryRecordSupply> recoveryRecordSupplyRepository,
             ICurrentUserService currentUserService)
         {
             _barRepository = barRepository
@@ -32,12 +28,6 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             _supplyRepository = supplyRepository
                 ?? throw new ArgumentNullException(nameof(supplyRepository));
-
-            /*_recoveryRecordRepository = recoveryRecordRepository
-                ?? throw new ArgumentNullException(nameof(recoveryRecordRepository));
-
-            _recoveryRecordSupplyRepository = recoveryRecordSupplyRepository
-                ?? throw new ArgumentNullException(nameof(recoveryRecordSupplyRepository));*/
 
             _currentUserService = currentUserService
                 ?? throw new ArgumentNullException(nameof(currentUserService));
@@ -113,40 +103,6 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
                 if (supply is null || !supply.IsActive)
                     return false;
-            }
-
-            /*var recoveryRecord = new RecoveryRecord
-            {
-                Id = Guid.NewGuid().ToString(),
-                BarId = bar.Id,
-                UserId = session.UserId,
-                ActivityId = activity.Id,
-                PerformedAtUtc = DateTime.Now,
-                Notes = notes?.Trim(),
-                DeviceId = "LOCAL_DEVICE",
-                SyncStatus = SyncStatus.Pending,
-                RemoteId = null,
-                IsActive = true,
-                CreatedAtUtc = DateTime.Now,
-                UpdatedAtUtc = DateTime.Now
-            };
-
-            await _recoveryRecordRepository.InsertAsync(recoveryRecord);*/
-
-            foreach (var supplyInput in supplies)
-            {
-                /*var recordSupply = new RecoveryRecordSupply
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    RecoveryRecordId = recoveryRecord.Id,
-                    SupplyId = supplyInput.SupplyId,
-                    Quantity = supplyInput.Quantity,
-                    IsActive = true,
-                    CreatedAtUtc = DateTime.Now,
-                    UpdatedAtUtc = DateTime.Now
-                };
-
-                await _recoveryRecordSupplyRepository.InsertAsync(recordSupply);*/
             }
 
             bar.CurrentStatus = BarStatus.PendingQuality;

@@ -130,10 +130,6 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             if (!_currentUserService.IsAuthenticated)
                 return false;
 
-            /*
-             * Por ahora reutilizamos SHIPMENT_CREATE porque es un flujo logístico/calidad.
-             * Más adelante podemos crear permiso específico: BAR_RETURN_CREATE.
-             */
             if (!_currentUserService.HasPermission("SHIPMENT_CREATE"))
                 return false;
 

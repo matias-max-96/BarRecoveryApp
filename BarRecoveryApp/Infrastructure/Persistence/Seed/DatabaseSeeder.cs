@@ -173,13 +173,11 @@ namespace BarRecoveryApp.Infrastructure.Persistence.Seed
             var qualityRole = await GetRoleAsync(db, QualityRoleCode);
             var operatorRole = await GetRoleAsync(db, OperatorRoleCode);
 
-            // Super Administrador: todos los permisos.
             foreach (var permission in allPermissions)
             {
                 await EnsureRolePermissionAsync(db, superAdminRole.Id, permission.Id);
             }
 
-            // Administrador común: casi todo, excepto control de administradores y auditoría avanzada si deseas restringir.
             await AssignPermissionsAsync(db, adminRole.Id,
                 "USER_CREATE",
                 "USER_EDIT",
@@ -195,14 +193,12 @@ namespace BarRecoveryApp.Infrastructure.Persistence.Seed
                 "EXPORT_EXCEL",
                 "SYNC_RUN");
 
-            // Control de Calidad.
             await AssignPermissionsAsync(db, qualityRole.Id,
                 "QUALITY_INSPECT",
                 "BAR_MANAGE",
                 "SHIPMENT_CREATE",
                 "EXPORT_EXCEL");
 
-            // Operario.
             await AssignPermissionsAsync(db, operatorRole.Id,
                 "RECOVERY_CREATE");
         }

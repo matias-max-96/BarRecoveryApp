@@ -45,4 +45,8 @@ public partial class QualityHomePage : ContentPage
     {
         await Shell.Current.GoToAsync(nameof(BarHistoryPage));
     }
+    private async void OnDashboardClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(DashboardPage));
+    }
 }

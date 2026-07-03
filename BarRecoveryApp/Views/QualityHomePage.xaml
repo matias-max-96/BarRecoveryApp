@@ -32,6 +32,8 @@
                     Clicked="OnShipmentsClicked"/>
             <Button Text="Recepción de barras"
                     Clicked="OnBarReturnClicked"/>
+            <Button Text="Resumen operacional"
+                    Clicked="OnDashboardClicked"/>
 
 
             <Button

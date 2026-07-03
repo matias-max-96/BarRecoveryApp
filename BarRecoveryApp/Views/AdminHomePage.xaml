@@ -36,6 +36,10 @@
                     Clicked="OnBarRecoveryPoliciesClicked"/>
             <Button Text="Barras"
                     Clicked="OnBarsClicked"/>
+            <Button Text="Importar Barras .csv"
+                    Clicked="OnBarImportClicked"/>
+            <Button Text="Resumen operacional"
+                    Clicked="OnDashboardClicked"/>
             <Button Text="Exportaciones"/>
             <Button Text="Sincronización"/>
 

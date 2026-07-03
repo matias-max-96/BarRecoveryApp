@@ -60,6 +60,8 @@ namespace BarRecoveryApp
             Routing.RegisterRoute(nameof(ShipmentPage), typeof(ShipmentPage));
             Routing.RegisterRoute(nameof(BarReturnPage), typeof(BarReturnPage));
             Routing.RegisterRoute(nameof(BarHistoryPage), typeof(BarHistoryPage));
+            Routing.RegisterRoute(nameof(BarImportPage), typeof(BarImportPage));
+            Routing.RegisterRoute(nameof(DashboardPage), typeof(DashboardPage));
         }
     }
 }

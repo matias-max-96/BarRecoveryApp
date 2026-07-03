@@ -26,8 +26,7 @@ namespace BarRecoveryApp.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("ERROR EN LoginPage.OnAppearing:");
-                System.Diagnostics.Debug.WriteLine(ex.ToString());
+                throw;
             }
         }
     }

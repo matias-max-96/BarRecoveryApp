@@ -55,8 +55,6 @@ namespace BarRecoveryApp
 
                 await _databaseSeeder.SeedAsync();
 
-                await DebugSeedResultAsync();
-
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     MainPage = _serviceProvider.GetRequiredService<AppShell>();
@@ -64,9 +62,6 @@ namespace BarRecoveryApp
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("ERROR INICIALIZANDO APP:");
-                System.Diagnostics.Debug.WriteLine(ex.ToString());
-
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     MainPage = new ContentPage
@@ -81,30 +76,6 @@ namespace BarRecoveryApp
                     };
                 });
             }
-        }
-
-        private async Task DebugSeedResultAsync()
-        {
-            var db = await _databaseService.GetConnectionAsync();
-
-            var roles = await db.Table<Models.Security.Role>().ToListAsync();
-            var users = await db.Table<Models.Security.User>().ToListAsync();
-
-            System.Diagnostics.Debug.WriteLine("===== DEBUG SEED =====");
-            System.Diagnostics.Debug.WriteLine($"Roles en DB: {roles.Count}");
-            System.Diagnostics.Debug.WriteLine($"Usuarios en DB: {users.Count}");
-
-            foreach (var role in roles)
-            {
-                System.Diagnostics.Debug.WriteLine($"ROL: {role.Code} - {role.Name}");
-            }
-
-            foreach (var user in users)
-            {
-                System.Diagnostics.Debug.WriteLine($"USER: {user.Username} - {user.DisplayName}");
-            }
-
-            System.Diagnostics.Debug.WriteLine("===== FIN DEBUG SEED =====");
         }
     }
 }
