@@ -9,6 +9,7 @@
         Rejected = 5,
         ReadyToShip = 6,
         Shipped = 7,
-        Disposed = 8
+        Disposed = 8,
+        Returned = 9
     }
 }

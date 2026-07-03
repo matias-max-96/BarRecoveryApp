@@ -33,4 +33,16 @@ public partial class QualityHomePage : ContentPage
     {
         await Shell.Current.GoToAsync(nameof(QualityInspectionPage));
     }
+    private async void OnShipmentsClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(ShipmentPage));
+    }
+    private async void OnBarReturnClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(BarReturnPage));
+    }
+    private async void OnBarHistoryClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(BarHistoryPage));
+    }
 }

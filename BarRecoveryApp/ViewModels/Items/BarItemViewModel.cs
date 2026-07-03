@@ -33,6 +33,7 @@ namespace BarRecoveryApp.ViewModels.Items
             BarStatus.ReadyToShip => "Lista para envío",
             BarStatus.Shipped => "Enviada",
             BarStatus.Disposed => "Dada de baja",
+            BarStatus.Returned => "Retornada / Disponible",
             _ => "Desconocido"
         };
     }

@@ -25,9 +25,13 @@
             <Button Text="Buscar barra" />
             <Button Text="Nueva inspección" 
                     Clicked="OnQualityInspectionClicked"/>
-            <Button Text="Historial de barra" />
+            <Button Text="Historial de barra" 
+                    Clicked="OnBarHistoryClicked"/>
             <Button Text="Atributos técnicos" />
-            <Button Text="Envíos" />
+            <Button Text="Envíos"
+                    Clicked="OnShipmentsClicked"/>
+            <Button Text="Recepción de barras"
+                    Clicked="OnBarReturnClicked"/>
 
 
             <Button

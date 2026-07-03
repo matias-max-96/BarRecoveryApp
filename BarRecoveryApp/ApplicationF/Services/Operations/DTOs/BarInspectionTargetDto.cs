@@ -41,6 +41,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations.DTOs
                     BarStatus.ReadyToShip => "Estado: Aprobada para envío",
                     BarStatus.Shipped => "Estado: Enviada",
                     BarStatus.Disposed => "Estado: Dada de baja",
+                    BarStatus.Returned => "Estado: Retornada / Disponible",
                     _ => "Estado: Desconocido"
                 };
 

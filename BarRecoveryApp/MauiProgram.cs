@@ -53,6 +53,9 @@ namespace BarRecoveryApp
             builder.Services.AddTransient<IRecoveryService, RecoveryService>();
             builder.Services.AddTransient<IRecoveryWorkReportService, RecoveryWorkReportService>();
             builder.Services.AddTransient<IQualityInspectionService, QualityInspectionService>();
+            builder.Services.AddTransient<IShipmentService, ShipmentService>();
+            builder.Services.AddTransient<IBarReturnService, BarReturnService>();
+            builder.Services.AddTransient<IBarHistoryService, BarHistoryService>();
 
             //Login View Model
             builder.Services.AddTransient<LoginViewModel>();
@@ -99,6 +102,15 @@ namespace BarRecoveryApp
             //QualityInsectionPage
             builder.Services.AddTransient<QualityInspectionViewModel>();
             builder.Services.AddTransient<QualityInspectionPage>();
+            //ShipmentPage
+            builder.Services.AddTransient<ShipmentViewModel>();
+            builder.Services.AddTransient<ShipmentPage>();
+            //BarReturnPage
+            builder.Services.AddTransient<BarReturnViewModel>();
+            builder.Services.AddTransient<BarReturnPage>();
+            //BarHistoryPage
+            builder.Services.AddTransient<BarHistoryViewModel>();
+            builder.Services.AddTransient<BarHistoryPage>();
             //Appshell
             builder.Services.AddSingleton<AppShell>();
 

@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="BarRecoveryApp.Views.BarReturnPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Recepción de barras">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16">
+
+            <Label
+                Text="Recepción de Barras Retornadas"
+                FontSize="26"
+                FontAttributes="Bold"
+                HorizontalOptions="Center" />
+
+            <ActivityIndicator
+                IsRunning="{Binding IsBusy}"
+                IsVisible="{Binding IsBusy}"
+                HorizontalOptions="Center" />
+
+            <!-- Error Message -->
+            <Border
+                IsVisible="{Binding HasError}"
+                Padding="12"
+                Margin="0,4"
+                Stroke="#D9534F"
+                StrokeThickness="1"
+                BackgroundColor="White">
+
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+
+                <Label
+                    Text="{Binding ErrorMessage}"
+                    TextColor="#B00020"
+                    FontAttributes="Bold" />
+            </Border>
+
+            <!-- Success Message -->
+            <Border
+                IsVisible="{Binding HasSuccess}"
+                Padding="12"
+                Margin="0,4"
+                Stroke="#2E7D32"
+                StrokeThickness="1"
+                BackgroundColor="White">
+
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+
+                <Label
+                    Text="{Binding SuccessMessage}"
+                    TextColor="#2E7D32"
+                    FontAttributes="Bold" />
+            </Border>
+
+            <!-- Reception Data -->
+            <Label
+                Text="Datos de recepción"
+                FontSize="20"
+                FontAttributes="Bold" />
+
+            <Entry
+                Text="{Binding ReturnDocument}"
+                Placeholder="Documento de retorno / guía / referencia opcional" />
+
+            <Editor
+                Text="{Binding Notes}"
+                Placeholder="Observaciones de recepción"
+                AutoSize="TextChanges"
+                HeightRequest="90" />
+
+            <BoxView
+                HeightRequest="1"
+                Color="#DDDDDD"
+                Margin="0,8" />
+
+            <!-- Filters -->
+            <Label
+                Text="Filtros de búsqueda"
+                FontSize="20"
+                FontAttributes="Bold" />
+
+            <Picker
+                Title="Seleccione planta"
+                ItemsSource="{Binding Plants}"
+                SelectedItem="{Binding SelectedPlant}"
+                ItemDisplayBinding="{Binding Name}" />
+
+            <Picker
+                Title="Seleccione tipo de barra"
+                ItemsSource="{Binding BarTypes}"
+                SelectedItem="{Binding SelectedBarType}"
+                ItemDisplayBinding="{Binding Name}" />
+
+            <Entry
+                Text="{Binding SearchText}"
+                Placeholder="Buscar por número de barra" />
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+
+                <Button
+                    Grid.Column="0"
+                    Text="Limpiar filtros"
+                    Command="{Binding ClearFiltersCommand}"
+                    BackgroundColor="#6C757D"
+                    TextColor="White" />
+
+                <Button
+                    Grid.Column="1"
+                    Text="Buscar barras"
+                    Command="{Binding SearchCommand}"
+                    BackgroundColor="#0D6EFD"
+                    TextColor="White" />
+
+            </Grid>
+
+            <Label
+                Text="{Binding ResultCountText}"
+                FontSize="13"
+                TextColor="Gray" />
+
+            <BoxView
+                HeightRequest="1"
+                Color="#DDDDDD"
+                Margin="0,8" />
+
+            <!-- Results -->
+            <Label
+                Text="Barras enviadas encontradas"
+                FontSize="20"
+                FontAttributes="Bold" />
+
+            <CollectionView ItemsSource="{Binding Bars}">
+                <CollectionView.EmptyView>
+                    <Label
+                        Text="No hay barras enviadas para mostrar. Use los filtros y presione Buscar barras."
+                        TextColor="Gray"
+                        HorizontalTextAlignment="Center"
+                        Margin="0,24" />
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border
+                            Padding="12"
+                            Margin="0,4"
+                            Stroke="#DDDDDD"
+                            StrokeThickness="1"
+                            BackgroundColor="White">
+
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
+
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+
+                                <CheckBox
+                                    Grid.Column="0"
+                                    IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                    CheckedChanged="OnBarCheckedChanged" />
+
+                                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                    <Label
+                                        Text="{Binding DisplayName}"
+                                        FontAttributes="Bold"
+                                        FontSize="16" />
+
+                                    <Label
+                                        Text="{Binding DetailText}"
+                                        FontSize="13"
+                                        TextColor="Gray" />
+                                </VerticalStackLayout>
+
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <BoxView
+                HeightRequest="1"
+                Color="#DDDDDD"
+                Margin="0,8" />
+
+            <!-- Selected -->
+            <Label
+                Text="Barras seleccionadas para recepción"
+                FontSize="20"
+                FontAttributes="Bold" />
+
+            <Label
+                Text="{Binding SelectedCountText}"
+                FontSize="13"
+                TextColor="Gray" />
+
+            <CollectionView ItemsSource="{Binding SelectedBars}">
+                <CollectionView.EmptyView>
+                    <Label
+                        Text="No hay barras seleccionadas."
+                        TextColor="Gray"
+                        HorizontalTextAlignment="Center"
+                        Margin="0,12" />
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border
+                            Padding="12"
+                            Margin="0,4"
+                            Stroke="#198754"
+                            StrokeThickness="1"
+                            BackgroundColor="#F2FFF6">
+
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
+
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+
+                                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                    <Label
+                                        Text="{Binding DisplayName}"
+                                        FontAttributes="Bold"
+                                        FontSize="16" />
+
+                                    <Label
+                                        Text="{Binding DetailText}"
+                                        FontSize="13"
+                                        TextColor="Gray" />
+                                </VerticalStackLayout>
+
+                                <Button
+                                    Grid.Column="1"
+                                    Text="Quitar"
+                                    Clicked="OnRemoveSelectedBarClicked"
+                                    BackgroundColor="#DC3545"
+                                    TextColor="White" />
+
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Actions -->
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+
+                <Button
+                    Grid.Column="0"
+                    Text="Limpiar selección"
+                    Command="{Binding ClearSelectionCommand}"
+                    BackgroundColor="#FFC107"
+                    TextColor="Black" />
+
+                <Button
+                    Grid.Column="1"
+                    Text="Limpiar todo"
+                    Command="{Binding ClearAllCommand}"
+                    BackgroundColor="#6C757D"
+                    TextColor="White" />
+
+                <Button
+                    Grid.Column="2"
+                    Text="Registrar recepción"
+                    Command="{Binding SaveCommand}"
+                    BackgroundColor="#198754"
+                    TextColor="White" />
+
+            </Grid>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
