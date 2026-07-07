@@ -63,11 +63,9 @@ namespace BarRecoveryApp
             //Login View Model
             builder.Services.AddTransient<LoginViewModel>();
             builder.Services.AddTransient<LoginPage>();
-
             //Change PIN
             builder.Services.AddTransient<ChangePinViewModel>();
             builder.Services.AddTransient<ChangePinPage>();
-
             //Pages
             builder.Services.AddTransient<AdminHomePage>();
             builder.Services.AddTransient<QualityHomePage>();
@@ -120,6 +118,9 @@ namespace BarRecoveryApp
             //DashBoardPage
             builder.Services.AddTransient<DashboardViewModel>();
             builder.Services.AddTransient<DashboardPage>();
+            //ReportExportExcel
+            builder.Services.AddTransient<ReportExportViewModel>();
+            builder.Services.AddTransient<ReportExportPage>();
             //Appshell
             builder.Services.AddSingleton<AppShell>();
 

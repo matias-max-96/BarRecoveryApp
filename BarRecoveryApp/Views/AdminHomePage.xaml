@@ -40,7 +40,8 @@
                     Clicked="OnBarImportClicked"/>
             <Button Text="Resumen operacional"
                     Clicked="OnDashboardClicked"/>
-            <Button Text="Exportaciones"/>
+            <Button Text="Exportar reportes"
+                    Clicked="OnReportExportClicked"/>
             <Button Text="Sincronización"/>
 
             <Button

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="BarRecoveryApp.Views.ReportExportPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Exportar reportes">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16">
+
+            <Label
+                Text="Exportar Reportes"
+                FontSize="26"
+                FontAttributes="Bold"
+                HorizontalOptions="Center" />
+
+            <Label
+                Text="Genera un archivo Excel con una hoja por operador y columnas por fecha."
+                FontSize="14"
+                TextColor="Gray"
+                HorizontalTextAlignment="Center" />
+
+            <ActivityIndicator
+                IsRunning="{Binding IsBusy}"
+                IsVisible="{Binding IsBusy}"
+                HorizontalOptions="Center" />
+
+            <Border
+                IsVisible="{Binding HasError}"
+                Padding="12"
+                Margin="0,4"
+                Stroke="#D9534F"
+                StrokeThickness="1"
+                BackgroundColor="White">
+
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+
+                <Label
+                    Text="{Binding ErrorMessage}"
+                    TextColor="#B00020"
+                    FontAttributes="Bold" />
+            </Border>
+
+            <Border
+                IsVisible="{Binding HasSuccess}"
+                Padding="12"
+                Margin="0,4"
+                Stroke="#2E7D32"
+                StrokeThickness="1"
+                BackgroundColor="White">
+
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+
+                <Label
+                    Text="{Binding SuccessMessage}"
+                    TextColor="#2E7D32"
+                    FontAttributes="Bold" />
+            </Border>
+
+            <Label
+                Text="Rango de fechas"
+                FontSize="20"
+                FontAttributes="Bold" />
+
+            <VerticalStackLayout Spacing="8">
+
+                <Label Text="Desde" />
+
+                <DatePicker
+                    Date="{Binding FromDate}" />
+
+                <Label Text="Hasta" />
+
+                <DatePicker
+                    Date="{Binding ToDate}" />
+
+            </VerticalStackLayout>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+
+                <Button
+                    Grid.Column="0"
+                    Text="Limpiar"
+                    Command="{Binding ClearCommand}"
+                    BackgroundColor="#6C757D"
+                    TextColor="White" />
+
+                <Button
+                    Grid.Column="1"
+                    Text="Exportar producción"
+                    Command="{Binding ExportProductionCommand}"
+                    BackgroundColor="#0D6EFD"
+                    TextColor="White" />
+
+            </Grid>
+
+            <BoxView
+                HeightRequest="1"
+                Color="#DDDDDD"
+                Margin="0,8" />
+
+            <Label
+                Text="Último archivo generado"
+                FontSize="20"
+                FontAttributes="Bold" />
+
+            <Label
+                Text="{Binding LastFileName}"
+                FontSize="14"
+                TextColor="Gray" />
+
+            <Button
+                Text="Compartir archivo generado"
+                Command="{Binding ShareLastFileCommand}"
+                BackgroundColor="#198754"
+                TextColor="White" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

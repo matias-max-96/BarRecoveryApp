@@ -65,4 +65,8 @@ public partial class AdminHomePage : ContentPage
     {
         await Shell.Current.GoToAsync(nameof(DashboardPage));
     }
+    private async void OnReportExportClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(ReportExportPage));
+    }
 }
