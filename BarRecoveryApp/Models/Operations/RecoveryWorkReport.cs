@@ -16,8 +16,6 @@ namespace BarRecoveryApp.Models.Operations
         [MaxLength(50)]
         public string? ShiftName { get; set; }
 
-        public int BarsWorkedCount { get; set; }
-
         [MaxLength(1000)]
         public string? Notes { get; set; }
 

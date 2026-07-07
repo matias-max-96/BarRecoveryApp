@@ -8,7 +8,7 @@ namespace BarRecoveryApp.Models.Operations
     {
         [Indexed]
         [MaxLength(36)]
-        public string RecoveryWorkReportId { get; set; } = string.Empty;
+        public string RecoveryWorkReportCategoryId { get; set; } = string.Empty;
 
         [Indexed]
         [MaxLength(36)]
