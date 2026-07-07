@@ -56,3 +56,6 @@ Thumbs.db
 **/platforms/windows/obj/
 **/platforms/maccatalyst/bin/
 **/platforms/maccatalyst/obj/
+
+#Program Specific's
+*.xlsx
