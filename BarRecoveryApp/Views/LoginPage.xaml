@@ -4,7 +4,12 @@
              x:Class="BarRecoveryApp.Views.LoginPage"
              Title="Ingreso">
 
-
+    <Shell.BackButtonBehavior>
+        <BackButtonBehavior
+        IsVisible="False"
+        IsEnabled="False" />
+    </Shell.BackButtonBehavior>
+    
     <Grid Padding="24"
           RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, *"
           RowSpacing="16">

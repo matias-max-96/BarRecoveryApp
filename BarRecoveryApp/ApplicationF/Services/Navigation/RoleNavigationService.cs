@@ -1,5 +1,6 @@
 ﻿using BarRecoveryApp.ApplicationF.Services.Authentication;
 using BarRecoveryApp.Views;
+
 namespace BarRecoveryApp.ApplicationF.Services.Navigation
 {
     public class RoleNavigationService : IRoleNavigationService
@@ -22,9 +23,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Navigation
         {
             var session = _currentUserService.CurrentSession;
 
-            if(session is null || !session.IsAuthenticated)
+            if (session is null || !session.IsAuthenticated)
             {
-                await Shell.Current.GoToAsync($"//{nameof(AdminHomePage)}");
+                await Shell.Current.GoToAsync($"//{nameof(LoginPage)}");
                 return;
             }
 
@@ -48,15 +49,19 @@ namespace BarRecoveryApp.ApplicationF.Services.Navigation
                         "Rol no encontrado",
                         $"El rol {session.RoleCode} no tiene una pantalla asignada",
                         "Aceptar");
+
                     await Shell.Current.GoToAsync($"//{nameof(LoginPage)}");
                     break;
             }
         }
+
         public async Task LogoutAndGoToLoginAsync()
         {
             await _authenticationService.LogoutAsync();
 
-            await Shell.Current.GoToAsync($"{nameof(LoginPage)}");
+            _currentUserService.ClearSession();
+
+            await Shell.Current.GoToAsync($"//{nameof(LoginPage)}");
         }
     }
 }
