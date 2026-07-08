@@ -14,6 +14,52 @@
                 FontAttributes="Bold"
                 HorizontalOptions="Center" />
 
+            <Label
+                Text="Filtro por fecha"
+                FontSize="18"
+                FontAttributes="Bold" />
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+
+                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                    <Label Text="Desde" FontSize="13" TextColor="Gray" />
+
+                    <DatePicker
+            Date="{Binding FromDate}" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                    <Label Text="Hasta" FontSize="13" TextColor="Gray" />
+
+                    <DatePicker
+            Date="{Binding ToDate}" />
+                </VerticalStackLayout>
+
+            </Grid>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+
+                <Button
+                    Grid.Column="0"
+                    Text="Limpiar filtro"
+                    Command="{Binding ClearFilterCommand}"
+                    BackgroundColor="#6C757D"
+                    TextColor="White" />
+
+                <Button
+                    Grid.Column="1"
+                    Text="Filtrar"
+                    Command="{Binding ApplyFilterCommand}"
+                    BackgroundColor="#0D6EFD"
+                    TextColor="White" />
+
+            </Grid>
+
+            <Label
+                Text="{Binding ResultCountText}"
+                FontSize="13"
+                TextColor="Gray" />
+
             <ActivityIndicator
                 IsRunning="{Binding IsBusy}"
                 IsVisible="{Binding IsBusy}"

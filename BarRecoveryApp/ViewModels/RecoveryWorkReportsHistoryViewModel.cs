@@ -8,8 +8,14 @@ namespace BarRecoveryApp.ViewModels
     {
         private readonly IRecoveryWorkReportService _service;
 
+        private readonly List<RecoveryWorkReportItemDto> _allReports = new();
+
         private RecoveryWorkReportItemDto? _selectedReport;
 
+        private DateTime _fromDate = DateTime.Now.Date;
+        private DateTime _toDate = DateTime.Now.Date;
+
+        private string _resultCountText = string.Empty;
         private string _errorMessage = string.Empty;
         private bool _hasError;
 
@@ -24,6 +30,8 @@ namespace BarRecoveryApp.ViewModels
             Reports = new ObservableCollection<RecoveryWorkReportItemDto>();
 
             LoadCommand = new RelayCommand(LoadAsync);
+            ApplyFilterCommand = new RelayCommand(ApplyFilterAsync);
+            ClearFilterCommand = new RelayCommand(ClearFilterAsync);
         }
 
         public ObservableCollection<RecoveryWorkReportItemDto> Reports { get; }
@@ -40,6 +48,38 @@ namespace BarRecoveryApp.ViewModels
             }
         }
 
+        public DateTime FromDate
+        {
+            get => _fromDate;
+            set
+            {
+                if (SetProperty(ref _fromDate, value))
+                {
+                    ClearError();
+                    RefreshCommands();
+                }
+            }
+        }
+
+        public DateTime ToDate
+        {
+            get => _toDate;
+            set
+            {
+                if (SetProperty(ref _toDate, value))
+                {
+                    ClearError();
+                    RefreshCommands();
+                }
+            }
+        }
+
+        public string ResultCountText
+        {
+            get => _resultCountText;
+            set => SetProperty(ref _resultCountText, value);
+        }
+
         public string ErrorMessage
         {
             get => _errorMessage;
@@ -54,6 +94,10 @@ namespace BarRecoveryApp.ViewModels
 
         public RelayCommand LoadCommand { get; }
 
+        public RelayCommand ApplyFilterCommand { get; }
+
+        public RelayCommand ClearFilterCommand { get; }
+
         private async Task LoadAsync()
         {
             if (IsBusy)
@@ -65,11 +109,14 @@ namespace BarRecoveryApp.ViewModels
                 ClearError();
 
                 Reports.Clear();
+                _allReports.Clear();
 
                 var reports = await _service.GetMyReportItemsAsync();
 
                 foreach (var report in reports)
-                    Reports.Add(report);
+                    _allReports.Add(report);
+
+                ApplyFilterInternal();
             }
             catch (Exception ex)
             {
@@ -78,8 +125,54 @@ namespace BarRecoveryApp.ViewModels
             finally
             {
                 IsBusy = false;
-                LoadCommand?.RaiseCanExecuteChanged();
+                RefreshCommands();
             }
+        }
+
+        private Task ApplyFilterAsync()
+        {
+            if (ToDate.Date < FromDate.Date)
+            {
+                ShowError("La fecha hasta no puede ser menor que la fecha desde.");
+                return Task.CompletedTask;
+            }
+
+            ClearError();
+            ApplyFilterInternal();
+            RefreshCommands();
+
+            return Task.CompletedTask;
+        }
+
+        private Task ClearFilterAsync()
+        {
+            FromDate = DateTime.Now.Date;
+            ToDate = DateTime.Now.Date;
+
+            ClearError();
+            ApplyFilterInternal();
+            RefreshCommands();
+
+            return Task.CompletedTask;
+        }
+
+        private void ApplyFilterInternal()
+        {
+            Reports.Clear();
+
+            var filtered = _allReports
+                .Where(x =>
+                    x.WorkDate.Date >= FromDate.Date &&
+                    x.WorkDate.Date <= ToDate.Date)
+                .OrderByDescending(x => x.WorkDate)
+                .ToList();
+
+            foreach (var report in filtered)
+                Reports.Add(report);
+
+            ResultCountText = Reports.Count == 0
+                ? "No hay registros en el rango seleccionado."
+                : $"Registros encontrados: {Reports.Count}";
         }
 
         private void ShowError(string message)
@@ -92,6 +185,15 @@ namespace BarRecoveryApp.ViewModels
         {
             ErrorMessage = string.Empty;
             HasError = false;
+        }
+
+        private void RefreshCommands()
+        {
+            LoadCommand?.RaiseCanExecuteChanged();
+            ApplyFilterCommand?.RaiseCanExecuteChanged();
+            ClearFilterCommand?.RaiseCanExecuteChanged();
+
+            OnPropertyChanged(nameof(ResultCountText));
         }
     }
 }
