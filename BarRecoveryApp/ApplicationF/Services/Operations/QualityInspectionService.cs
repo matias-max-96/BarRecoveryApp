@@ -4,6 +4,7 @@ using BarRecoveryApp.Infrastructure.Persistence.Repositories;
 using BarRecoveryApp.Models.Catalogs;
 using BarRecoveryApp.Models.Enums;
 using BarRecoveryApp.Models.Operations;
+using BarRecoveryApp.ApplicationF.Services.Auditing;
 
 namespace BarRecoveryApp.ApplicationF.Services.Operations
 {
@@ -15,6 +16,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
         private readonly IRepository<BarRecoveryPolicy> _policyRepository;
         private readonly IRepository<QualityInspection> _inspectionRepository;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IAuditLogService _auditLogService;
 
         public QualityInspectionService(
             IRepository<Bar> barRepository,
@@ -22,7 +24,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             IRepository<BarType> barTypeRepository,
             IRepository<BarRecoveryPolicy> policyRepository,
             IRepository<QualityInspection> inspectionRepository,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            IAuditLogService auditLogService)
         {
             _barRepository = barRepository
                 ?? throw new ArgumentNullException(nameof(barRepository));
@@ -41,6 +44,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             _currentUserService = currentUserService
                 ?? throw new ArgumentNullException(nameof(currentUserService));
+
+            _auditLogService = auditLogService
+                ?? throw new ArgumentNullException(nameof(auditLogService));
         }
         public async Task<List<BarInspectionTargetDto>> SearchBarsForInspectionAsync(
             string? plantId, 
@@ -202,6 +208,57 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             await _barRepository.UpdateAsync(bar);
 
+            await _auditLogService.WriteAsync(
+                AuditActionCodes.QualityInspectionCreated,
+                "QualityInspection",
+                inspection.Id,
+                $"Se registró inspección de calidad para la barra {bar.BarNumber}.",
+                BuildInspectionMetadataJson(
+                    bar,
+                    inspection,
+                    recoveryCountAtInspection,
+                    canBeRecovered,
+                    mustBeDisposed,
+                    isApprovedForShipment,
+                    notes));
+
+            if (mustBeDisposed)
+            {
+                await _auditLogService.WriteAsync(
+                    AuditActionCodes.BarDisposed,
+                    "Bar",
+                    bar.Id,
+                    $"La barra {bar.BarNumber} fue dada de baja en control de calidad.",
+                    BuildBarStatusMetadataJson(bar, inspection.Id));
+            }
+            else if (isApprovedForShipment)
+            {
+                await _auditLogService.WriteAsync(
+                    AuditActionCodes.BarApprovedForShipment,
+                    "Bar",
+                    bar.Id,
+                    $"La barra {bar.BarNumber} fue aprobada para envío.",
+                    BuildBarStatusMetadataJson(bar, inspection.Id));
+            }
+            else if (canBeRecovered)
+            {
+                await _auditLogService.WriteAsync(
+                    AuditActionCodes.BarMarkedRecoverable,
+                    "Bar",
+                    bar.Id,
+                    $"La barra {bar.BarNumber} fue marcada como recuperable nuevamente.",
+                    BuildBarStatusMetadataJson(bar, inspection.Id));
+            }
+            else
+            {
+                await _auditLogService.WriteAsync(
+                    AuditActionCodes.BarRejected,
+                    "Bar",
+                    bar.Id,
+                    $"La barra {bar.BarNumber} fue rechazada en control de calidad.",
+                    BuildBarStatusMetadataJson(bar, inspection.Id));
+            }
+
             return true;
         }
 
@@ -221,6 +278,48 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             return barTypes
                 .OrderBy(x => x.Name)
                 .ToList();
+        }
+
+        private static string BuildInspectionMetadataJson(
+                                Bar bar,
+                                QualityInspection inspection,
+                                int recoveryCountAtInspection,
+                                bool canBeRecovered,
+                                bool mustBeDisposed,
+                                bool isApprovedForShipment,
+                                string? notes)
+        {
+            var safeNotes = string.IsNullOrWhiteSpace(notes)
+                ? string.Empty
+                : notes.Trim().Replace("\"", "'");
+
+            return
+                "{" +
+                $"\"BarId\":\"{bar.Id}\"," +
+                $"\"BarNumber\":\"{bar.BarNumber}\"," +
+                $"\"InspectionId\":\"{inspection.Id}\"," +
+                $"\"RecoveryCountAtInspection\":{recoveryCountAtInspection}," +
+                $"\"CanBeRecovered\":{canBeRecovered.ToString().ToLowerInvariant()}," +
+                $"\"MustBeDisposed\":{mustBeDisposed.ToString().ToLowerInvariant()}," +
+                $"\"IsApprovedForShipment\":{isApprovedForShipment.ToString().ToLowerInvariant()}," +
+                $"\"ResultingStatus\":\"{bar.CurrentStatus}\"," +
+                $"\"IsDisposed\":{bar.IsDisposed.ToString().ToLowerInvariant()}," +
+                $"\"Notes\":\"{safeNotes}\"" +
+                "}";
+        }
+        private static string BuildBarStatusMetadataJson(
+                                Bar bar,
+                                string inspectionId)
+        {
+            return
+                "{" +
+                $"\"BarId\":\"{bar.Id}\"," +
+                $"\"BarNumber\":\"{bar.BarNumber}\"," +
+                $"\"InspectionId\":\"{inspectionId}\"," +
+                $"\"CurrentStatus\":\"{bar.CurrentStatus}\"," +
+                $"\"RecoveryCount\":{bar.RecoveryCount}," +
+                $"\"IsDisposed\":{bar.IsDisposed.ToString().ToLowerInvariant()}" +
+                "}";
         }
     }
 }

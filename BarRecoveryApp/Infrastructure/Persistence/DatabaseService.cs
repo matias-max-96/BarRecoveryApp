@@ -70,7 +70,6 @@ namespace BarRecoveryApp.Infrastructure.Persistence
         {
             if (_database is null)
                 throw new InvalidOperationException("No existe conexión a la base de datos.");
-
             // Users / security
             await SafeCreateTableAsync<Role>();
             await SafeCreateTableAsync<Permission>();

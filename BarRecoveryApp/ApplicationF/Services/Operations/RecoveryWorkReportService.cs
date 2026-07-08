@@ -5,6 +5,7 @@ using BarRecoveryApp.Models.Catalogs;
 using BarRecoveryApp.Models.Enums;
 using BarRecoveryApp.Models.Operations;
 using ActivityModel = BarRecoveryApp.Models.Catalogs.Activity;
+using BarRecoveryApp.ApplicationF.Services.Auditing;
 
 namespace BarRecoveryApp.ApplicationF.Services.Operations
 {
@@ -21,6 +22,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
         private readonly IRepository<BarType> _barTypeRepository;
 
         private readonly ICurrentUserService _currentUserService;
+        private readonly IAuditLogService _auditLogService;
+
 
         public RecoveryWorkReportService(
             IRepository<RecoveryWorkReport> reportRepository,
@@ -31,7 +34,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             IRepository<Supply> supplyRepository,
             IRepository<Plant> plantRepository,
             IRepository<BarType> barTypeRepository,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            IAuditLogService auditLogService)
         {
             _reportRepository = reportRepository
                 ?? throw new ArgumentNullException(nameof(reportRepository));
@@ -59,6 +63,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             _currentUserService = currentUserService
                 ?? throw new ArgumentNullException(nameof(currentUserService));
+
+            _auditLogService = auditLogService
+                ?? throw new ArgumentNullException(nameof(auditLogService));
         }
 
         public async Task<List<ActivityModel>> GetActiveActivitiesAsync()
@@ -163,6 +170,17 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             {
                 await InsertCategoryAsync(reportId, categoryInput);
             }
+
+            var totalBarsWorked = categories.Sum(x => x.BarsWorkedCount);
+            var totalActivities = categories.Sum(x => x.Activities.Count);
+            var totalSupplies = categories.Sum(x => x.Supplies?.Count ?? 0);
+
+            await _auditLogService.WriteAsync(
+                AuditActionCodes.RecoveryReportCreated,
+                "RecoveryWorkReport",
+                reportId,
+                $"Se creó un registro de recuperación con {categories.Count} bloque(s), {totalBarsWorked} barra(s), {totalActivities} actividad(es) y {totalSupplies} insumo(s).",
+                $"{{\"WorkDate\":\"{workDate:yyyy-MM-dd HH:mm:ss}\",\"ShiftName\":\"{shiftName}\",\"CategoryCount\":{categories.Count},\"TotalBarsWorked\":{totalBarsWorked},\"TotalActivities\":{totalActivities},\"TotalSupplies\":{totalSupplies}}}");
 
             return true;
         }

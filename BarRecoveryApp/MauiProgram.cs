@@ -1,16 +1,16 @@
-﻿using SQLitePCL;
-
-using Microsoft.Extensions.Logging;
-using BarRecoveryApp.Infrastructure.Persistence;
-using BarRecoveryApp.Infrastructure.Persistence.Seed;
-using BarRecoveryApp.Infrastructure.Persistence.Repositories;
+﻿using BarRecoveryApp.ApplicationF.Services.Auditing;
 using BarRecoveryApp.ApplicationF.Services.Authentication;
+using BarRecoveryApp.ApplicationF.Services.Catalogs;
+using BarRecoveryApp.ApplicationF.Services.Navigation;
+using BarRecoveryApp.ApplicationF.Services.Operations;
+using BarRecoveryApp.ApplicationF.Services.Users;
+using BarRecoveryApp.Infrastructure.Persistence;
+using BarRecoveryApp.Infrastructure.Persistence.Repositories;
+using BarRecoveryApp.Infrastructure.Persistence.Seed;
 using BarRecoveryApp.ViewModels;
 using BarRecoveryApp.Views;
-using BarRecoveryApp.ApplicationF.Services.Navigation;
-using BarRecoveryApp.ApplicationF.Services.Users;
-using BarRecoveryApp.ApplicationF.Services.Catalogs;
-using BarRecoveryApp.ApplicationF.Services.Operations;
+using Microsoft.Extensions.Logging;
+using SQLitePCL;
 
 namespace BarRecoveryApp
 {
@@ -60,6 +60,7 @@ namespace BarRecoveryApp
             builder.Services.AddTransient<IDashboardService, DashboardService>();
             builder.Services.AddTransient<IReportExportService, ReportExportService>();
             builder.Services.AddTransient<IBarLookupService, BarLookupService>();
+            builder.Services.AddTransient<IAuditLogService, AuditLogService>();
 
             //Login View Model
             builder.Services.AddTransient<LoginViewModel>();
