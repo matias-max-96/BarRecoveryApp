@@ -19,36 +19,45 @@
                 IsVisible="{Binding IsBusy}"
                 HorizontalOptions="Center" />
 
+            <!-- Error -->
             <Border
                 IsVisible="{Binding HasError}"
                 Padding="12"
+                Margin="0,4"
                 Stroke="#D9534F"
                 StrokeThickness="1"
                 BackgroundColor="White">
+
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
+
                 <Label
                     Text="{Binding ErrorMessage}"
                     TextColor="#B00020"
                     FontAttributes="Bold" />
             </Border>
 
+            <!-- Éxito -->
             <Border
                 IsVisible="{Binding HasSuccess}"
                 Padding="12"
+                Margin="0,4"
                 Stroke="#2E7D32"
                 StrokeThickness="1"
                 BackgroundColor="White">
+
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
+
                 <Label
                     Text="{Binding SuccessMessage}"
                     TextColor="#2E7D32"
                     FontAttributes="Bold" />
             </Border>
 
+            <!-- Datos generales -->
             <Label
                 Text="Datos del turno"
                 FontSize="20"
@@ -63,14 +72,55 @@
                 Text="{Binding ShiftName}"
                 Placeholder="Turno ej: Día, Noche, Tarde" />
 
+            <Editor
+                Text="{Binding Notes}"
+                Placeholder="Observaciones generales del turno"
+                AutoSize="TextChanges"
+                HeightRequest="80" />
+
+            <BoxView
+                HeightRequest="1"
+                Color="#DDDDDD"
+                Margin="0,8" />
+
+            <!-- Bloque de trabajo actual -->
+            <Label
+                Text="Bloque de trabajo"
+                FontSize="20"
+                FontAttributes="Bold" />
+
+            <Picker
+                Title="Tipo de trabajo"
+                ItemsSource="{Binding WorkTypes}"
+                SelectedItem="{Binding SelectedWorkType}"
+                ItemDisplayBinding="{Binding Name}" />
+
+            <Picker
+                Title="Planta"
+                ItemsSource="{Binding Plants}"
+                SelectedItem="{Binding SelectedPlant}"
+                ItemDisplayBinding="{Binding Name}" />
+
+            <Picker
+                Title="Tipo de barra"
+                ItemsSource="{Binding BarTypes}"
+                SelectedItem="{Binding SelectedBarType}"
+                ItemDisplayBinding="{Binding Name}" />
+
             <Entry
                 Text="{Binding BarsWorkedCount}"
                 Placeholder="Cantidad de barras trabajadas"
                 Keyboard="Numeric" />
 
+            <BoxView
+                HeightRequest="1"
+                Color="#EEEEEE"
+                Margin="0,8" />
+
+            <!-- Actividades del bloque -->
             <Label
-                Text="Actividades realizadas"
-                FontSize="20"
+                Text="Actividades del bloque"
+                FontSize="18"
                 FontAttributes="Bold" />
 
             <Picker
@@ -84,13 +134,37 @@
                 Placeholder="Horas trabajadas"
                 Keyboard="Numeric" />
 
-            <Button
-                Text="Agregar actividad"
-                Command="{Binding AddActivityCommand}"
-                BackgroundColor="#0D6EFD"
-                TextColor="White" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
 
-            <CollectionView ItemsSource="{Binding WorkActivities}">
+                <Button
+                    Grid.Column="0"
+                    Text="Agregar actividad"
+                    Command="{Binding AddActivityCommand}"
+                    BackgroundColor="#0D6EFD"
+                    TextColor="White" />
+
+                <Button
+                    Grid.Column="1"
+                    Text="Quitar actividad"
+                    Command="{Binding RemoveActivityCommand}"
+                    BackgroundColor="#DC3545"
+                    TextColor="White" />
+
+            </Grid>
+
+            <CollectionView
+                ItemsSource="{Binding CurrentActivities}"
+                SelectedItem="{Binding SelectedActivityItem, Mode=TwoWay}"
+                SelectionMode="Single">
+
+                <CollectionView.EmptyView>
+                    <Label
+                        Text="No hay actividades agregadas en este bloque."
+                        TextColor="Gray"
+                        HorizontalTextAlignment="Center"
+                        Margin="0,12" />
+                </CollectionView.EmptyView>
+
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Border
@@ -99,19 +173,28 @@
                             Stroke="#DDDDDD"
                             StrokeThickness="1"
                             BackgroundColor="White">
+
                             <Border.StrokeShape>
                                 <RoundRectangle CornerRadius="8" />
                             </Border.StrokeShape>
 
-                            <Label Text="{Binding DisplayText}" />
+                            <Label
+                                Text="{Binding DisplayText}"
+                                FontAttributes="Bold" />
                         </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
+            <BoxView
+                HeightRequest="1"
+                Color="#EEEEEE"
+                Margin="0,8" />
+
+            <!-- Insumos del bloque -->
             <Label
-                Text="Insumos utilizados"
-                FontSize="20"
+                Text="Insumos del bloque"
+                FontSize="18"
                 FontAttributes="Bold" />
 
             <Picker
@@ -125,13 +208,37 @@
                 Placeholder="Cantidad utilizada"
                 Keyboard="Numeric" />
 
-            <Button
-                Text="Agregar insumo"
-                Command="{Binding AddSupplyCommand}"
-                BackgroundColor="#198754"
-                TextColor="White" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
 
-            <CollectionView ItemsSource="{Binding WorkSupplies}">
+                <Button
+                    Grid.Column="0"
+                    Text="Agregar insumo"
+                    Command="{Binding AddSupplyCommand}"
+                    BackgroundColor="#198754"
+                    TextColor="White" />
+
+                <Button
+                    Grid.Column="1"
+                    Text="Quitar insumo"
+                    Command="{Binding RemoveSupplyCommand}"
+                    BackgroundColor="#DC3545"
+                    TextColor="White" />
+
+            </Grid>
+
+            <CollectionView
+                ItemsSource="{Binding CurrentSupplies}"
+                SelectedItem="{Binding SelectedSupplyItem, Mode=TwoWay}"
+                SelectionMode="Single">
+
+                <CollectionView.EmptyView>
+                    <Label
+                        Text="No hay insumos agregados en este bloque."
+                        TextColor="Gray"
+                        HorizontalTextAlignment="Center"
+                        Margin="0,12" />
+                </CollectionView.EmptyView>
+
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Border
@@ -140,22 +247,98 @@
                             Stroke="#DDDDDD"
                             StrokeThickness="1"
                             BackgroundColor="White">
+
                             <Border.StrokeShape>
                                 <RoundRectangle CornerRadius="8" />
                             </Border.StrokeShape>
 
-                            <Label Text="{Binding DisplayText}" />
+                            <Label
+                                Text="{Binding DisplayText}"
+                                FontAttributes="Bold" />
                         </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <Editor
-                Text="{Binding Notes}"
-                Placeholder="Observaciones"
-                AutoSize="TextChanges"
-                HeightRequest="100" />
+            <Button
+                Text="Agregar bloque al registro"
+                Command="{Binding AddCategoryCommand}"
+                BackgroundColor="#0D6EFD"
+                TextColor="White" />
 
+            <BoxView
+                HeightRequest="1"
+                Color="#DDDDDD"
+                Margin="0,8" />
+
+            <!-- Bloques agregados -->
+            <Label
+                Text="Bloques agregados al registro"
+                FontSize="20"
+                FontAttributes="Bold" />
+
+            <CollectionView
+                ItemsSource="{Binding Categories}"
+                SelectedItem="{Binding SelectedCategoryItem, Mode=TwoWay}"
+                SelectionMode="Single">
+
+                <CollectionView.EmptyView>
+                    <Label
+                        Text="No hay bloques agregados. Complete un bloque y presione Agregar bloque al registro."
+                        TextColor="Gray"
+                        HorizontalTextAlignment="Center"
+                        Margin="0,12" />
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border
+                            Padding="12"
+                            Margin="0,4"
+                            Stroke="#198754"
+                            StrokeThickness="1"
+                            BackgroundColor="#F2FFF6">
+
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
+
+                            <VerticalStackLayout Spacing="4">
+
+                                <Label
+                                    Text="{Binding DisplayText}"
+                                    FontAttributes="Bold"
+                                    FontSize="16"
+                                    TextColor="#198754" />
+
+                                <Label
+                                    Text="{Binding ActivitiesSummary, StringFormat='Actividades: {0}'}"
+                                    FontSize="13"
+                                    TextColor="Gray" />
+
+                                <Label
+                                    Text="{Binding SuppliesSummary, StringFormat='Insumos: {0}'}"
+                                    FontSize="13"
+                                    TextColor="Gray" />
+
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Button
+                Text="Quitar bloque seleccionado"
+                Command="{Binding RemoveCategoryCommand}"
+                BackgroundColor="#DC3545"
+                TextColor="White" />
+
+            <BoxView
+                HeightRequest="1"
+                Color="#DDDDDD"
+                Margin="0,8" />
+
+            <!-- Acciones finales -->
             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
 
                 <Button
@@ -167,9 +350,9 @@
 
                 <Button
                     Grid.Column="1"
-                    Text="Guardar"
+                    Text="Guardar registro"
                     Command="{Binding SaveCommand}"
-                    BackgroundColor="#0D6EFD"
+                    BackgroundColor="#198754"
                     TextColor="White" />
 
             </Grid>

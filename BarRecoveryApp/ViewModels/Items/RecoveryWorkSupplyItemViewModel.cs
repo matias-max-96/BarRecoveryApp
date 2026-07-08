@@ -10,6 +10,12 @@
 
         public double Quantity { get; set; }
 
-        public string DisplayText => $"{SupplyName} - {Quantity:0.##} {Unit}";
+        public string DisplayText
+        {
+            get
+            {
+                return $"{SupplyName} - {Quantity:0.##} {Unit}";
+            }
+        }
     }
 }

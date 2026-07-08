@@ -20,9 +20,11 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
         private readonly IRepository<RecoveryWorkReport> _recoveryReportRepository;
         private readonly IRepository<RecoveryWorkActivity> _recoveryActivityRepository;
         private readonly IRepository<RecoveryWorkSupply> _recoverySupplyRepository;
-        private readonly IRepository<Activity> _activityRepository;
+        private readonly IRepository<RecoveryWorkReportCategory> _recoveryCategoryRepository;
+        private readonly IRepository<ActivityModel> _activityRepository;
         private readonly IRepository<Supply> _supplyRepository;
         private readonly IRepository<User> _userRepository;
+        
 
         public ReportExportService(
             IRepository<Bar> barRepository,
@@ -31,6 +33,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             IRepository<RecoveryWorkReport> recoveryReportRepository,
             IRepository<RecoveryWorkActivity> recoveryActivityRepository,
             IRepository<RecoveryWorkSupply> recoverySupplyRepository,
+            IRepository<RecoveryWorkReportCategory> recoveryCategoryRepository,
             IRepository<ActivityModel> activityRepository,
             IRepository<Supply> supplyRepository,
             IRepository<User> userRepository,
@@ -53,6 +56,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             _recoverySupplyRepository = recoverySupplyRepository
                 ?? throw new ArgumentNullException(nameof(recoverySupplyRepository));
+
+            _recoveryCategoryRepository = recoveryCategoryRepository
+                ?? throw new ArgumentNullException(nameof(recoveryCategoryRepository));
 
             _activityRepository = activityRepository
                 ?? throw new ArgumentNullException(nameof(activityRepository));
@@ -93,7 +99,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 var plants = await _plantRepository.GetAllAsync();
                 var barTypes = await _barTypeRepository.GetAllAsync();
 
-                var fileName = $"reporte_barras_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+                var fileName = $"reporte_barras_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
 
                 var exportDirectory = Path.Combine(
                     FileSystem.AppDataDirectory,
@@ -153,8 +159,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             }
         }
         public async Task<ExportFileResultDto> ExportProductionWorkbookAsync(
-    DateTime fromDate,
-    DateTime toDate)
+                                                DateTime fromDate,
+                                                DateTime toDate)
         {
             if (!_currentUserService.IsAuthenticated)
             {
@@ -186,6 +192,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             try
             {
                 var reports = await _recoveryReportRepository.GetAllAsync();
+                var categories = await _recoveryCategoryRepository.GetAllAsync();
                 var reportActivities = await _recoveryActivityRepository.GetAllAsync();
                 var reportSupplies = await _recoverySupplyRepository.GetAllAsync();
                 var activities = await _activityRepository.GetAllAsync();
@@ -208,13 +215,27 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                     };
                 }
 
-                var fileName = $"reporte_produccion_{fromDate:yyyyMMdd}_{toDate:yyyyMMdd}.xlsx";
-                var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
+                var filteredReportIds = filteredReports
+                    .Select(x => x.Id)
+                    .ToHashSet();
 
-                using var workbook = new XLWorkbook();
+                var filteredCategories = categories
+                    .Where(x => x.IsActive &&
+                                filteredReportIds.Contains(x.RecoveryWorkReportId))
+                    .ToList();
 
-                var reportsByUser = filteredReports
-                    .GroupBy(x => x.UserId)
+                var filteredCategoryIds = filteredCategories
+                    .Select(x => x.Id)
+                    .ToHashSet();
+
+                var filteredActivities = reportActivities
+                    .Where(x => x.IsActive &&
+                                filteredCategoryIds.Contains(x.RecoveryWorkReportCategoryId))
+                    .ToList();
+
+                var filteredSupplies = reportSupplies
+                    .Where(x => x.IsActive &&
+                                filteredCategoryIds.Contains(x.RecoveryWorkReportCategoryId))
                     .ToList();
 
                 var dates = Enumerable
@@ -222,26 +243,95 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                     .Select(offset => fromDate.Date.AddDays(offset))
                     .ToList();
 
+                var fileName = $"reporte_produccion_{fromDate:yyyyMMdd}_{toDate:yyyyMMdd}.xlsx";
+
+                var exportDirectory = Path.Combine(
+                    FileSystem.AppDataDirectory,
+                    "Exports");
+
+                Directory.CreateDirectory(exportDirectory);
+
+                var filePath = Path.Combine(exportDirectory, fileName);
+
+                using var workbook = new XLWorkbook();
+
+                var reportsByUser = filteredReports
+                    .GroupBy(x => x.UserId)
+                    .ToList();
+
                 foreach (var userGroup in reportsByUser)
                 {
                     var user = users.FirstOrDefault(x => x.Id == userGroup.Key);
+
                     var operatorName = user?.DisplayName ?? "Operador";
 
                     var sheetName = SanitizeSheetName(operatorName);
+
                     var worksheet = workbook.Worksheets.Add(sheetName);
+
+                    var userReports = userGroup
+                        .OrderBy(x => x.WorkDate)
+                        .ToList();
+
+                    var userReportIds = userReports
+                        .Select(x => x.Id)
+                        .ToHashSet();
+
+                    var userCategories = filteredCategories
+                        .Where(x => userReportIds.Contains(x.RecoveryWorkReportId))
+                        .ToList();
+
+                    var userCategoryIds = userCategories
+                        .Select(x => x.Id)
+                        .ToHashSet();
+
+                    var userActivities = filteredActivities
+                        .Where(x => userCategoryIds.Contains(x.RecoveryWorkReportCategoryId))
+                        .ToList();
+
+                    var userSupplies = filteredSupplies
+                        .Where(x => userCategoryIds.Contains(x.RecoveryWorkReportCategoryId))
+                        .ToList();
 
                     BuildProductionSheet(
                         worksheet,
                         operatorName,
                         dates,
-                        userGroup.ToList(),
-                        reportActivities,
-                        reportSupplies,
+                        userReports,
+                        userCategories,
+                        userActivities,
+                        userSupplies,
                         activities,
                         supplies);
                 }
 
-                workbook.SaveAs(filePath);
+                await using (var fileStream = File.Create(filePath))
+                {
+                    workbook.SaveAs(fileStream);
+                }
+
+                if (!File.Exists(filePath))
+                {
+                    return new ExportFileResultDto
+                    {
+                        Success = false,
+                        Message = $"El archivo no fue creado en la ruta esperada: {filePath}"
+                    };
+                }
+
+                var fileInfo = new FileInfo(filePath);
+
+                if (fileInfo.Length == 0)
+                {
+                    return new ExportFileResultDto
+                    {
+                        Success = false,
+                        Message = $"El archivo fue creado, pero está vacío: {filePath}"
+                    };
+                }
+
+                System.Diagnostics.Debug.WriteLine($"Archivo Excel exportado: {filePath}");
+                System.Diagnostics.Debug.WriteLine($"Tamaño archivo: {fileInfo.Length} bytes");
 
                 return new ExportFileResultDto
                 {
@@ -261,14 +351,15 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             }
         }
         private static void BuildProductionSheet(
-    IXLWorksheet worksheet,
-    string operatorName,
-    List<DateTime> dates,
-    List<RecoveryWorkReport> reports,
-    List<RecoveryWorkActivity> reportActivities,
-    List<RecoveryWorkSupply> reportSupplies,
-    List<ActivityModel> activities,
-    List<Supply> supplies)
+                                IXLWorksheet worksheet,
+                                string operatorName,
+                                List<DateTime> dates,
+                                List<RecoveryWorkReport> reports,
+                                List<RecoveryWorkReportCategory> categories,
+                                List<RecoveryWorkActivity> reportActivities,
+                                List<RecoveryWorkSupply> reportSupplies,
+                                List<ActivityModel> activities,
+                                List<Supply> supplies)
         {
             worksheet.Cell(1, 1).Value = operatorName;
             worksheet.Cell(1, 1).Style.Font.Bold = true;
@@ -280,54 +371,105 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             for (int i = 0; i < dates.Count; i++)
             {
                 var column = i + 3;
+
                 worksheet.Cell(2, column).Value = dates[i];
                 worksheet.Cell(2, column).Style.DateFormat.Format = "dd-MM-yyyy";
             }
 
-            var rowDefinitions = GetProductionRows();
+            worksheet.Cell(3, 1).Value = "Horas jornada";
+            worksheet.Cell(3, 2).Value = "Hora";
 
-            var currentRow = 3;
-
-            foreach (var row in rowDefinitions)
+            for (int i = 0; i < dates.Count; i++)
             {
-                if (row.IsSection)
+                var column = i + 3;
+                worksheet.Cell(3, column).Value = 7.5;
+                worksheet.Cell(3, column).Style.NumberFormat.Format = "#,##0.##";
+            }
+
+            var currentRow = 5;
+
+            worksheet.Cell(currentRow, 1).Value = "Actividades de produccion";
+            worksheet.Range(currentRow, 1, currentRow, dates.Count + 2).Merge();
+            worksheet.Cell(currentRow, 1).Style.Font.Bold = true;
+            worksheet.Cell(currentRow, 1).Style.Fill.BackgroundColor = XLColor.FromHtml("#EAF2FF");
+
+            currentRow++;
+
+            var categoryGroups = categories
+                .OrderBy(x => x.ExportLabel)
+                .GroupBy(x => x.ExportLabel)
+                .ToList();
+
+            foreach (var categoryGroup in categoryGroups)
+            {
+                var exportLabel = categoryGroup.Key;
+
+                WriteBarsWorkedRow(
+                    worksheet,
+                    currentRow,
+                    exportLabel,
+                    dates,
+                    reports,
+                    categoryGroup.ToList());
+
+                currentRow++;
+
+                var activityIds = reportActivities
+                    .Where(x => categoryGroup.Any(c => c.Id == x.RecoveryWorkReportCategoryId))
+                    .Select(x => x.ActivityId)
+                    .Distinct()
+                    .ToList();
+
+                foreach (var activityId in activityIds)
                 {
-                    worksheet.Cell(currentRow, 1).Value = row.Label;
-                    worksheet.Range(currentRow, 1, currentRow, dates.Count + 2).Merge();
-                    worksheet.Cell(currentRow, 1).Style.Font.Bold = true;
-                    worksheet.Cell(currentRow, 1).Style.Fill.BackgroundColor = XLColor.FromHtml("#EAF2FF");
+                    var activity = activities.FirstOrDefault(x => x.Id == activityId);
+
+                    if (activity is null)
+                        continue;
+
+                    WriteActivityRow(
+                        worksheet,
+                        currentRow,
+                        activity,
+                        exportLabel,
+                        dates,
+                        reports,
+                        categoryGroup.ToList(),
+                        reportActivities);
+
                     currentRow++;
-                    continue;
                 }
 
-                worksheet.Cell(currentRow, 1).Value = row.Label;
-                worksheet.Cell(currentRow, 2).Value = row.Unit;
+                var supplyIds = reportSupplies
+                    .Where(x => categoryGroup.Any(c => c.Id == x.RecoveryWorkReportCategoryId))
+                    .Select(x => x.SupplyId)
+                    .Distinct()
+                    .ToList();
 
-                for (int i = 0; i < dates.Count; i++)
+                foreach (var supplyId in supplyIds)
                 {
-                    var date = dates[i];
-                    var column = i + 3;
+                    var supply = supplies.FirstOrDefault(x => x.Id == supplyId);
 
-                    var value = GetValueForRowAndDate(
-                        row,
-                        date,
+                    if (supply is null)
+                        continue;
+
+                    WriteSupplyRow(
+                        worksheet,
+                        currentRow,
+                        supply,
+                        exportLabel,
+                        dates,
                         reports,
-                        reportActivities,
-                        reportSupplies,
-                        activities,
-                        supplies);
+                        categoryGroup.ToList(),
+                        reportSupplies);
 
-                    if (value.HasValue)
-                    {
-                        worksheet.Cell(currentRow, column).Value = value.Value;
-                        worksheet.Cell(currentRow, column).Style.NumberFormat.Format = "#,##0.##";
-                    }
+                    currentRow++;
                 }
 
                 currentRow++;
             }
 
-            var usedRange = worksheet.Range(1, 1, currentRow - 1, dates.Count + 2);
+            var usedRange = worksheet.Range(1, 1, Math.Max(currentRow - 1, 5), dates.Count + 2);
 
             usedRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
             usedRange.Style.Border.InsideBorder = XLBorderStyleValues.Hair;
@@ -335,7 +477,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             worksheet.Row(2).Style.Font.Bold = true;
             worksheet.Row(2).Style.Fill.BackgroundColor = XLColor.FromHtml("#F2F2F2");
 
-            worksheet.Column(1).Width = 32;
+            worksheet.Column(1).Width = 36;
             worksheet.Column(2).Width = 12;
 
             for (int i = 0; i < dates.Count; i++)
@@ -346,15 +488,131 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             worksheet.SheetView.FreezeRows(2);
             worksheet.SheetView.FreezeColumns(2);
         }
+        private static void WriteBarsWorkedRow(
+                                IXLWorksheet worksheet,
+                                int row,
+                                string exportLabel,
+                                List<DateTime> dates,
+                                List<RecoveryWorkReport> reports,
+                                List<RecoveryWorkReportCategory> categories)
+        {
+            worksheet.Cell(row, 1).Value = exportLabel;
+            worksheet.Cell(row, 2).Value = "Unidad";
 
+            worksheet.Cell(row, 1).Style.Font.Bold = true;
+
+            for (int i = 0; i < dates.Count; i++)
+            {
+                var date = dates[i];
+                var column = i + 3;
+
+                var reportIds = reports
+                    .Where(x => x.WorkDate.Date == date.Date)
+                    .Select(x => x.Id)
+                    .ToHashSet();
+
+                var total = categories
+                    .Where(x => reportIds.Contains(x.RecoveryWorkReportId))
+                    .Sum(x => x.BarsWorkedCount);
+
+                if (total > 0)
+                {
+                    worksheet.Cell(row, column).Value = total;
+                    worksheet.Cell(row, column).Style.NumberFormat.Format = "#,##0";
+                }
+            }
+        }
+        private static void WriteActivityRow(
+                                IXLWorksheet worksheet,
+                                int row,
+                                ActivityModel activity,
+                                string exportLabel,
+                                List<DateTime> dates,
+                                List<RecoveryWorkReport> reports,
+                                List<RecoveryWorkReportCategory> categories,
+                                List<RecoveryWorkActivity> reportActivities)
+        {
+            worksheet.Cell(row, 1).Value = activity.Name;
+            worksheet.Cell(row, 2).Value = "Hora";
+
+            for (int i = 0; i < dates.Count; i++)
+            {
+                var date = dates[i];
+                var column = i + 3;
+
+                var reportIds = reports
+                    .Where(x => x.WorkDate.Date == date.Date)
+                    .Select(x => x.Id)
+                    .ToHashSet();
+
+                var categoryIds = categories
+                    .Where(x => reportIds.Contains(x.RecoveryWorkReportId) &&
+                                x.ExportLabel == exportLabel)
+                    .Select(x => x.Id)
+                    .ToHashSet();
+
+                var total = reportActivities
+                    .Where(x => categoryIds.Contains(x.RecoveryWorkReportCategoryId) &&
+                                x.ActivityId == activity.Id)
+                    .Sum(x => x.HoursWorked);
+
+                if (total > 0)
+                {
+                    worksheet.Cell(row, column).Value = total;
+                    worksheet.Cell(row, column).Style.NumberFormat.Format = "#,##0.##";
+                }
+            }
+        }
+        private static void WriteSupplyRow(
+                                IXLWorksheet worksheet,
+                                int row,
+                                Supply supply,
+                                string exportLabel,
+                                List<DateTime> dates,
+                                List<RecoveryWorkReport> reports,
+                                List<RecoveryWorkReportCategory> categories,
+                                List<RecoveryWorkSupply> reportSupplies)
+        {
+            worksheet.Cell(row, 1).Value = supply.Name;
+            worksheet.Cell(row, 2).Value = supply.Unit;
+
+            for (int i = 0; i < dates.Count; i++)
+            {
+                var date = dates[i];
+                var column = i + 3;
+
+                var reportIds = reports
+                    .Where(x => x.WorkDate.Date == date.Date)
+                    .Select(x => x.Id)
+                    .ToHashSet();
+
+                var categoryIds = categories
+                    .Where(x => reportIds.Contains(x.RecoveryWorkReportId) &&
+                                x.ExportLabel == exportLabel)
+                    .Select(x => x.Id)
+                    .ToHashSet();
+
+                var total = reportSupplies
+                    .Where(x => categoryIds.Contains(x.RecoveryWorkReportCategoryId) &&
+                                x.SupplyId == supply.Id)
+                    .Sum(x => x.Quantity);
+
+                if (total > 0)
+                {
+                    worksheet.Cell(row, column).Value = total;
+                    worksheet.Cell(row, column).Style.NumberFormat.Format = "#,##0.##";
+                }
+            }
+        }
         private static double? GetValueForRowAndDate(
-            ProductionExportRow row,
-            DateTime date,
-            List<RecoveryWorkReport> reports,
-            List<RecoveryWorkActivity> reportActivities,
-            List<RecoveryWorkSupply> reportSupplies,
-            List<ActivityModel> activities,
-            List<Supply> supplies)
+                                    ProductionExportRow row,
+                                    DateTime date,
+                                    List<RecoveryWorkReport> reports,
+                                    List<RecoveryWorkActivity> reportActivities,
+                                    List<RecoveryWorkSupply> reportSupplies,
+                                    List<RecoveryWorkReportCategory> categories,
+                                    List<ActivityModel> activities,
+                                    List<Supply> supplies)
         {
             var dayReports = reports
                 .Where(x => x.WorkDate.Date == date.Date)
@@ -367,6 +625,11 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 .Select(x => x.Id)
                 .ToHashSet();
 
+            var dayCategoryIds = categories
+                    .Where(x => dayReportIds.Contains(x.RecoveryWorkReportId) && x.IsActive)
+                    .Select(x => x.Id)
+                    .ToHashSet();
+
             if (row.Kind == ProductionExportRowKind.Activity)
             {
                 var matchingActivityIds = activities
@@ -376,7 +639,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                     .ToHashSet();
 
                 var total = reportActivities
-                    .Where(x => dayReportIds.Contains(x.RecoveryWorkReportId) &&
+                    .Where(x => dayReportIds.Contains(x.RecoveryWorkReportCategoryId) &&
                                 matchingActivityIds.Contains(x.ActivityId) &&
                                 x.IsActive)
                     .Sum(x => x.HoursWorked);
@@ -393,7 +656,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                     .ToHashSet();
 
                 var total = reportSupplies
-                    .Where(x => dayReportIds.Contains(x.RecoveryWorkReportId) &&
+                    .Where(x => dayReportIds.Contains(x.RecoveryWorkReportCategoryId) &&
                                 matchingSupplyIds.Contains(x.SupplyId) &&
                                 x.IsActive)
                     .Sum(x => x.Quantity);
@@ -403,11 +666,6 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             if (row.Kind == ProductionExportRowKind.BarsWorked)
             {
-                /*
-                 * Ojo: con el modelo actual, BarsWorkedCount no distingue MAPA / Santa Fe /
-                 * Nueva Aldea / 90° / 60°. Por eso este valor solo se puede llenar de forma
-                 * exacta si más adelante agregamos clasificación de sección al registro.
-                 */
                 return null;
             }
 
@@ -460,9 +718,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
         }
 
         private static void AddCustomBlock(
-            List<ProductionExportRow> rows,
-            string mainLabel,
-            string rectificadoLabel)
+                                List<ProductionExportRow> rows,
+                                string mainLabel,
+                                string rectificadoLabel)
         {
             rows.Add(new ProductionExportRow
             {
