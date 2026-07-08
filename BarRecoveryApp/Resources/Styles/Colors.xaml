@@ -41,4 +41,29 @@
     <SolidColorBrush x:Key="Gray600Brush" Color="{StaticResource Gray600}"/>
     <SolidColorBrush x:Key="Gray900Brush" Color="{StaticResource Gray900}"/>
     <SolidColorBrush x:Key="Gray950Brush" Color="{StaticResource Gray950}"/>
+
+    <!-- Primary Button (#1B4533)-->
+    <Color x:Key="PrimaryNormal">#1B4533</Color>
+    <Color x:Key="PrimaryPressed">#0F2A1F</Color>
+    <Color x:Key="PrimaryHover">#2D6B4F</Color>
+    <Color x:Key="PrimaryFocused">#1B4533</Color>
+    <Color x:Key="PrimaryDisabled">#1B453340</Color>
+
+    <!-- Secondary Button (#FC6327) -->
+    <Color x:Key="SecondaryNormal">#FC6327</Color>
+    <Color x:Key="SecondaryPressed">#D94A15</Color>
+    <Color x:Key="SecondaryHover">#FF8A54</Color>
+    <Color x:Key="SecondaryFocused">#FC6327</Color>
+    <Color x:Key="SecondaryDisabled">#FC632740</Color>
+
+    <!-- Outline Button -->
+    <Color x:Key="OutlineBorderNormal">#1B4533</Color>
+    <Color x:Key="OutlineBorderPressed">#0F2A1F</Color>
+    <Color x:Key="OutlineBorderFocused">#FC6327</Color>
+    <Color x:Key="OutlineBackgroundFocused">#1B453310</Color>
+
+    <!-- State Text -->
+    <Color x:Key="TextDisabled">#1B453360</Color>
+    
+
 </ResourceDictionary>
