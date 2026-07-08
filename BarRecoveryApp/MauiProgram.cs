@@ -59,6 +59,7 @@ namespace BarRecoveryApp
             builder.Services.AddTransient<IBarImportService, BarImportService>();
             builder.Services.AddTransient<IDashboardService, DashboardService>();
             builder.Services.AddTransient<IReportExportService, ReportExportService>();
+            builder.Services.AddTransient<IBarLookupService, BarLookupService>();
 
             //Login View Model
             builder.Services.AddTransient<LoginViewModel>();
@@ -121,6 +122,9 @@ namespace BarRecoveryApp
             //ReportExportExcel
             builder.Services.AddTransient<ReportExportViewModel>();
             builder.Services.AddTransient<ReportExportPage>();
+            //BarLookUp For Operators Page
+            builder.Services.AddTransient<BarLookupViewModel>();
+            builder.Services.AddTransient<BarLookupPage>();
             //Appshell
             builder.Services.AddSingleton<AppShell>();
 

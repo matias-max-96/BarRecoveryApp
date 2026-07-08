@@ -136,11 +136,11 @@
                                     FontSize="13" />
 
                                 <Label
-                                    Text="{Binding IsDisposed, StringFormat='Dada de baja: {0}'}"
+                                    Text="{Binding IsDisposedText, StringFormat='Dada de baja: {0}'}"
                                     FontSize="13" />
 
                                 <Label
-                                    Text="{Binding IsActive, StringFormat='Activa: {0}'}"
+                                    Text="{Binding IsActiveText, StringFormat='Activa: {0}'}"
                                     FontSize="13" />
                             </VerticalStackLayout>
                         </Border>

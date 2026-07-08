@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="BarRecoveryApp.Views.BarLookupPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Consultar barra">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16">
+
+            <Label
+                Text="Consultar Barra"
+                FontSize="26"
+                FontAttributes="Bold"
+                HorizontalOptions="Center" />
+
+            <Label
+                Text="Ingrese el número completo o parcial de la barra para consultar su estado actual."
+                FontSize="14"
+                TextColor="Gray"
+                HorizontalTextAlignment="Center" />
+
+            <ActivityIndicator
+                IsRunning="{Binding IsBusy}"
+                IsVisible="{Binding IsBusy}"
+                HorizontalOptions="Center" />
+
+            <Border
+                IsVisible="{Binding HasError}"
+                Padding="12"
+                Stroke="#D9534F"
+                StrokeThickness="1"
+                BackgroundColor="White">
+
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+
+                <Label
+                    Text="{Binding ErrorMessage}"
+                    TextColor="#B00020"
+                    FontAttributes="Bold" />
+            </Border>
+
+            <Entry
+                Text="{Binding SearchText}"
+                Placeholder="Ej: BARRA-004, 004, MAPA-001" />
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+
+                <Button
+                    Grid.Column="0"
+                    Text="Limpiar"
+                    Command="{Binding ClearCommand}"
+                    BackgroundColor="#6C757D"
+                    TextColor="White" />
+
+                <Button
+                    Grid.Column="1"
+                    Text="Buscar"
+                    Command="{Binding SearchCommand}"
+                    BackgroundColor="#0D6EFD"
+                    TextColor="White" />
+
+            </Grid>
+
+            <Label
+                Text="{Binding ResultCountText}"
+                FontSize="13"
+                TextColor="Gray" />
+
+            <CollectionView ItemsSource="{Binding Bars}">
+
+                <CollectionView.EmptyView>
+                    <Label
+                        Text="No hay barras para mostrar."
+                        TextColor="Gray"
+                        HorizontalTextAlignment="Center"
+                        Margin="0,24" />
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border
+                            Padding="12"
+                            Margin="0,4"
+                            Stroke="#DDDDDD"
+                            StrokeThickness="1"
+                            BackgroundColor="White">
+
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
+
+                            <VerticalStackLayout Spacing="4">
+
+                                <Label
+                                    Text="{Binding DisplayName}"
+                                    FontAttributes="Bold"
+                                    FontSize="16" />
+
+                                <Label
+                                    Text="{Binding DetailText}"
+                                    FontSize="13"
+                                    TextColor="Gray" />
+
+                                <Label
+                                    Text="{Binding IsDisposedText, StringFormat='Dada de baja: {0}'}"
+                                    FontSize="13"
+                                    TextColor="Gray" />
+
+                                <Label
+                                    Text="{Binding IsActiveText, StringFormat='Activa: {0}'}"
+                                    FontSize="13"
+                                    TextColor="Gray" />
+
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+            </CollectionView>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

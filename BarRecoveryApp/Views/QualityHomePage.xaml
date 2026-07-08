@@ -22,7 +22,8 @@
             <Button
                 Text="Gestionar barras"
                 Clicked="OnBarsClicked" />
-            <Button Text="Buscar barra" />
+            <Button Text="Buscar barra" 
+                    Clicked="OnSearchBarClicked"/>
             <Button Text="Nueva inspección" 
                     Clicked="OnQualityInspectionClicked"/>
             <Button Text="Historial de barra" 

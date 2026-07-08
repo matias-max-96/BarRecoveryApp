@@ -36,5 +36,20 @@ namespace BarRecoveryApp.ViewModels.Items
             BarStatus.Returned => "Retornada / Disponible",
             _ => "Desconocido"
         };
+        public string IsDisposedText
+        {
+            get
+            {
+                return IsDisposed ? "Sí" : "No";
+            }
+        }
+
+        public string IsActiveText
+        {
+            get
+            {
+                return IsActive ? "Sí" : "No";
+            }
+        }
     }
 }

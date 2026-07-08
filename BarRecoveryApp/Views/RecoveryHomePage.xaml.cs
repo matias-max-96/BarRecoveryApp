@@ -35,4 +35,8 @@ public partial class RecoveryHomePage : ContentPage
     {
         await Shell.Current.GoToAsync(nameof(RecoveryWorkReportsHistoryPage));
     }
+    private async void OnBarLookupClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(BarLookupPage));
+    }
 }

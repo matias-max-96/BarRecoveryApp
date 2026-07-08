@@ -24,7 +24,8 @@
                     Clicked="OnRecoveryWorkReportClicked"/>
             <Button Text="Mis registros recientes"
                     Clicked="OnMyRecoveryReportsClicked"/>
-            <Button Text="Consultar barra" />
+            <Button Text="Consultar barra" 
+                    Clicked="OnBarLookupClicked"/>
 
             <Button
                 Text="Cerrar sesión"

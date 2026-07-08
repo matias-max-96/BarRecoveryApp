@@ -49,5 +49,13 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations.DTOs
             MaxRecoveries.HasValue
                 ? $"Recuperaciones: {CurrentRecoveryCount} / {MaxRecoveries.Value}"
                 : $"Recuperaciones: {CurrentRecoveryCount} / Sin política definida";
+
+        public string IsDisposedText
+        {
+            get
+            {
+                return IsDisposed ? "Sí" : "No";
+            }
+        }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace BarRecoveryApp.ApplicationF.Services.Operations.DTOs
 {
-    public class BarHistorySearchItemDto
+    public class BarLookupResultDto
     {
         public string BarId { get; set; } = string.Empty;
 
@@ -20,16 +20,22 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations.DTOs
 
         public BarStatus CurrentStatus { get; set; }
 
-        public string DisplayName =>
-            $"{BarNumber} - {PlantName} - {BarTypeName}";
+        public string DisplayName
+        {
+            get
+            {
+                return $"{BarNumber} - {PlantName} - {BarTypeName}";
+            }
+        }
 
-        public string DetailText =>
-            $"Recuperaciones: {RecoveryCount} | Estado: {StatusText}";
+        public string StatusText
+        {
+            get
+            {
+                if (IsDisposed)
+                    return "Dada de baja";
 
-        public string StatusText =>
-            IsDisposed
-                ? "Dada de baja"
-                : CurrentStatus switch
+                return CurrentStatus switch
                 {
                     BarStatus.Created => "Creada",
                     BarStatus.InRecovery => "En recuperación",
@@ -42,6 +48,16 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations.DTOs
                     BarStatus.Returned => "Retornada / Disponible",
                     _ => "Desconocido"
                 };
+            }
+        }
+
+        public string DetailText
+        {
+            get
+            {
+                return $"Estado: {StatusText} | Recuperaciones: {RecoveryCount}";
+            }
+        }
         public string IsDisposedText
         {
             get

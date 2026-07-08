@@ -49,4 +49,8 @@ public partial class QualityHomePage : ContentPage
     {
         await Shell.Current.GoToAsync(nameof(DashboardPage));
     }
+    private async void OnSearchBarClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(BarLookupPage));
+    }
 }

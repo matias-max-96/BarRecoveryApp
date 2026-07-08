@@ -27,5 +27,7 @@
 
         public string SummaryText =>
             $"Recuperaciones: {RecoveryCount} | Estado: {StatusText}";
+
+
     }
 }
