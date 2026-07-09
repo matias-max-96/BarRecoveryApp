@@ -1,4 +1,5 @@
-﻿using BarRecoveryApp.ApplicationF.Services.Authentication;
+﻿using BarRecoveryApp.ApplicationF.Services.Auditing;
+using BarRecoveryApp.ApplicationF.Services.Authentication;
 using BarRecoveryApp.ApplicationF.Services.Operations.DTOs;
 using BarRecoveryApp.Infrastructure.Persistence.Repositories;
 using BarRecoveryApp.Models.Catalogs;
@@ -15,6 +16,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
         private readonly IRepository<Plant> _plantRepository;
         private readonly IRepository<BarType> _barTypeRepository;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IAuditLogService _auditLogService;
 
         public BarReturnService(
             IRepository<BarReturnReceipt> receiptRepository,
@@ -22,7 +24,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             IRepository<Bar> barRepository,
             IRepository<Plant> plantRepository,
             IRepository<BarType> barTypeRepository,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            IAuditLogService auditLogService)
         {
             _receiptRepository = receiptRepository
                 ?? throw new ArgumentNullException(nameof(receiptRepository));
@@ -41,6 +44,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             _currentUserService = currentUserService
                 ?? throw new ArgumentNullException(nameof(currentUserService));
+
+            _auditLogService = auditLogService
+                ?? throw new ArgumentNullException(nameof(auditLogService));
         }
 
         public async Task<List<Plant>> GetActivePlantsAsync()
@@ -165,6 +171,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             await _receiptRepository.InsertAsync(receipt);
 
+            var returnedBars = new List<Bar>();
+
             foreach (var barId in barIds.Distinct())
             {
                 var bar = await _barRepository.GetByIdAsync(barId);
@@ -197,9 +205,85 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 bar.UpdatedAtUtc = DateTime.Now;
 
                 await _barRepository.UpdateAsync(bar);
+
+                returnedBars.Add(bar);
+            }
+
+            await _auditLogService.WriteAsync(
+                AuditActionCodes.BarReturnCreated,
+                "BarReturnReceipt",
+                receiptId,
+                $"Se registró recepción de retorno con {returnedBars.Count} barra(s).",
+                BuildReturnReceiptMetadataJson(
+                    receipt,
+                    returnDocument,
+                    notes,
+                    returnedBars));
+
+            foreach (var bar in returnedBars)
+            {
+                await _auditLogService.WriteAsync(
+                    AuditActionCodes.BarReturned,
+                    "Bar",
+                    bar.Id,
+                    $"La barra {bar.BarNumber} fue marcada como retornada/disponible.",
+                    BuildBarReturnedMetadataJson(
+                        bar,
+                        receiptId,
+                        receipt.ReturnDocument));
             }
 
             return true;
+        }
+
+        private static string BuildReturnReceiptMetadataJson(
+                                BarReturnReceipt receipt,
+                                string? returnDocument,
+                                string? notes,
+                                List<Bar> returnedBars)
+        {
+            var safeReturnDocument = string.IsNullOrWhiteSpace(returnDocument)
+                ? string.Empty
+                : returnDocument.Trim().Replace("\"", "'");
+
+            var safeNotes = string.IsNullOrWhiteSpace(notes)
+                ? string.Empty
+                : notes.Trim().Replace("\"", "'");
+
+            var barNumbers = string.Join(
+                ",",
+                returnedBars.Select(x => x.BarNumber.Replace("\"", "'")));
+
+            return
+                "{" +
+                $"\"ReceiptId\":\"{receipt.Id}\"," +
+                $"\"ReturnDocument\":\"{safeReturnDocument}\"," +
+                $"\"ReceivedAt\":\"{receipt.ReceivedAtUtc:yyyy-MM-dd HH:mm:ss}\"," +
+                $"\"BarCount\":{returnedBars.Count}," +
+                $"\"BarNumbers\":\"{barNumbers}\"," +
+                $"\"Notes\":\"{safeNotes}\"" +
+                "}";
+        }
+
+        private static string BuildBarReturnedMetadataJson(
+                                Bar bar,
+                                string receiptId,
+                                string? returnDocument)
+        {
+            var safeReturnDocument = string.IsNullOrWhiteSpace(returnDocument)
+                ? string.Empty
+                : returnDocument.Trim().Replace("\"", "'");
+
+            return
+                "{" +
+                $"\"BarId\":\"{bar.Id}\"," +
+                $"\"BarNumber\":\"{bar.BarNumber}\"," +
+                $"\"ReceiptId\":\"{receiptId}\"," +
+                $"\"ReturnDocument\":\"{safeReturnDocument}\"," +
+                $"\"CurrentStatus\":\"{bar.CurrentStatus}\"," +
+                $"\"RecoveryCount\":{bar.RecoveryCount}," +
+                $"\"IsDisposed\":{bar.IsDisposed.ToString().ToLowerInvariant()}" +
+                "}";
         }
     }
 }

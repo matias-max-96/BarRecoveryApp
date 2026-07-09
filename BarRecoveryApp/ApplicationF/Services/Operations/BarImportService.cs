@@ -1,10 +1,11 @@
-﻿using System.Text;
+﻿using BarRecoveryApp.ApplicationF.Services.Auditing;
 using BarRecoveryApp.ApplicationF.Services.Authentication;
 using BarRecoveryApp.ApplicationF.Services.Operations.DTOs;
 using BarRecoveryApp.Infrastructure.Persistence.Repositories;
 using BarRecoveryApp.Models.Catalogs;
 using BarRecoveryApp.Models.Enums;
 using BarRecoveryApp.Models.Operations;
+using System.Text;
 
 namespace BarRecoveryApp.ApplicationF.Services.Operations
 {
@@ -14,12 +15,15 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
         private readonly IRepository<Plant> _plantRepository;
         private readonly IRepository<BarType> _barTypeRepository;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IAuditLogService _auditLogService;
+
 
         public BarImportService(
             IRepository<Bar> barRepository,
             IRepository<Plant> plantRepository,
             IRepository<BarType> barTypeRepository,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            IAuditLogService auditLogService)
         {
             _barRepository = barRepository
                 ?? throw new ArgumentNullException(nameof(barRepository));
@@ -32,6 +36,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             _currentUserService = currentUserService
                 ?? throw new ArgumentNullException(nameof(currentUserService));
+
+            _auditLogService = auditLogService
+                ?? throw new ArgumentNullException(nameof(auditLogService));
         }
 
         public async Task<BarImportResultDto> ImportFromCsvStreamAsync(
@@ -79,9 +86,14 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             var rows = await ReadCsvRowsAsync(stream, result);
 
             if (result.Errors.Count > 0)
+            {
+                await WriteImportAuditAsync(result, fileName);
                 return result;
+            }
 
             await ImportRowsAsync(rows, result);
+
+            await WriteImportAuditAsync(result, fileName);
 
             return result;
         }
@@ -365,6 +377,64 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             }
 
             return -1;
+        }
+        private async Task WriteImportAuditAsync(
+                            BarImportResultDto result,
+                            string fileName)
+        {
+            var description =
+                $"Se ejecutó importación masiva de barras desde archivo {fileName}. " +
+                $"Filas leídas: {result.TotalRowsRead}, " +
+                $"creadas: {result.CreatedCount}, " +
+                $"omitidas: {result.SkippedCount}, " +
+                $"errores: {result.ErrorCount}.";
+
+            await _auditLogService.WriteAsync(
+                AuditActionCodes.BarImported,
+                "BarImport",
+                null,
+                description,
+                BuildImportMetadataJson(result, fileName));
+        }
+        private static string BuildImportMetadataJson(
+                                BarImportResultDto result,
+                                string fileName)
+        {
+            var safeFileName = string.IsNullOrWhiteSpace(fileName)
+                ? string.Empty
+                : fileName.Trim().Replace("\"", "'");
+
+            var firstErrors = result.Errors
+                .Take(10)
+                .Select(x =>
+                    "{" +
+                    $"\"RowNumber\":{x.RowNumber}," +
+                    $"\"BarNumber\":\"{SafeJsonValue(x.BarNumber)}\"," +
+                    $"\"Message\":\"{SafeJsonValue(x.Message)}\"" +
+                    "}");
+
+            var errorsJson = string.Join(",", firstErrors);
+
+            return
+                "{" +
+                $"\"FileName\":\"{safeFileName}\"," +
+                $"\"TotalRowsRead\":{result.TotalRowsRead}," +
+                $"\"CreatedCount\":{result.CreatedCount}," +
+                $"\"SkippedCount\":{result.SkippedCount}," +
+                $"\"ErrorCount\":{result.ErrorCount}," +
+                $"\"Success\":{result.Success.ToString().ToLowerInvariant()}," +
+                $"\"SampleErrors\":[{errorsJson}]" +
+                "}";
+        }
+        private static string SafeJsonValue(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            return value
+                .Trim()
+                .Replace("\\", "\\\\")
+                .Replace("\"", "'");
         }
     }
 }
