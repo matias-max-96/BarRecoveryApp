@@ -1,4 +1,5 @@
-﻿using BarRecoveryApp.ApplicationF.Services.Authentication;
+﻿using BarRecoveryApp.ApplicationF.Services.Auditing;
+using BarRecoveryApp.ApplicationF.Services.Authentication;
 using BarRecoveryApp.ApplicationF.Services.Operations.DTOs;
 using BarRecoveryApp.Infrastructure.Persistence.Repositories;
 using BarRecoveryApp.Models.Catalogs;
@@ -15,6 +16,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
         private readonly IRepository<Plant> _plantRepository;
         private readonly IRepository<BarType> _barTypeRepository;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IAuditLogService _auditLogService;
 
         public ShipmentService(
             IRepository<Shipment> shipmentRepository,
@@ -22,7 +24,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             IRepository<Bar> barRepository,
             IRepository<Plant> plantRepository,
             IRepository<BarType> barTypeRepository,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            IAuditLogService auditLogService)
         {
             _shipmentRepository = shipmentRepository
                 ?? throw new ArgumentNullException(nameof(shipmentRepository));
@@ -41,6 +44,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             _currentUserService = currentUserService
                 ?? throw new ArgumentNullException(nameof(currentUserService));
+
+            _auditLogService = auditLogService
+                ?? throw new ArgumentNullException(nameof(auditLogService));
         }
 
         public async Task<List<Plant>> GetActivePlantsAsync()
@@ -167,6 +173,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             await _shipmentRepository.InsertAsync(shipment);
 
+            var shippedBars = new List<Bar>();
+
             foreach (var barId in barIds.Distinct())
             {
                 var bar = await _barRepository.GetByIdAsync(barId);
@@ -196,9 +204,75 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 bar.UpdatedAtUtc = DateTime.Now;
 
                 await _barRepository.UpdateAsync(bar);
+
+                shippedBars.Add(bar);
+            }
+
+            await _auditLogService.WriteAsync(
+                AuditActionCodes.ShipmentCreated,
+                "Shipment",
+                shipmentId,
+                $"Se creó el envío con orden de traslado {normalizedTransferOrder} y {shippedBars.Count} barra(s).",
+                BuildShipmentMetadataJson(
+                    shipment,
+                    normalizedTransferOrder,
+                    normalizedCustomerReference,
+                    shippedBars));
+
+            foreach (var bar in shippedBars)
+            {
+                await _auditLogService.WriteAsync(
+                    AuditActionCodes.BarShipped,
+                    "Bar",
+                    bar.Id,
+                    $"La barra {bar.BarNumber} fue marcada como enviada en la orden {normalizedTransferOrder}.",
+                    BuildBarShippedMetadataJson(
+                        bar,
+                        shipmentId,
+                        normalizedTransferOrder));
             }
 
             return true;
+        }
+        private static string BuildShipmentMetadataJson(
+                                Shipment shipment,
+                                string transferOrder,
+                                string? customerReference,
+                                List<Bar> shippedBars)
+        {
+            var safeCustomerReference = string.IsNullOrWhiteSpace(customerReference)
+                ? string.Empty
+                : customerReference.Trim().Replace("\"", "'");
+
+            var barNumbers = string.Join(
+                ",",
+                shippedBars.Select(x => x.BarNumber.Replace("\"", "'")));
+
+            return
+                "{" +
+                $"\"ShipmentId\":\"{shipment.Id}\"," +
+                $"\"TransferOrder\":\"{transferOrder}\"," +
+                $"\"CustomerReference\":\"{safeCustomerReference}\"," +
+                $"\"ShippedAt\":\"{shipment.ShippedAtUtc:yyyy-MM-dd HH:mm:ss}\"," +
+                $"\"BarCount\":{shippedBars.Count}," +
+                $"\"BarNumbers\":\"{barNumbers}\"" +
+                "}";
+        }
+        private static string BuildBarShippedMetadataJson(
+                                Bar bar,
+                                string shipmentId,
+                                string transferOrder)
+        {
+            return
+                "{" +
+                $"\"BarId\":\"{bar.Id}\"," +
+                $"\"BarNumber\":\"{bar.BarNumber}\"," +
+                $"\"ShipmentId\":\"{shipmentId}\"," +
+                $"\"TransferOrder\":\"{transferOrder}\"," +
+                $"\"CurrentStatus\":\"{bar.CurrentStatus}\"," +
+                $"\"RecoveryCount\":{bar.RecoveryCount}," +
+                $"\"IsDisposed\":{bar.IsDisposed.ToString().ToLowerInvariant()}" +
+                "}";
         }
     }
 }
