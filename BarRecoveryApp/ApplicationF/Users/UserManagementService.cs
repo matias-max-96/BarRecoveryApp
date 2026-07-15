@@ -1,4 +1,5 @@
-﻿using BarRecoveryApp.ApplicationF.Services.Authentication;
+﻿using BarRecoveryApp.ApplicationF.Services.Auditing;
+using BarRecoveryApp.ApplicationF.Services.Authentication;
 using BarRecoveryApp.Infrastructure.Persistence.Repositories;
 using BarRecoveryApp.Infrastructure.Persistence.Seed;
 using BarRecoveryApp.Models.Security;
@@ -10,6 +11,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Users
         private readonly IRepository<User> _userRepository;
         private readonly IRepository<Role> _roleRepository;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IAuditLogService _auditLogService;
 
         private const string SuperAdminRoleCode = "SUPER_ADMIN";
         private const string AdminRoleCode = "ADMIN";
@@ -17,7 +19,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Users
         public UserManagementService(
             IRepository<User> userRepository,
             IRepository<Role> roleRepository,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            IAuditLogService auditLogService)
         {
             _userRepository = userRepository
                 ?? throw new ArgumentNullException(nameof(userRepository));
@@ -27,6 +30,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Users
 
             _currentUserService = currentUserService
                 ?? throw new ArgumentNullException(nameof(currentUserService));
+            
+            _auditLogService = auditLogService
+                ?? throw new ArgumentNullException(nameof(auditLogService));
         }
 
         public async Task<List<User>> GetUsersAsync()
@@ -57,7 +63,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Users
             if (currentSession.RoleCode == AdminRoleCode)
             {
                 return roles
-                    .Where(x => x.Code != SuperAdminRoleCode)
+                    .Where(x => x.Code != SuperAdminRoleCode && x.Code != AdminRoleCode)
                     .OrderBy(x => x.Name)
                     .ToList();
             }
@@ -66,10 +72,10 @@ namespace BarRecoveryApp.ApplicationF.Services.Users
         }
 
         public async Task<bool> CreateUserAsync(
-    string username,
-    string displayName,
-    string roleId,
-    string initialPin)
+                                    string username,
+                                    string displayName,
+                                    string roleId,
+                                    string initialPin)
         {
             if (!_currentUserService.IsAuthenticated)
                 return false;
@@ -131,6 +137,13 @@ namespace BarRecoveryApp.ApplicationF.Services.Users
             };
 
             await _userRepository.InsertAsync(user);
+
+            await _auditLogService.WriteAsync(
+                AuditActionCodes.UserCreated,
+                "User",
+                user.Id,
+                $"Se creo el usuario {user.DisplayName} con rol {role.Code}.",
+                BuildUserCreatedMetadataJson(user, role, currentSession.UserId));
 
             return true;
         }
@@ -227,6 +240,36 @@ namespace BarRecoveryApp.ApplicationF.Services.Users
                    && pin.Length >= 4
                    && pin.Length <= 6
                    && pin.All(char.IsDigit);
+        }
+
+        private static string BuildUserCreatedMetadataJson(
+                                User user,
+                                Role role,
+                                string createdByUserId)
+        {
+            return
+                "{" +
+                $"\"UserId\":\"{SafeJsonValue(user.Id)}\"," +
+                $"\"Username\":\"{SafeJsonValue(user.Username)}\"," +
+                $"\"DisplayName\":\"{SafeJsonValue(user.DisplayName)}\"," +
+                $"\"RoleId\":\"{SafeJsonValue(role.Id)}\"," +
+                $"\"RoleCode\":\"{SafeJsonValue(role.Code)}\"," +
+                $"\"CreatedByUserId\":\"{SafeJsonValue(createdByUserId)}\"," +
+                $"\"MustChangePin\":{user.MustChangePin.ToString().ToLowerInvariant()}," +
+                $"\"IsPinEnabled\":{user.IsPinEnabled.ToString().ToLowerInvariant()}," +
+                $"\"IsActive\":{user.IsActive.ToString().ToLowerInvariant()}" +
+                "}";
+        }
+
+        private static string SafeJsonValue(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            return value
+                .Trim()
+                .Replace("\\", "\\\\")
+                .Replace("\"", "'");
         }
     }
 }

@@ -126,6 +126,9 @@ namespace BarRecoveryApp
             //BarLookUp For Operators Page
             builder.Services.AddTransient<BarLookupViewModel>();
             builder.Services.AddTransient<BarLookupPage>();
+            //Audit
+            builder.Services.AddTransient<AuditExportViewModel>();
+            builder.Services.AddTransient<AuditExportPage>();
             //Appshell
             builder.Services.AddSingleton<AppShell>();
 

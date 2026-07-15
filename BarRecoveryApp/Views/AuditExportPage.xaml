@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="BarRecoveryApp.Views.AuditExportPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Exportar auditoría">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16">
+
+            <Label
+                Text="Exportar Auditoría"
+                FontSize="26"
+                FontAttributes="Bold"
+                HorizontalOptions="Center" />
+
+            <Label
+                Text="Genera un archivo CSV local con las acciones realizadas en el rango seleccionado."
+                FontSize="14"
+                TextColor="Gray"
+                HorizontalTextAlignment="Center" />
+
+            <ActivityIndicator
+                IsRunning="{Binding IsBusy}"
+                IsVisible="{Binding IsBusy}"
+                HorizontalOptions="Center" />
+
+            <Border
+                IsVisible="{Binding HasError}"
+                Padding="12"
+                Stroke="#D9534F"
+                StrokeThickness="1"
+                BackgroundColor="White">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+                <Label
+                    Text="{Binding ErrorMessage}"
+                    TextColor="#B00020"
+                    FontAttributes="Bold" />
+            </Border>
+
+            <Border
+                IsVisible="{Binding HasSuccess}"
+                Padding="12"
+                Stroke="#2E7D32"
+                StrokeThickness="1"
+                BackgroundColor="White">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+                <Label
+                    Text="{Binding SuccessMessage}"
+                    TextColor="#2E7D32"
+                    FontAttributes="Bold" />
+            </Border>
+
+            <Label
+                Text="Rango de fechas"
+                FontSize="20"
+                FontAttributes="Bold" />
+
+            <Label Text="Desde" />
+            <DatePicker Date="{Binding FromDate}" />
+
+            <Label Text="Hasta" />
+            <DatePicker Date="{Binding ToDate}" />
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+
+                <Button
+                    Grid.Column="0"
+                    Text="Limpiar"
+                    Command="{Binding ClearCommand}"
+                    BackgroundColor="#6C757D"
+                    TextColor="White" />
+
+                <Button
+                    Grid.Column="1"
+                    Text="Exportar CSV"
+                    Command="{Binding ExportCommand}"
+                    BackgroundColor="#6F42C1"
+                    TextColor="White" />
+
+            </Grid>
+
+            <Label
+                Text="Último archivo generado"
+                FontSize="20"
+                FontAttributes="Bold" />
+
+            <Label
+                Text="{Binding LastFileName}"
+                FontSize="14"
+                TextColor="Gray" />
+
+            <Label
+                Text="{Binding LastFilePath}"
+                FontSize="12"
+                TextColor="Gray"
+                LineBreakMode="CharacterWrap" />
+
+            <Button
+                Text="Compartir auditoría"
+                Command="{Binding ShareCommand}"
+                BackgroundColor="#198754"
+                TextColor="White" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

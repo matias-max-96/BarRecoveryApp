@@ -179,7 +179,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 AuditActionCodes.RecoveryReportCreated,
                 "RecoveryWorkReport",
                 reportId,
-                $"Se creó un registro de recuperación con {categories.Count} bloque(s), {totalBarsWorked} barra(s), {totalActivities} actividad(es) y {totalSupplies} insumo(s).",
+                $"Se creo un registro de recuperacion con {categories.Count} bloque(s), {totalBarsWorked} barra(s), {totalActivities} actividad(es) y {totalSupplies} insumo(s).",
                 $"{{\"WorkDate\":\"{workDate:yyyy-MM-dd HH:mm:ss}\",\"ShiftName\":\"{shiftName}\",\"CategoryCount\":{categories.Count},\"TotalBarsWorked\":{totalBarsWorked},\"TotalActivities\":{totalActivities},\"TotalSupplies\":{totalSupplies}}}");
 
             return true;

@@ -213,7 +213,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 AuditActionCodes.BarReturnCreated,
                 "BarReturnReceipt",
                 receiptId,
-                $"Se registró recepción de retorno con {returnedBars.Count} barra(s).",
+                $"Se registro recepcion de retorno con {returnedBars.Count} barra(s).",
                 BuildReturnReceiptMetadataJson(
                     receipt,
                     returnDocument,

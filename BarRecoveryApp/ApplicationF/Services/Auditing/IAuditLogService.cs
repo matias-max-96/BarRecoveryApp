@@ -1,4 +1,5 @@
-﻿using BarRecoveryApp.Models.Security;
+﻿using BarRecoveryApp.ApplicationF.Services.Operations.DTOs;
+using BarRecoveryApp.Models.Security;
 
 namespace BarRecoveryApp.ApplicationF.Services.Auditing
 {
@@ -12,5 +13,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Auditing
             string? metadataJson = null);
 
         Task<List<AuditLog>> GetRecentAsync(int maxResults);
+
+        Task<ExportFileResultDto> ExportCsvAsync(
+            DateTime fromDate,
+            DateTime toDate);
     }
 }

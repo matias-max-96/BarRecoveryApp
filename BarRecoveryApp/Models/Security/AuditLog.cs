@@ -11,6 +11,9 @@ namespace BarRecoveryApp.Models.Security
         [MaxLength(36)]
         public string UserId { get; set; } = string.Empty;
 
+        [MaxLength(150)]
+        public string UserDisplayName { get; set; } = string.Empty;
+
         [MaxLength(50)]
         public string RoleCode { get; set; } = string.Empty;
 

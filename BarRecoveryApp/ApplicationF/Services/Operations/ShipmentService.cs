@@ -212,7 +212,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 AuditActionCodes.ShipmentCreated,
                 "Shipment",
                 shipmentId,
-                $"Se creó el envío con orden de traslado {normalizedTransferOrder} y {shippedBars.Count} barra(s).",
+                $"Se creo el envio con orden de traslado {normalizedTransferOrder} y {shippedBars.Count} barra(s).",
                 BuildShipmentMetadataJson(
                     shipment,
                     normalizedTransferOrder,

@@ -42,6 +42,14 @@
                     Clicked="OnDashboardClicked"/>
             <Button Text="Exportar reportes"
                     Clicked="OnReportExportClicked"/>
+            <Button 
+                    x:Name="AuditLogButton"
+                    Text="Exportar Auditoría"
+                    Clicked="OnAuditLogClicked"
+                    IsVisible="False"
+                    BackgroundColor="#6F42C1"
+                    TextColor="WhiteSmoke"/>
+            
             <Button Text="Sincronización"/>
 
             <Button

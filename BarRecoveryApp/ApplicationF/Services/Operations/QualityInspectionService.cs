@@ -212,7 +212,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 AuditActionCodes.QualityInspectionCreated,
                 "QualityInspection",
                 inspection.Id,
-                $"Se registró inspección de calidad para la barra {bar.BarNumber}.",
+                $"Se registro inspeccion de calidad para la barra {bar.BarNumber}.",
                 BuildInspectionMetadataJson(
                     bar,
                     inspection,

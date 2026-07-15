@@ -8,6 +8,7 @@ using BarRecoveryApp.Models.Operations;
 using ClosedXML.Excel;
 using BarRecoveryApp.Models.Security;
 using ActivityModel = BarRecoveryApp.Models.Catalogs.Activity;
+using BarRecoveryApp.ApplicationF.Services.Auditing;
 
 namespace BarRecoveryApp.ApplicationF.Services.Operations
 {
@@ -24,6 +25,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
         private readonly IRepository<ActivityModel> _activityRepository;
         private readonly IRepository<Supply> _supplyRepository;
         private readonly IRepository<User> _userRepository;
+        private readonly IAuditLogService _auditLogService;
         
 
         public ReportExportService(
@@ -37,7 +39,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             IRepository<ActivityModel> activityRepository,
             IRepository<Supply> supplyRepository,
             IRepository<User> userRepository,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            IAuditLogService auditLogService)
         {
             _barRepository = barRepository
                 ?? throw new ArgumentNullException(nameof(barRepository));
@@ -71,6 +74,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             _currentUserService = currentUserService
                 ?? throw new ArgumentNullException(nameof(currentUserService));
+
+            _auditLogService = auditLogService
+                ?? throw new ArgumentNullException(nameof(auditLogService));
         }
 
         public async Task<ExportFileResultDto> ExportBarsCsvAsync()
@@ -140,6 +146,21 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                     filePath,
                     builder.ToString(),
                     new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+
+                var fileInfo = new FileInfo(filePath);
+
+                await _auditLogService.WriteAsync(
+                    AuditActionCodes.ReportExported,
+                    "BarsCsvReport",
+                    null,
+                    $"se exporto reporte maestro de barras. Archivo generado: {fileName}.",
+                    BuildReportExportMetadataJson(
+                        "BarsCsvReport",
+                        fileName,
+                        filePath,
+                        fileInfo.Length,
+                        null,
+                        null));
 
                 return new ExportFileResultDto
                 {
@@ -332,6 +353,19 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
                 System.Diagnostics.Debug.WriteLine($"Archivo Excel exportado: {filePath}");
                 System.Diagnostics.Debug.WriteLine($"Tamaño archivo: {fileInfo.Length} bytes");
+
+                await _auditLogService.WriteAsync(
+                    AuditActionCodes.ReportExported,
+                    "ProductionReport",
+                    null,
+                    $"Se exportó reporte de producción desde {fromDate:dd-MM-yyyy} hasta {toDate:dd-MM-yyyy}. Archivo generado: {fileName}.",
+                    BuildReportExportMetadataJson(
+                        "ProductionReport",
+                        fileName,
+                        filePath,
+                        fileInfo.Length,
+                        fromDate,
+                        toDate));
 
                 return new ExportFileResultDto
                 {
@@ -877,6 +911,44 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             }
 
             return escaped;
+        }
+        private static string BuildReportExportMetadataJson(
+                                string reportType,
+                                string fileName,
+                                string filePath,
+                                long fileSizeBytes,
+                                DateTime? fromDate,
+                                DateTime? toDate)
+        {
+            var safeReportType = string.IsNullOrWhiteSpace(reportType)
+                ? string.Empty
+                : reportType.Trim().Replace("\"", "'");
+
+            var safeFileName = string.IsNullOrWhiteSpace(fileName)
+                ? string.Empty
+                : fileName.Trim().Replace("\"", "'");
+
+            var safeFilePath = string.IsNullOrWhiteSpace(filePath)
+                ? string.Empty
+                : filePath.Trim().Replace("\"", "'");
+
+            var fromDateValue = fromDate.HasValue
+                ? fromDate.Value.ToString("yyyy-MM-dd")
+                : string.Empty;
+
+            var toDateValue = toDate.HasValue
+                ? toDate.Value.ToString("yyyy-MM-dd")
+                : string.Empty;
+
+            return
+                "{" +
+                $"\"ReportType\":\"{safeReportType}\"," +
+                $"\"FileName\":\"{safeFileName}\"," +
+                $"\"FilePath\":\"{safeFilePath}\"," +
+                $"\"FileSizeBytes\":{fileSizeBytes}," +
+                $"\"FromDate\":\"{fromDateValue}\"," +
+                $"\"ToDate\":\"{toDateValue}\"" +
+                "}";
         }
     }
 }

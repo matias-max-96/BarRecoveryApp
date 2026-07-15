@@ -1,3 +1,4 @@
+using BarRecoveryApp.ApplicationF.Services.Authentication;
 using BarRecoveryApp.ApplicationF.Services.Navigation;
 
 namespace BarRecoveryApp.Views;
@@ -5,14 +6,34 @@ namespace BarRecoveryApp.Views;
 public partial class AdminHomePage : ContentPage
 {
     private readonly IRoleNavigationService _roleNavigationService;
-    public AdminHomePage(IRoleNavigationService  roleNavigationService)
+    private readonly ICurrentUserService _currentUserService;
+    public AdminHomePage(
+        IRoleNavigationService  roleNavigationService,
+        ICurrentUserService currentUserService)
 	{
 		InitializeComponent();
 
 		_roleNavigationService = roleNavigationService
 			?? throw new ArgumentNullException(nameof(roleNavigationService));
+
+        _currentUserService = currentUserService
+            ?? throw new ArgumentNullException(nameof(currentUserService));
 	}
-	private async void OnUsersClicked(Object sender, EventArgs e)
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+
+        ConfigureRolVisibility();
+    }
+
+    private void ConfigureRolVisibility()
+    {
+        var roleCode = _currentUserService.CurrentSession?.RoleCode;
+
+        AuditLogButton.IsVisible = roleCode == "SUPER_ADMIN";
+    }
+
+    private async void OnUsersClicked(Object sender, EventArgs e)
 	{
 		await Shell.Current.GoToAsync(nameof(UsersPage));
 	}
@@ -68,5 +89,9 @@ public partial class AdminHomePage : ContentPage
     private async void OnReportExportClicked(object sender, EventArgs e)
     {
         await Shell.Current.GoToAsync(nameof(ReportExportPage));
+    }
+    private async void OnAuditLogClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(AuditExportPage));
     }
 }
