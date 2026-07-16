@@ -181,11 +181,33 @@ namespace BarRecoveryApp.ApplicationF.Services.Users
                 return false;
             }
 
+            var previousState = user.IsActive;
+
             user.IsActive = isActive;
             user.UpdatedByUserId = currentSession.UserId;
             user.UpdatedAtUtc = DateTime.Now;
 
             await _userRepository.UpdateAsync(user);
+
+            var actionCode = isActive
+                ? AuditActionCodes.UserActivated
+                : AuditActionCodes.UserDeactivated;
+
+            var actionText = isActive
+                ? "activo"
+                : "desactivo";
+
+            await _auditLogService.WriteAsync(
+                actionCode,
+                "User",
+                user.Id,
+                $"Se {actionText} el usuario {user.DisplayName}.",
+                BuildUserActiveStateMetadataJson(
+                    user,
+                    userRole,
+                    previousState,
+                    isActive,
+                    currentSession.UserId));
 
             return true;
         }
@@ -231,6 +253,16 @@ namespace BarRecoveryApp.ApplicationF.Services.Users
 
             await _userRepository.UpdateAsync(user);
 
+            await _auditLogService.WriteAsync(
+                AuditActionCodes.UserPinReset,
+                "User",
+                user.Id,
+                $"Se restableció el PIN del usuario {user.DisplayName}.",
+                BuildUserPinResetMetadataJson(
+                    user,
+                    userRole,
+                    currentSession.UserId));
+
             return true;
         }
 
@@ -270,6 +302,44 @@ namespace BarRecoveryApp.ApplicationF.Services.Users
                 .Trim()
                 .Replace("\\", "\\\\")
                 .Replace("\"", "'");
+        }
+
+        private static string BuildUserActiveStateMetadataJson(
+                                User user,
+                                Role role,
+                                bool previousState,
+                                bool newState,
+                                string updatedByUserId)
+        {
+            return
+                "{" +
+                $"\"UserId\":\"{SafeJsonValue(user.Id)}\"," +
+                $"\"Username\":\"{SafeJsonValue(user.Username)}\"," +
+                $"\"DisplayName\":\"{SafeJsonValue(user.DisplayName)}\"," +
+                $"\"RoleId\":\"{SafeJsonValue(role.Id)}\"," +
+                $"\"RoleCode\":\"{SafeJsonValue(role.Code)}\"," +
+                $"\"PreviousIsActive\":{previousState.ToString().ToLowerInvariant()}," +
+                $"\"NewIsActive\":{newState.ToString().ToLowerInvariant()}," +
+                $"\"UpdatedByUserId\":\"{SafeJsonValue(updatedByUserId)}\"" +
+                "}";
+        }
+
+        private static string BuildUserPinResetMetadataJson(
+                             User user,
+                             Role role,
+                          string updatedByUserId)
+        {
+            return
+                "{" +
+                $"\"UserId\":\"{SafeJsonValue(user.Id)}\"," +
+                $"\"Username\":\"{SafeJsonValue(user.Username)}\"," +
+                $"\"DisplayName\":\"{SafeJsonValue(user.DisplayName)}\"," +
+                $"\"RoleId\":\"{SafeJsonValue(role.Id)}\"," +
+                $"\"RoleCode\":\"{SafeJsonValue(role.Code)}\"," +
+                $"\"MustChangePin\":{user.MustChangePin.ToString().ToLowerInvariant()}," +
+                $"\"IsPinEnabled\":{user.IsPinEnabled.ToString().ToLowerInvariant()}," +
+                $"\"UpdatedByUserId\":\"{SafeJsonValue(updatedByUserId)}\"" +
+                "}";
         }
     }
 }

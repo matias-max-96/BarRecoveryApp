@@ -53,4 +53,8 @@ public partial class QualityHomePage : ContentPage
     {
         await Shell.Current.GoToAsync(nameof(BarLookupPage));
     }
+    private async void OnBarAttributeDefinitionsClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(BarAttributeDefinitionsPage));
+    }
 }

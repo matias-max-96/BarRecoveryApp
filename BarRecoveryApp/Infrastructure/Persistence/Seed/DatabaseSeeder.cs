@@ -2,6 +2,7 @@
 using BarRecoveryApp.Models.Security;
 using BarRecoveryApp.Models.Catalogs;
 using SQLite;
+using Activity = BarRecoveryApp.Models.Catalogs.Activity;
 
 namespace BarRecoveryApp.Infrastructure.Persistence.Seed
 {
@@ -43,7 +44,7 @@ namespace BarRecoveryApp.Infrastructure.Persistence.Seed
             await EnsureRoleAsync(
                 db,
                 SuperAdminRoleCode,
-                "Super Administrador",
+                "Stefan Ronning",
                 "Rol principal con control total del sistema.",
                 true);
 
@@ -276,7 +277,7 @@ namespace BarRecoveryApp.Infrastructure.Persistence.Seed
             {
                 Id = superAdminId,
                 Username = DefaultSuperAdminUsername,
-                DisplayName = "Super Administrador",
+                DisplayName = "Stefan Ronning",
                 RoleId = superAdminRole.Id,
                 PinHash = pin.Hash,
                 PinSalt = pin.Salt,
@@ -400,6 +401,7 @@ namespace BarRecoveryApp.Infrastructure.Persistence.Seed
             await EnsureSupplyAsync(db, "ELECTRODO", "Electrodo", "un");
             await EnsureSupplyAsync(db, "DISCO", "Disco", "un");
             await EnsureSupplyAsync(db, "ALAMBRE", "Alambre", "kg");
+            await EnsureSupplyAsync(db, "GAS", "Gas Mezcla", "psi");
         }
 
         private static async Task EnsureSupplyAsync(
@@ -436,7 +438,7 @@ namespace BarRecoveryApp.Infrastructure.Persistence.Seed
             await EnsureBarAttributeDefinitionAsync(db, "LARGO", "Largo", "mm", 1);
             await EnsureBarAttributeDefinitionAsync(db, "ANCHO", "Ancho", "mm", 2);
             await EnsureBarAttributeDefinitionAsync(db, "ALTO", "Alto", "mm", 3);
-            await EnsureBarAttributeDefinitionAsync(db, "ANGULO", "Ángulo", "°", 4);
+            await EnsureBarAttributeDefinitionAsync(db, "DUREZA", "Dureza", "HRC", 4);
             await EnsureBarAttributeDefinitionAsync(db, "PESO", "Peso", "kg", 5);
         }
 

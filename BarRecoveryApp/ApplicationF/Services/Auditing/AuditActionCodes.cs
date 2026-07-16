@@ -27,6 +27,9 @@
 
         public const string UserCreated = "USER_CREATED";
         public const string UserUpdated = "USER_UPDATED";
+        public const string UserActivated = "USER_ACTIVATED";
+        public const string UserDeactivated = "USER_DEACTIVATED";
+        public const string UserPinReset = "USER_PIN_RESET";
 
         public const string CatalogCreated = "CATALOG_CREATED";
         public const string CatalogUpdated = "CATALOG_UPDATED";

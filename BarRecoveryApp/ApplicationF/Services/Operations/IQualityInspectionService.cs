@@ -12,6 +12,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             string? searchText,
             BarStatus? status,
             bool includeDisposed,
+            int? recoveryCountFilter,
             int maxResults);
 
         Task<bool> CreateInspectionAsync(

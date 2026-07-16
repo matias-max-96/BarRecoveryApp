@@ -53,7 +53,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             string? barTypeId, 
             string? searchText,
             BarStatus? status, 
-            bool includeDisposed, 
+            bool includeDisposed,
+            int? recoveryCountFilter,
             int maxResults)
         {
             var bars = await _barRepository.GetAllAsync();
@@ -85,6 +86,11 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             if (status.HasValue)
             {
                 query = query.Where(x => x.CurrentStatus == status.Value);
+            }
+
+            if (recoveryCountFilter.HasValue)
+            {
+                query = query.Where(x => x.RecoveryCount == recoveryCountFilter.Value);
             }
 
             if (!includeDisposed)

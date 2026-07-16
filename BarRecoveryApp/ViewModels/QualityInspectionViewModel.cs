@@ -17,6 +17,7 @@ namespace BarRecoveryApp.ViewModels
         private BarInspectionTargetDto? _selectedBar;
 
         private string _searchText = string.Empty;
+        private string _recoveryCountFilter = string.Empty;
         private bool _includeDisposed;
 
         private string _recoveryCount = "0";
@@ -109,7 +110,18 @@ namespace BarRecoveryApp.ViewModels
                 }
             }
         }
-
+        public string RecoveryCountFilter
+        {
+            get => _recoveryCountFilter;
+            set
+            {
+                if (SetProperty(ref _recoveryCountFilter, value))
+                {
+                    ClearMessages();
+                    RefreshCommands();
+                }
+            }
+        }
         public bool IncludeDisposed
         {
             get => _includeDisposed;
@@ -261,6 +273,7 @@ namespace BarRecoveryApp.ViewModels
                 SelectedBarType = null;
                 SelectedBar = null;
                 SearchText = string.Empty;
+                RecoveryCountFilter = string.Empty;
                 IncludeDisposed = false;
                 ResultCountText = string.Empty;
 
@@ -303,13 +316,28 @@ namespace BarRecoveryApp.ViewModels
                 Bars.Clear();
                 ClearInspectionFormOnly();
 
+                int? recoveryCountFilter = null;
+
+                if (!string.IsNullOrWhiteSpace(RecoveryCountFilter))
+                {
+                    if (!int.TryParse(RecoveryCountFilter, out var parsedRecoveryCount) ||
+                        parsedRecoveryCount < 0)
+                    {
+                        ShowError("El filtro de recuperaciones debe ser un número válido mayor o igual a 0.");
+                        return;
+                    }
+
+                    recoveryCountFilter = parsedRecoveryCount;
+                }
+
                 var results = await _service.SearchBarsForInspectionAsync(
-                    SelectedPlant?.Id,
-                    SelectedBarType?.Id,
-                    SearchText,
-                    null,
-                    IncludeDisposed,
-                    DefaultMaxResults);
+                                                SelectedPlant?.Id,
+                                                SelectedBarType?.Id,
+                                                SearchText,
+                                                null,
+                                                IncludeDisposed,
+                                                recoveryCountFilter,
+                                                DefaultMaxResults);
 
                 foreach (var bar in results)
                 {
@@ -403,6 +431,7 @@ namespace BarRecoveryApp.ViewModels
             SelectedPlant = null;
             SelectedBarType = null;
             SearchText = string.Empty;
+            RecoveryCountFilter = string.Empty;
             IncludeDisposed = false;
 
             Bars.Clear();

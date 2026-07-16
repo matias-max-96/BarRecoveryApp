@@ -28,7 +28,8 @@
                     Clicked="OnQualityInspectionClicked"/>
             <Button Text="Historial de barra" 
                     Clicked="OnBarHistoryClicked"/>
-            <Button Text="Atributos técnicos" />
+            <Button Text="Atributos técnicos" 
+                    Clicked="OnBarAttributeDefinitionsClicked"/>
             <Button Text="Envíos"
                     Clicked="OnShipmentsClicked"/>
             <Button Text="Recepción de barras"

@@ -80,6 +80,11 @@
                 Placeholder="Buscar por número de barra"
                 Keyboard="Text" />
 
+            <Entry
+                Text="{Binding RecoveryCountFilter}"
+                Placeholder="Filtrar por número de recuperaciones"
+                Keyboard="Numeric"/>
+
             <HorizontalStackLayout Spacing="8">
                 <CheckBox
                     IsChecked="{Binding IncludeDisposed}" />
