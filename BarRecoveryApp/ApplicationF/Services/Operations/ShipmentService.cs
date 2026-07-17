@@ -5,6 +5,8 @@ using BarRecoveryApp.Infrastructure.Persistence.Repositories;
 using BarRecoveryApp.Models.Catalogs;
 using BarRecoveryApp.Models.Enums;
 using BarRecoveryApp.Models.Operations;
+using System.Globalization;
+using System.Text;
 
 namespace BarRecoveryApp.ApplicationF.Services.Operations
 {
@@ -93,18 +95,41 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 query = query.Where(x => x.BarTypeId == barTypeId);
             }
 
-            if (!string.IsNullOrWhiteSpace(searchText))
-            {
-                var normalizedSearch = searchText.Trim().ToUpperInvariant();
+            var normalizedSearch = NormalizeForSearch(searchText);
 
-                query = query.Where(x =>
-                    !string.IsNullOrWhiteSpace(x.BarNumber) &&
-                    x.BarNumber.ToUpperInvariant().Contains(normalizedSearch));
+            if (!string.IsNullOrWhiteSpace(normalizedSearch))
+            {
+                query = query.Where(bar =>
+                {
+                    var plant = plants.FirstOrDefault(x => x.Id == bar.PlantId);
+                    var barType = barTypes.FirstOrDefault(x => x.Id == bar.BarTypeId);
+
+                    var barNumber = NormalizeForSearch(bar.BarNumber);
+                    var plantName = NormalizeForSearch(plant?.Name);
+                    var plantCode = NormalizeForSearch(plant?.Code);
+                    var barTypeName = NormalizeForSearch(barType?.Name);
+                    var barTypeCode = NormalizeForSearch(barType?.Code);
+
+                    var displayText = NormalizeForSearch(
+                        $"{bar.BarNumber} {plant?.Name} {plant?.Code} {barType?.Name} {barType?.Code}");
+
+                    var operationalKey = NormalizeForSearch(
+                        $"{plant?.Code}-{barType?.Code}-{bar.BarNumber}");
+
+                    return barNumber.Contains(normalizedSearch) ||
+                           plantName.Contains(normalizedSearch) ||
+                           plantCode.Contains(normalizedSearch) ||
+                           barTypeName.Contains(normalizedSearch) ||
+                           barTypeCode.Contains(normalizedSearch) ||
+                           displayText.Contains(normalizedSearch) ||
+                           operationalKey.Contains(normalizedSearch);
+                });
             }
 
             query = query
-                .OrderBy(x => x.PlantId)
-                .ThenBy(x => x.BarNumber)
+                .OrderBy(x => x.BarNumber)
+                .ThenBy(x => x.PlantId)
+                .ThenBy(x => x.BarTypeId)
                 .Take(maxResults);
 
             var result = new List<ShipmentBarTargetDto>();
@@ -207,6 +232,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
                 shippedBars.Add(bar);
             }
+            var plants = await _plantRepository.GetAllAsync();
+            var barTypes = await _barTypeRepository.GetAllAsync();
 
             await _auditLogService.WriteAsync(
                 AuditActionCodes.ShipmentCreated,
@@ -217,62 +244,205 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                     shipment,
                     normalizedTransferOrder,
                     normalizedCustomerReference,
-                    shippedBars));
+                    shippedBars,
+                    plants,
+                    barTypes));
 
             foreach (var bar in shippedBars)
             {
+                var plant = plants.FirstOrDefault(x => x.Id == bar.PlantId);
+                var barType = barTypes.FirstOrDefault(x => x.Id == bar.BarTypeId);
+
+                var operationalLabel = BuildBarOperationalLabel(
+                    bar,
+                    plant,
+                    barType);
+
                 await _auditLogService.WriteAsync(
                     AuditActionCodes.BarShipped,
                     "Bar",
                     bar.Id,
-                    $"La barra {bar.BarNumber} fue marcada como enviada en la orden {normalizedTransferOrder}.",
+                    $"La barra {operationalLabel} fue marcada como enviada en la orden {normalizedTransferOrder}.",
                     BuildBarShippedMetadataJson(
                         bar,
                         shipmentId,
-                        normalizedTransferOrder));
+                        normalizedTransferOrder,
+                        plant,
+                        barType));
             }
 
             return true;
         }
         private static string BuildShipmentMetadataJson(
-                                Shipment shipment,
-                                string transferOrder,
-                                string? customerReference,
-                                List<Bar> shippedBars)
+    Shipment shipment,
+    string transferOrder,
+    string? customerReference,
+    List<Bar> shippedBars,
+    List<Plant> plants,
+    List<BarType> barTypes)
         {
             var safeCustomerReference = string.IsNullOrWhiteSpace(customerReference)
                 ? string.Empty
-                : customerReference.Trim().Replace("\"", "'");
+                : SafeJsonValue(customerReference);
 
-            var barNumbers = string.Join(
-                ",",
-                shippedBars.Select(x => x.BarNumber.Replace("\"", "'")));
+            var barsJson = shippedBars
+                .Select(bar =>
+                {
+                    var plant = plants.FirstOrDefault(x => x.Id == bar.PlantId);
+                    var barType = barTypes.FirstOrDefault(x => x.Id == bar.BarTypeId);
+
+                    var plantName = plant?.Name ?? "Planta no encontrada";
+                    var plantCode = plant?.Code ?? string.Empty;
+
+                    var barTypeName = barType?.Name ?? "Tipo no encontrado";
+                    var barTypeCode = barType?.Code ?? string.Empty;
+
+                    var operationalKey = BuildBarOperationalKey(
+                        bar,
+                        plant,
+                        barType);
+
+                    return
+                        "{" +
+                        $"\"BarId\":\"{SafeJsonValue(bar.Id)}\"," +
+                        $"\"BarNumber\":\"{SafeJsonValue(bar.BarNumber)}\"," +
+                        $"\"PlantId\":\"{SafeJsonValue(bar.PlantId)}\"," +
+                        $"\"PlantName\":\"{SafeJsonValue(plantName)}\"," +
+                        $"\"PlantCode\":\"{SafeJsonValue(plantCode)}\"," +
+                        $"\"BarTypeId\":\"{SafeJsonValue(bar.BarTypeId)}\"," +
+                        $"\"BarTypeName\":\"{SafeJsonValue(barTypeName)}\"," +
+                        $"\"BarTypeCode\":\"{SafeJsonValue(barTypeCode)}\"," +
+                        $"\"OperationalKey\":\"{SafeJsonValue(operationalKey)}\"" +
+                        "}";
+                });
+
+            var barsJsonText = string.Join(",", barsJson);
 
             return
                 "{" +
-                $"\"ShipmentId\":\"{shipment.Id}\"," +
-                $"\"TransferOrder\":\"{transferOrder}\"," +
+                $"\"ShipmentId\":\"{SafeJsonValue(shipment.Id)}\"," +
+                $"\"TransferOrder\":\"{SafeJsonValue(transferOrder)}\"," +
                 $"\"CustomerReference\":\"{safeCustomerReference}\"," +
                 $"\"ShippedAt\":\"{shipment.ShippedAtUtc:yyyy-MM-dd HH:mm:ss}\"," +
                 $"\"BarCount\":{shippedBars.Count}," +
-                $"\"BarNumbers\":\"{barNumbers}\"" +
+                $"\"Bars\":[{barsJsonText}]" +
                 "}";
         }
-        private static string BuildBarShippedMetadataJson(
-                                Bar bar,
-                                string shipmentId,
-                                string transferOrder)
+
+        private static string NormalizeForSearch(string? value)
         {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            var normalized = value
+                .Trim()
+                .ToUpperInvariant()
+                .Normalize(NormalizationForm.FormD);
+
+            var builder = new StringBuilder();
+
+            foreach (var character in normalized)
+            {
+                var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(character);
+
+                if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+                    builder.Append(character);
+            }
+
+            return builder
+                .ToString()
+                .Normalize(NormalizationForm.FormC)
+                .Replace(" ", string.Empty)
+                .Replace("-", string.Empty)
+                .Replace("_", string.Empty);
+        }
+
+        private static string BuildBarShippedMetadataJson(
+    Bar bar,
+    string shipmentId,
+    string transferOrder,
+    Plant? plant,
+    BarType? barType)
+        {
+            var plantName = plant?.Name ?? "Planta no encontrada";
+            var plantCode = plant?.Code ?? string.Empty;
+
+            var barTypeName = barType?.Name ?? "Tipo no encontrado";
+            var barTypeCode = barType?.Code ?? string.Empty;
+
+            var operationalKey = BuildBarOperationalKey(
+                bar,
+                plant,
+                barType);
+
             return
                 "{" +
-                $"\"BarId\":\"{bar.Id}\"," +
-                $"\"BarNumber\":\"{bar.BarNumber}\"," +
-                $"\"ShipmentId\":\"{shipmentId}\"," +
-                $"\"TransferOrder\":\"{transferOrder}\"," +
+                $"\"BarId\":\"{SafeJsonValue(bar.Id)}\"," +
+                $"\"BarNumber\":\"{SafeJsonValue(bar.BarNumber)}\"," +
+                $"\"PlantId\":\"{SafeJsonValue(bar.PlantId)}\"," +
+                $"\"PlantName\":\"{SafeJsonValue(plantName)}\"," +
+                $"\"PlantCode\":\"{SafeJsonValue(plantCode)}\"," +
+                $"\"BarTypeId\":\"{SafeJsonValue(bar.BarTypeId)}\"," +
+                $"\"BarTypeName\":\"{SafeJsonValue(barTypeName)}\"," +
+                $"\"BarTypeCode\":\"{SafeJsonValue(barTypeCode)}\"," +
+                $"\"OperationalKey\":\"{SafeJsonValue(operationalKey)}\"," +
+                $"\"ShipmentId\":\"{SafeJsonValue(shipmentId)}\"," +
+                $"\"TransferOrder\":\"{SafeJsonValue(transferOrder)}\"," +
                 $"\"CurrentStatus\":\"{bar.CurrentStatus}\"," +
                 $"\"RecoveryCount\":{bar.RecoveryCount}," +
                 $"\"IsDisposed\":{bar.IsDisposed.ToString().ToLowerInvariant()}" +
                 "}";
+        }
+
+        private static string BuildBarOperationalKey(
+    Bar bar,
+    Plant? plant,
+    BarType? barType)
+        {
+            var plantCode = string.IsNullOrWhiteSpace(plant?.Code)
+                ? plant?.Name ?? "PLANTA"
+                : plant.Code;
+
+            var barTypeCode = string.IsNullOrWhiteSpace(barType?.Code)
+                ? barType?.Name ?? "TIPO"
+                : barType.Code;
+
+            return $"{NormalizeKeyPart(plantCode)}-{NormalizeKeyPart(barTypeCode)}-{NormalizeKeyPart(bar.BarNumber)}";
+        }
+
+        private static string BuildBarOperationalLabel(
+            Bar bar,
+            Plant? plant,
+            BarType? barType)
+        {
+            var plantName = plant?.Name ?? "Planta no encontrada";
+            var barTypeName = barType?.Name ?? "Tipo no encontrado";
+
+            return $"{bar.BarNumber} - {plantName} - {barTypeName}";
+        }
+
+        private static string NormalizeKeyPart(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            return value
+                .Trim()
+                .ToUpperInvariant()
+                .Replace(" ", "_")
+                .Replace("-", "_")
+                .Replace("\"", string.Empty);
+        }
+
+        private static string SafeJsonValue(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            return value
+                .Trim()
+                .Replace("\\", "\\\\")
+                .Replace("\"", "'");
         }
     }
 }

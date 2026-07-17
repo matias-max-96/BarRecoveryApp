@@ -5,6 +5,8 @@ using BarRecoveryApp.Infrastructure.Persistence.Repositories;
 using BarRecoveryApp.Models.Catalogs;
 using BarRecoveryApp.Models.Enums;
 using BarRecoveryApp.Models.Operations;
+using System.Globalization;
+using System.Text;
 
 namespace BarRecoveryApp.ApplicationF.Services.Operations
 {
@@ -95,16 +97,42 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             if (!string.IsNullOrWhiteSpace(searchText))
             {
-                var normalizedSearch = searchText.Trim().ToUpperInvariant();
+                var normalizedSearch = NormalizeForSearch(searchText);
 
-                query = query.Where(x =>
-                    !string.IsNullOrWhiteSpace(x.BarNumber) &&
-                    x.BarNumber.ToUpperInvariant().Contains(normalizedSearch));
+                if (!string.IsNullOrWhiteSpace(normalizedSearch))
+                {
+                    query = query.Where(bar =>
+                    {
+                        var plant = plants.FirstOrDefault(x => x.Id == bar.PlantId);
+                        var barType = barTypes.FirstOrDefault(x => x.Id == bar.BarTypeId);
+
+                        var barNumber = NormalizeForSearch(bar.BarNumber);
+                        var plantName = NormalizeForSearch(plant?.Name);
+                        var plantCode = NormalizeForSearch(plant?.Code);
+                        var barTypeName = NormalizeForSearch(barType?.Name);
+                        var barTypeCode = NormalizeForSearch(barType?.Code);
+
+                        var displayText = NormalizeForSearch(
+                            $"{bar.BarNumber} {plant?.Name} {plant?.Code} {barType?.Name} {barType?.Code}");
+
+                        var operationalKey = NormalizeForSearch(
+                            $"{plant?.Code}-{barType?.Code}-{bar.BarNumber}");
+
+                        return barNumber.Contains(normalizedSearch) ||
+                               plantName.Contains(normalizedSearch) ||
+                               plantCode.Contains(normalizedSearch) ||
+                               barTypeName.Contains(normalizedSearch) ||
+                               barTypeCode.Contains(normalizedSearch) ||
+                               displayText.Contains(normalizedSearch) ||
+                               operationalKey.Contains(normalizedSearch);
+                    });
+                }
             }
 
             query = query
-                .OrderBy(x => x.PlantId)
-                .ThenBy(x => x.BarNumber)
+                .OrderBy(x => x.BarNumber)
+                .ThenBy(x => x.PlantId)
+                .ThenBy(x => x.BarTypeId)
                 .Take(maxResults);
 
             var result = new List<ShipmentBarTargetDto>();
@@ -209,81 +237,225 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 returnedBars.Add(bar);
             }
 
+            var plants = await _plantRepository.GetAllAsync();
+            var barTypes = await _barTypeRepository.GetAllAsync();
+
             await _auditLogService.WriteAsync(
                 AuditActionCodes.BarReturnCreated,
                 "BarReturnReceipt",
                 receiptId,
-                $"Se registro recepcion de retorno con {returnedBars.Count} barra(s).",
+                $"Se registró recepción de retorno con {returnedBars.Count} barra(s).",
                 BuildReturnReceiptMetadataJson(
                     receipt,
                     returnDocument,
                     notes,
-                    returnedBars));
+                    returnedBars,
+                    plants,
+                    barTypes));
 
             foreach (var bar in returnedBars)
             {
+                var plant = plants.FirstOrDefault(x => x.Id == bar.PlantId);
+                var barType = barTypes.FirstOrDefault(x => x.Id == bar.BarTypeId);
+
+                var operationalLabel = BuildBarOperationalLabel(
+                    bar,
+                    plant,
+                    barType);
+
                 await _auditLogService.WriteAsync(
                     AuditActionCodes.BarReturned,
                     "Bar",
                     bar.Id,
-                    $"La barra {bar.BarNumber} fue marcada como retornada/disponible.",
+                    $"La barra {operationalLabel} fue marcada como retornada/disponible.",
                     BuildBarReturnedMetadataJson(
                         bar,
                         receiptId,
-                        receipt.ReturnDocument));
+                        receipt.ReturnDocument,
+                        plant,
+                        barType));
             }
 
             return true;
         }
 
         private static string BuildReturnReceiptMetadataJson(
-                                BarReturnReceipt receipt,
-                                string? returnDocument,
-                                string? notes,
-                                List<Bar> returnedBars)
+    BarReturnReceipt receipt,
+    string? returnDocument,
+    string? notes,
+    List<Bar> returnedBars,
+    List<Plant> plants,
+    List<BarType> barTypes)
         {
             var safeReturnDocument = string.IsNullOrWhiteSpace(returnDocument)
                 ? string.Empty
-                : returnDocument.Trim().Replace("\"", "'");
+                : SafeJsonValue(returnDocument);
 
             var safeNotes = string.IsNullOrWhiteSpace(notes)
                 ? string.Empty
-                : notes.Trim().Replace("\"", "'");
+                : SafeJsonValue(notes);
 
-            var barNumbers = string.Join(
-                ",",
-                returnedBars.Select(x => x.BarNumber.Replace("\"", "'")));
+            var barsJson = returnedBars
+                .Select(bar =>
+                {
+                    var plant = plants.FirstOrDefault(x => x.Id == bar.PlantId);
+                    var barType = barTypes.FirstOrDefault(x => x.Id == bar.BarTypeId);
+
+                    var plantName = plant?.Name ?? "Planta no encontrada";
+                    var plantCode = plant?.Code ?? string.Empty;
+
+                    var barTypeName = barType?.Name ?? "Tipo no encontrado";
+                    var barTypeCode = barType?.Code ?? string.Empty;
+
+                    var operationalKey = BuildBarOperationalKey(
+                        bar,
+                        plant,
+                        barType);
+
+                    return
+                        "{" +
+                        $"\"BarId\":\"{SafeJsonValue(bar.Id)}\"," +
+                        $"\"BarNumber\":\"{SafeJsonValue(bar.BarNumber)}\"," +
+                        $"\"PlantId\":\"{SafeJsonValue(bar.PlantId)}\"," +
+                        $"\"PlantName\":\"{SafeJsonValue(plantName)}\"," +
+                        $"\"PlantCode\":\"{SafeJsonValue(plantCode)}\"," +
+                        $"\"BarTypeId\":\"{SafeJsonValue(bar.BarTypeId)}\"," +
+                        $"\"BarTypeName\":\"{SafeJsonValue(barTypeName)}\"," +
+                        $"\"BarTypeCode\":\"{SafeJsonValue(barTypeCode)}\"," +
+                        $"\"OperationalKey\":\"{SafeJsonValue(operationalKey)}\"" +
+                        "}";
+                });
+
+            var barsJsonText = string.Join(",", barsJson);
 
             return
                 "{" +
-                $"\"ReceiptId\":\"{receipt.Id}\"," +
+                $"\"ReceiptId\":\"{SafeJsonValue(receipt.Id)}\"," +
                 $"\"ReturnDocument\":\"{safeReturnDocument}\"," +
                 $"\"ReceivedAt\":\"{receipt.ReceivedAtUtc:yyyy-MM-dd HH:mm:ss}\"," +
                 $"\"BarCount\":{returnedBars.Count}," +
-                $"\"BarNumbers\":\"{barNumbers}\"," +
+                $"\"Bars\":[{barsJsonText}]," +
                 $"\"Notes\":\"{safeNotes}\"" +
                 "}";
         }
 
         private static string BuildBarReturnedMetadataJson(
-                                Bar bar,
-                                string receiptId,
-                                string? returnDocument)
+    Bar bar,
+    string receiptId,
+    string? returnDocument,
+    Plant? plant,
+    BarType? barType)
         {
             var safeReturnDocument = string.IsNullOrWhiteSpace(returnDocument)
                 ? string.Empty
-                : returnDocument.Trim().Replace("\"", "'");
+                : SafeJsonValue(returnDocument);
+
+            var plantName = plant?.Name ?? "Planta no encontrada";
+            var plantCode = plant?.Code ?? string.Empty;
+
+            var barTypeName = barType?.Name ?? "Tipo no encontrado";
+            var barTypeCode = barType?.Code ?? string.Empty;
+
+            var operationalKey = BuildBarOperationalKey(
+                bar,
+                plant,
+                barType);
 
             return
                 "{" +
-                $"\"BarId\":\"{bar.Id}\"," +
-                $"\"BarNumber\":\"{bar.BarNumber}\"," +
-                $"\"ReceiptId\":\"{receiptId}\"," +
+                $"\"BarId\":\"{SafeJsonValue(bar.Id)}\"," +
+                $"\"BarNumber\":\"{SafeJsonValue(bar.BarNumber)}\"," +
+                $"\"PlantId\":\"{SafeJsonValue(bar.PlantId)}\"," +
+                $"\"PlantName\":\"{SafeJsonValue(plantName)}\"," +
+                $"\"PlantCode\":\"{SafeJsonValue(plantCode)}\"," +
+                $"\"BarTypeId\":\"{SafeJsonValue(bar.BarTypeId)}\"," +
+                $"\"BarTypeName\":\"{SafeJsonValue(barTypeName)}\"," +
+                $"\"BarTypeCode\":\"{SafeJsonValue(barTypeCode)}\"," +
+                $"\"OperationalKey\":\"{SafeJsonValue(operationalKey)}\"," +
+                $"\"ReceiptId\":\"{SafeJsonValue(receiptId)}\"," +
                 $"\"ReturnDocument\":\"{safeReturnDocument}\"," +
                 $"\"CurrentStatus\":\"{bar.CurrentStatus}\"," +
                 $"\"RecoveryCount\":{bar.RecoveryCount}," +
                 $"\"IsDisposed\":{bar.IsDisposed.ToString().ToLowerInvariant()}" +
                 "}";
+        }
+        private static string BuildBarOperationalKey(
+    Bar bar,
+    Plant? plant,
+    BarType? barType)
+        {
+            var plantCode = string.IsNullOrWhiteSpace(plant?.Code)
+                ? plant?.Name ?? "PLANTA"
+                : plant.Code;
+
+            var barTypeCode = string.IsNullOrWhiteSpace(barType?.Code)
+                ? barType?.Name ?? "TIPO"
+                : barType.Code;
+
+            return $"{NormalizeKeyPart(plantCode)}-{NormalizeKeyPart(barTypeCode)}-{NormalizeKeyPart(bar.BarNumber)}";
+        }
+
+        private static string BuildBarOperationalLabel(
+            Bar bar,
+            Plant? plant,
+            BarType? barType)
+        {
+            var plantName = plant?.Name ?? "Planta no encontrada";
+            var barTypeName = barType?.Name ?? "Tipo no encontrado";
+
+            return $"{bar.BarNumber} - {plantName} - {barTypeName}";
+        }
+
+        private static string NormalizeKeyPart(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            return value
+                .Trim()
+                .ToUpperInvariant()
+                .Replace(" ", "_")
+                .Replace("-", "_")
+                .Replace("\"", string.Empty);
+        }
+
+        private static string SafeJsonValue(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            return value
+                .Trim()
+                .Replace("\\", "\\\\")
+                .Replace("\"", "'");
+        }
+
+        private static string NormalizeForSearch(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            var normalized = value
+                .Trim()
+                .ToUpperInvariant()
+                .Normalize(NormalizationForm.FormD);
+
+            var builder = new StringBuilder();
+
+            foreach (var character in normalized)
+            {
+                var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(character);
+
+                if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+                    builder.Append(character);
+            }
+
+            return builder
+                .ToString()
+                .Normalize(NormalizationForm.FormC)
+                .Replace(" ", string.Empty)
+                .Replace("-", string.Empty)
+                .Replace("_", string.Empty);
         }
     }
 }

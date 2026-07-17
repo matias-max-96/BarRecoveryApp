@@ -87,7 +87,7 @@
 
             <Entry
                 Text="{Binding SearchText}"
-                Placeholder="Buscar por número de barra" />
+                Placeholder="Buscar por número, planta o tipo de barra" />
 
             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
 
