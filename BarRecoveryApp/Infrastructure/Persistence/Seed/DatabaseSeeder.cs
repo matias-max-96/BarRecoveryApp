@@ -16,7 +16,7 @@ namespace BarRecoveryApp.Infrastructure.Persistence.Seed
         private const string OperatorRoleCode = "OPERATOR";
 
         private const string DefaultSuperAdminUsername = "superadmin";
-        private const string DefaultSuperAdminPin = "1234";
+        private const string DefaultSuperAdminPin = "4321";
         public DatabaseSeeder(IDatabaseService databaseService)
         {
             _databaseService = databaseService;
@@ -434,27 +434,133 @@ namespace BarRecoveryApp.Infrastructure.Persistence.Seed
 
         private static async Task SeedBarAttributeDefinitionsAsync(SQLiteAsyncConnection db)
         {
-            // Estos atributos son generales. Luego el administrador podrá crear más.
-            await EnsureBarAttributeDefinitionAsync(db, "LARGO", "Largo", "mm", 1);
-            await EnsureBarAttributeDefinitionAsync(db, "ANCHO", "Ancho", "mm", 2);
-            await EnsureBarAttributeDefinitionAsync(db, "ALTO", "Alto", "mm", 3);
-            await EnsureBarAttributeDefinitionAsync(db, "DUREZA", "Dureza", "HRC", 4);
-            await EnsureBarAttributeDefinitionAsync(db, "PESO", "Peso", "kg", 5);
+
+            await EnsureBarAttributeDefinitionAsync(
+                db,
+                "ALTO",
+                "Alto",
+                BarRecoveryApp.Models.Enums.AttributeDataType.Decimal,
+                "mm",
+                displayOrder: 1,
+                isRequired: true,
+                hasRangeValidation: true,
+                minValue: 193.5,
+                maxValue: 194,
+                toleranceText: "193,5 - 194",
+                appliesToPlantCode: "MAPA",
+                appliesToBarTypeCode: "MAPA");
+
+            await EnsureBarAttributeDefinitionAsync(
+                db,
+                "ALTO",
+                "Alto",
+                BarRecoveryApp.Models.Enums.AttributeDataType.Decimal,
+                "mm",
+                displayOrder: 1,
+                isRequired: true,
+                hasRangeValidation: true,
+                minValue: 137.5,
+                maxValue: 139,
+                toleranceText: "137,5 - 139",
+                appliesToPlantCode: "SANTA_FE",
+                appliesToBarTypeCode: "90");
+
+            await EnsureBarAttributeDefinitionAsync(
+                db,
+                "ALTO",
+                "Alto",
+                BarRecoveryApp.Models.Enums.AttributeDataType.Decimal,
+                "mm",
+                displayOrder: 1,
+                isRequired: true,
+                hasRangeValidation: true,
+                minValue: 158,
+                maxValue: 159,
+                toleranceText: "158 - 159",
+                appliesToPlantCode: "SANTA_FE",
+                appliesToBarTypeCode: "60");
         }
 
         private static async Task EnsureBarAttributeDefinitionAsync(
             SQLiteAsyncConnection db,
             string code,
             string name,
-            string unit,
-            int displayOrder)
+            BarRecoveryApp.Models.Enums.AttributeDataType dataType,
+            string? unit,
+            int displayOrder,
+            bool isRequired,
+            bool hasRangeValidation,
+            double? minValue,
+            double? maxValue,
+            string? toleranceText,
+            string? appliesToPlantCode,
+            string? appliesToBarTypeCode)
         {
+            var normalizedCode = code.Trim().ToUpperInvariant();
+
+
+
+            string? appliesToPlantId = null;
+            string? appliesToBarTypeId = null;
+
+            if (!string.IsNullOrWhiteSpace(appliesToPlantCode))
+            {
+                var normalizedPlantCode = appliesToPlantCode.Trim().ToUpperInvariant();
+
+                var plant = await db.Table<Plant>()
+                    .Where(x => x.Code == normalizedPlantCode)
+                    .FirstOrDefaultAsync();
+
+                appliesToPlantId = plant?.Id;
+            }
+
+            if (!string.IsNullOrWhiteSpace(appliesToBarTypeCode))
+            {
+                var normalizedBarTypeCode = appliesToBarTypeCode.Trim().ToUpperInvariant();
+
+                var barType = await db.Table<BarType>()
+                    .Where(x => x.Code == normalizedBarTypeCode)
+                    .FirstOrDefaultAsync();
+
+                appliesToBarTypeId = barType?.Id;
+            }
+
             var existing = await db.Table<BarAttributeDefinition>()
-                .Where(x => x.Code == code)
+                .Where(x =>
+                x.Code == normalizedCode &&
+                x.AppliesToPlantId == appliesToPlantId &&
+                x.AppliesToBarTypeId == appliesToBarTypeId)
                 .FirstOrDefaultAsync();
 
             if (existing is not null)
                 return;
+
+            if (hasRangeValidation)
+            {
+                if (dataType != BarRecoveryApp.Models.Enums.AttributeDataType.Decimal &&
+                    dataType != BarRecoveryApp.Models.Enums.AttributeDataType.Integer)
+                {
+                    hasRangeValidation = false;
+                    minValue = null;
+                    maxValue = null;
+                }
+
+                if (!minValue.HasValue || !maxValue.HasValue)
+                {
+                    hasRangeValidation = false;
+                    minValue = null;
+                    maxValue = null;
+                }
+
+                if (minValue.HasValue &&
+                    maxValue.HasValue &&
+                    minValue.Value > maxValue.Value)
+                {
+                    hasRangeValidation = false;
+                    minValue = null;
+                    maxValue = null;
+                }
+            }
 
             var superAdmin = await db.Table<User>()
                 .Where(x => x.Username == DefaultSuperAdminUsername)
@@ -463,15 +569,29 @@ namespace BarRecoveryApp.Infrastructure.Persistence.Seed
             var attribute = new BarAttributeDefinition
             {
                 Id = Guid.NewGuid().ToString(),
-                Code = code,
-                Name = name,
-                Unit = unit,
-                DataType = BarRecoveryApp.Models.Enums.AttributeDataType.Decimal,
-                IsRequired = false,
-                AppliesToBarTypeId = null,
-                AppliesToPlantId = null,
+
+                Code = normalizedCode,
+                Name = name.Trim(),
+                Unit = string.IsNullOrWhiteSpace(unit)
+                    ? null
+                    : unit.Trim(),
+
+                DataType = dataType,
+                IsRequired = isRequired,
+
+                HasRangeValidation = hasRangeValidation,
+                MinValue = hasRangeValidation ? minValue : null,
+                MaxValue = hasRangeValidation ? maxValue : null,
+                ToleranceText = string.IsNullOrWhiteSpace(toleranceText)
+                    ? null
+                    : toleranceText.Trim(),
+
+                AppliesToBarTypeId = appliesToBarTypeId,
+                AppliesToPlantId = appliesToPlantId,
+
                 DisplayOrder = displayOrder,
                 CreatedByUserId = superAdmin?.Id ?? string.Empty,
+
                 IsActive = true,
                 CreatedAtUtc = DateTime.Now,
                 UpdatedAtUtc = DateTime.Now

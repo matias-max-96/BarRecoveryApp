@@ -118,14 +118,23 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 var builder = new StringBuilder();
 
                 builder.AppendLine(
-                    "BarNumber;Plant;PlantCode;BarType;BarTypeCode;RecoveryCount;Status;IsDisposed;IsActive;CreatedAt;UpdatedAt");
+                    "OperationalKey;BarNumber;Plant;PlantCode;BarType;BarTypeCode;RecoveryCount;Status;IsDisposed;IsActive;CreatedAt;UpdatedAt");
 
-                foreach (var bar in bars.OrderBy(x => x.BarNumber))
+                foreach (var bar in bars
+                    .OrderBy(x => x.BarNumber)
+                    .ThenBy(x => x.PlantId)
+                    .ThenBy(x => x.BarTypeId))
                 {
                     var plant = plants.FirstOrDefault(x => x.Id == bar.PlantId);
                     var barType = barTypes.FirstOrDefault(x => x.Id == bar.BarTypeId);
 
+                    var operationalKey = BuildBarOperationalKey(
+                        bar,
+                        plant,
+                        barType);
+
                     var line = string.Join(";",
+                        EscapeCsv(operationalKey),
                         EscapeCsv(bar.BarNumber),
                         EscapeCsv(plant?.Name ?? "Planta no encontrada"),
                         EscapeCsv(plant?.Code ?? string.Empty),
@@ -949,6 +958,33 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 $"\"FromDate\":\"{fromDateValue}\"," +
                 $"\"ToDate\":\"{toDateValue}\"" +
                 "}";
+        }
+        private static string BuildBarOperationalKey(
+                                Bar bar,
+                                Plant? plant,
+                                BarType? barType)
+        {
+            var plantCode = string.IsNullOrWhiteSpace(plant?.Code)
+                ? plant?.Name ?? "PLANTA"
+                : plant.Code;
+
+            var barTypeCode = string.IsNullOrWhiteSpace(barType?.Code)
+                ? barType?.Name ?? "TIPO"
+                : barType.Code;
+
+            return $"{NormalizeKeyPart(plantCode)}-{NormalizeKeyPart(barTypeCode)}-{NormalizeKeyPart(bar.BarNumber)}";
+        }
+        private static string NormalizeKeyPart(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            return value
+                .Trim()
+                .ToUpperInvariant()
+                .Replace(" ", "_")
+                .Replace("-", "_")
+                .Replace("\"", string.Empty);
         }
     }
 }

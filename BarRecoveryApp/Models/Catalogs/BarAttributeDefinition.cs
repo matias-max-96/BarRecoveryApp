@@ -7,7 +7,7 @@ namespace BarRecoveryApp.Models.Catalogs
     [Table("BarAttributeDefinitions")]
     public class BarAttributeDefinition : EntityBase
     {
-        [Indexed(Unique = true)]
+        [Indexed]
         [MaxLength(50)]
         public string Code { get; set; } = string.Empty;
 
@@ -21,9 +21,20 @@ namespace BarRecoveryApp.Models.Catalogs
 
         public bool IsRequired { get; set; } = false;
 
-        [MaxLength (36)]
-        public string? AppliesToBarTypeId { get; set;  }
+        public bool HasRangeValidation { get; set; } = false;
 
+        public double? MinValue { get; set; }
+
+        public double? MaxValue { get; set; }
+
+        [MaxLength(200)]
+        public string? ToleranceText { get; set; }
+
+        [Indexed]
+        [MaxLength(36)]
+        public string? AppliesToBarTypeId { get; set; }
+
+        [Indexed]
         [MaxLength(36)]
         public string? AppliesToPlantId { get; set; }
 
@@ -31,6 +42,5 @@ namespace BarRecoveryApp.Models.Catalogs
 
         [MaxLength(36)]
         public string CreatedByUserId { get; set; } = string.Empty;
-
     }
 }

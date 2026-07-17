@@ -19,6 +19,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
         private readonly IRepository<QualityInspection> _inspectionRepository;
         private readonly ICurrentUserService _currentUserService;
         private readonly IAuditLogService _auditLogService;
+        private readonly IRepository<BarAttributeDefinition> _attributeDefinitionRepository;
+        private readonly IRepository<QualityInspectionAttributeValue> _inspectionAttributeValueRepository;
 
         public QualityInspectionService(
             IRepository<Bar> barRepository,
@@ -26,6 +28,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             IRepository<BarType> barTypeRepository,
             IRepository<BarRecoveryPolicy> policyRepository,
             IRepository<QualityInspection> inspectionRepository,
+            IRepository<BarAttributeDefinition> attributeDefinitionRepository,
+            IRepository<QualityInspectionAttributeValue> inspectionAttributeValueRepository,
             ICurrentUserService currentUserService,
             IAuditLogService auditLogService)
         {
@@ -44,12 +48,19 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             _inspectionRepository = inspectionRepository
                 ?? throw new ArgumentNullException(nameof(inspectionRepository));
 
+            _attributeDefinitionRepository = attributeDefinitionRepository
+                ?? throw new ArgumentNullException(nameof(attributeDefinitionRepository));
+
+            _inspectionAttributeValueRepository = inspectionAttributeValueRepository
+                ?? throw new ArgumentNullException(nameof(inspectionAttributeValueRepository));
+
             _currentUserService = currentUserService
                 ?? throw new ArgumentNullException(nameof(currentUserService));
 
             _auditLogService = auditLogService
                 ?? throw new ArgumentNullException(nameof(auditLogService));
         }
+
         public async Task<List<BarInspectionTargetDto>> SearchBarsForInspectionAsync(
             string? plantId, 
             string? barTypeId, 
@@ -154,7 +165,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             return result;
         }
-       
+
 
         public async Task<bool> CreateInspectionAsync(
             string barId,
@@ -162,7 +173,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             bool canBeRecovered,
             bool mustBeDisposed,
             bool isApprovedForShipment,
-            string? notes)
+            string? notes,
+            List<QualityInspectionAttributeValueInputDto> attributeValues)
         {
             if (!_currentUserService.IsAuthenticated)
                 return false;
@@ -211,6 +223,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             };
 
             await _inspectionRepository.InsertAsync(inspection);
+            await SaveInspectionAttributeValuesAsync(inspection, bar, attributeValues);
 
             bar.RecoveryCount = recoveryCountAtInspection;
             bar.UpdatedAtUtc = DateTime.Now;
@@ -378,6 +391,144 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 .Replace(" ", string.Empty)
                 .Replace("-", string.Empty)
                 .Replace("_", string.Empty);
+        }
+        public async Task<List<BarAttributeDefinition>> GetApplicableAttributeDefinitionsAsync(
+    string barId)
+        {
+            if (string.IsNullOrWhiteSpace(barId))
+                return new List<BarAttributeDefinition>();
+
+            var bar = await _barRepository.GetByIdAsync(barId);
+
+            if (bar is null)
+                return new List<BarAttributeDefinition>();
+
+            var definitions = await _attributeDefinitionRepository.GetAllAsync();
+
+            var applicable = definitions
+                .Where(x => x.IsActive)
+                .Where(x =>
+                    (string.IsNullOrWhiteSpace(x.AppliesToPlantId) ||
+                     x.AppliesToPlantId == bar.PlantId) &&
+                    (string.IsNullOrWhiteSpace(x.AppliesToBarTypeId) ||
+                     x.AppliesToBarTypeId == bar.BarTypeId))
+                .Select(x => new
+                {
+                    Definition = x,
+                    Specificity =
+                        (!string.IsNullOrWhiteSpace(x.AppliesToPlantId) &&
+                         x.AppliesToPlantId == bar.PlantId ? 2 : 0) +
+                        (!string.IsNullOrWhiteSpace(x.AppliesToBarTypeId) &&
+                         x.AppliesToBarTypeId == bar.BarTypeId ? 1 : 0)
+                })
+                .GroupBy(x => x.Definition.Code)
+                .Select(g => g
+                    .OrderByDescending(x => x.Specificity)
+                    .ThenBy(x => x.Definition.DisplayOrder)
+                    .First()
+                    .Definition)
+                .OrderBy(x => x.DisplayOrder)
+                .ThenBy(x => x.Name)
+                .ToList();
+
+            return applicable;
+        }
+
+        private async Task SaveInspectionAttributeValuesAsync(
+    QualityInspection inspection,
+    Bar bar,
+    List<QualityInspectionAttributeValueInputDto> attributeValues)
+        {
+            if (attributeValues is null || attributeValues.Count == 0)
+                return;
+
+            var definitions = await _attributeDefinitionRepository.GetAllAsync();
+
+            foreach (var input in attributeValues)
+            {
+                if (string.IsNullOrWhiteSpace(input.AttributeDefinitionId))
+                    continue;
+
+                var definition = definitions.FirstOrDefault(
+                    x => x.Id == input.AttributeDefinitionId);
+
+                if (definition is null)
+                    continue;
+
+                var isOutOfRange = CalculateOutOfRange(
+                    definition,
+                    input);
+
+                var value = new QualityInspectionAttributeValue
+                {
+                    Id = Guid.NewGuid().ToString(),
+
+                    QualityInspectionId = inspection.Id,
+                    BarId = bar.Id,
+                    AttributeDefinitionId = definition.Id,
+
+                    AttributeCode = definition.Code,
+                    AttributeName = definition.Name,
+                    DataType = definition.DataType,
+
+                    WasMeasured = input.WasMeasured,
+
+                    ValueText = input.ValueText,
+                    ValueNumber = input.ValueNumber,
+                    ValueDate = input.ValueDate,
+                    ValueBool = input.ValueBool,
+
+                    IsOutOfRange = isOutOfRange,
+
+                    MinValueAtInspection = definition.HasRangeValidation
+                        ? definition.MinValue
+                        : null,
+
+                    MaxValueAtInspection = definition.HasRangeValidation
+                        ? definition.MaxValue
+                        : null,
+
+                    UnitAtInspection = definition.Unit,
+                    ToleranceTextAtInspection = definition.ToleranceText,
+
+                    IsActive = true,
+                    CreatedAtUtc = DateTime.Now,
+                    UpdatedAtUtc = DateTime.Now
+                };
+
+                await _inspectionAttributeValueRepository.InsertAsync(value);
+            }
+        }
+        private static bool? CalculateOutOfRange(BarAttributeDefinition definition, QualityInspectionAttributeValueInputDto input)
+        {
+            if (!input.WasMeasured)
+                return null;
+
+            if (!definition.HasRangeValidation)
+                return null;
+
+            if (definition.DataType != AttributeDataType.Decimal &&
+                definition.DataType != AttributeDataType.Integer)
+            {
+                return null;
+            }
+
+            if (!input.ValueNumber.HasValue)
+                return null;
+
+            if (definition.MinValue.HasValue &&
+                input.ValueNumber.Value < definition.MinValue.Value)
+            {
+                return true;
+            }
+
+            if (definition.MaxValue.HasValue &&
+                input.ValueNumber.Value > definition.MaxValue.Value)
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

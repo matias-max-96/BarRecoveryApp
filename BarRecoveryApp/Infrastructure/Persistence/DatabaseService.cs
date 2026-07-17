@@ -95,6 +95,7 @@ namespace BarRecoveryApp.Infrastructure.Persistence
             await SafeCreateTableAsync<RecoveryWorkSupply>();
 
             await SafeCreateTableAsync<QualityInspection>();
+            await SafeCreateTableAsync<QualityInspectionAttributeValue>();
             await SafeCreateTableAsync<Shipment>();
             await SafeCreateTableAsync<ShipmentBar>();
             await SafeCreateTableAsync<BarReturnReceipt>();

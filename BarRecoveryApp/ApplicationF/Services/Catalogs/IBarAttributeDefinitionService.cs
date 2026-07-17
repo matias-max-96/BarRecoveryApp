@@ -11,15 +11,19 @@ namespace BarRecoveryApp.ApplicationF.Services.Catalogs
         Task<List<BarType>> GetActiveBarTypesAsync();
 
         Task<bool> SaveDefinitionAsync(
-            string? definitionId,
-            string code,
-            string name,
-            BarRecoveryApp.Models.Enums.AttributeDataType dataType,
-            string? unit,
-            bool isRequired,
-            string? appliesToPlantId,
-            string? appliesToBarTypeId,
-            int displayOrder);
+                    string? definitionId,
+                    string code,
+                    string name,
+                    BarRecoveryApp.Models.Enums.AttributeDataType dataType,
+                    string? unit,
+                    bool isRequired,
+                    bool hasRangeValidation,
+                    double? minValue,
+                    double? maxValue,
+                    string? toleranceText,
+                    string? appliesToPlantId,
+                    string? appliesToBarTypeId,
+                    int displayOrder);
 
         Task<bool> SetDefinitionActiveStateAsync(
             string definitionId,

@@ -15,13 +15,17 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             int? recoveryCountFilter,
             int maxResults);
 
+        Task<List<BarAttributeDefinition>> GetApplicableAttributeDefinitionsAsync(
+            string barId);
+
         Task<bool> CreateInspectionAsync(
             string barId,
             int recoveryCountAtInspection,
             bool canBeRecovered,
             bool mustBeDisposed,
             bool isApprovedForShipment,
-            string? notes);
+            string? notes,
+            List<QualityInspectionAttributeValueInputDto> attributeValues);
 
         Task<List<Plant>> GetActivePlantsAsync();
 

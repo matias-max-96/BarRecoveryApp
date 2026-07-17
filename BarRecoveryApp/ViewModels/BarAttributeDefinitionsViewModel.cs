@@ -1,8 +1,11 @@
-﻿using System.Collections.ObjectModel;
-using BarRecoveryApp.ApplicationF.Services.Catalogs;
+﻿using BarRecoveryApp.ApplicationF.Services.Catalogs;
 using BarRecoveryApp.Models.Catalogs;
 using BarRecoveryApp.Models.Enums;
+using BarRecoveryApp.ViewModels.Items;
 using BarRecoveryApp.ViewModels.Options;
+using System.Collections.ObjectModel;
+using System.Globalization;
+
 
 namespace BarRecoveryApp.ViewModels
 {
@@ -10,7 +13,6 @@ namespace BarRecoveryApp.ViewModels
     {
         private readonly IBarAttributeDefinitionService _service;
 
-        private BarAttributeDefinition? _selectedDefinition;
         private AttributeDataTypeOption? _selectedDataType;
         private Plant? _selectedPlant;
         private BarType? _selectedBarType;
@@ -19,10 +21,17 @@ namespace BarRecoveryApp.ViewModels
         private string _name = string.Empty;
         private string _unit = string.Empty;
         private string _displayOrder = "0";
+
         private bool _isRequired;
+
+        private bool _hasRangeValidation;
+        private string _minValue = string.Empty;
+        private string _maxValue = string.Empty;
+        private string _toleranceText = string.Empty;
 
         private string _errorMessage = string.Empty;
         private bool _hasError;
+
         private string _successMessage = string.Empty;
         private bool _hasSuccess;
 
@@ -34,9 +43,10 @@ namespace BarRecoveryApp.ViewModels
 
             Title = "Atributos técnicos";
 
-            Definitions = new ObservableCollection<BarAttributeDefinition>();
+            Definitions = new ObservableCollection<BarAttributeDefinitionItemViewModel>();
             Plants = new ObservableCollection<Plant>();
             BarTypes = new ObservableCollection<BarType>();
+
             DataTypes = new ObservableCollection<AttributeDataTypeOption>
             {
                 new AttributeDataTypeOption { Value = AttributeDataType.Text, Name = "Texto" },
@@ -54,7 +64,7 @@ namespace BarRecoveryApp.ViewModels
             SelectedDataType = DataTypes.FirstOrDefault(x => x.Value == AttributeDataType.Decimal);
         }
 
-        public ObservableCollection<BarAttributeDefinition> Definitions { get; }
+        public ObservableCollection<BarAttributeDefinitionItemViewModel> Definitions { get; }
 
         public ObservableCollection<Plant> Plants { get; }
 
@@ -62,7 +72,9 @@ namespace BarRecoveryApp.ViewModels
 
         public ObservableCollection<AttributeDataTypeOption> DataTypes { get; }
 
-        public BarAttributeDefinition? SelectedDefinition
+        private BarAttributeDefinitionItemViewModel? _selectedDefinition;
+
+        public BarAttributeDefinitionItemViewModel? SelectedDefinition
         {
             get => _selectedDefinition;
             set
@@ -83,6 +95,13 @@ namespace BarRecoveryApp.ViewModels
             {
                 if (SetProperty(ref _selectedDataType, value))
                 {
+                    if (value is not null &&
+                        value.Value != AttributeDataType.Decimal &&
+                        value.Value != AttributeDataType.Integer)
+                    {
+                        HasRangeValidation = false;
+                    }
+
                     ClearMessages();
                     RefreshCommands();
                 }
@@ -147,6 +166,58 @@ namespace BarRecoveryApp.ViewModels
             set
             {
                 if (SetProperty(ref _unit, value))
+                {
+                    ClearMessages();
+                    RefreshCommands();
+                }
+            }
+        }
+
+        public bool HasRangeValidation
+        {
+            get => _hasRangeValidation;
+            set
+            {
+                if (SetProperty(ref _hasRangeValidation, value))
+                {
+                    ClearMessages();
+                    RefreshCommands();
+                }
+            }
+        }
+
+        public string MinValue
+        {
+            get => _minValue;
+            set
+            {
+                if (SetProperty(ref _minValue, value))
+                {
+                    ClearMessages();
+                    RefreshCommands();
+                }
+            }
+        }
+
+        public string MaxValue
+        {
+            get => _maxValue;
+            set
+            {
+                if (SetProperty(ref _maxValue, value))
+                {
+                    ClearMessages();
+                    RefreshCommands();
+                }
+            }
+        }
+
+        public string ToleranceText
+        {
+            get => _toleranceText;
+            set
+            {
+                if (SetProperty(ref _toleranceText, value))
                 {
                     ClearMessages();
                     RefreshCommands();
@@ -233,8 +304,18 @@ namespace BarRecoveryApp.ViewModels
                 var plants = await _service.GetActivePlantsAsync();
                 var barTypes = await _service.GetActiveBarTypesAsync();
 
-                foreach (var item in definitions)
-                    Definitions.Add(item);
+                foreach (var definition in definitions)
+                {
+                    var plant = plants.FirstOrDefault(x => x.Id == definition.AppliesToPlantId);
+                    var barType = barTypes.FirstOrDefault(x => x.Id == definition.AppliesToBarTypeId);
+
+                    Definitions.Add(new BarAttributeDefinitionItemViewModel
+                    {
+                        Definition = definition,
+                        PlantName = plant?.Name ?? "General",
+                        BarTypeName = barType?.Name ?? "General"
+                    });
+                }
 
                 foreach (var plant in plants)
                     Plants.Add(plant);
@@ -271,20 +352,58 @@ namespace BarRecoveryApp.ViewModels
 
                 var order = int.Parse(DisplayOrder);
 
+                double? minValue = null;
+                double? maxValue = null;
+
+                if (HasRangeValidation)
+                {
+                    if (SelectedDataType!.Value != AttributeDataType.Decimal &&
+                        SelectedDataType.Value != AttributeDataType.Integer)
+                    {
+                        ShowError("La validación por rango solo aplica para atributos numéricos.");
+                        return;
+                    }
+
+                    if (!TryParseDecimal(MinValue, out var parsedMin))
+                    {
+                        ShowError("El valor mínimo debe ser numérico.");
+                        return;
+                    }
+
+                    if (!TryParseDecimal(MaxValue, out var parsedMax))
+                    {
+                        ShowError("El valor máximo debe ser numérico.");
+                        return;
+                    }
+
+                    if (parsedMin > parsedMax)
+                    {
+                        ShowError("El valor mínimo no puede ser mayor que el valor máximo.");
+                        return;
+                    }
+
+                    minValue = parsedMin;
+                    maxValue = parsedMax;
+                }
+
                 var saved = await _service.SaveDefinitionAsync(
-                    SelectedDefinition?.Id,
+                    SelectedDefinition?.Definition.Id,
                     Code,
                     Name,
                     SelectedDataType!.Value,
                     Unit,
                     IsRequired,
+                    HasRangeValidation,
+                    minValue,
+                    maxValue,
+                    ToleranceText,
                     SelectedPlant?.Id,
                     SelectedBarType?.Id,
                     order);
 
                 if (!saved)
                 {
-                    ShowError("No fue posible guardar el atributo. Verifique permisos o código duplicado.");
+                    ShowError("No fue posible guardar el atributo. Verifique permisos, código duplicado o configuración de rango.");
                     return;
                 }
 
@@ -293,7 +412,6 @@ namespace BarRecoveryApp.ViewModels
                     : "Atributo técnico actualizado correctamente.");
 
                 ClearForm();
-
                 await LoadAsync();
             }
             catch (Exception ex)
@@ -317,10 +435,12 @@ namespace BarRecoveryApp.ViewModels
                 IsBusy = true;
                 ClearMessages();
 
-                var newState = !SelectedDefinition.IsActive;
+                var definition = SelectedDefinition.Definition;
+
+                var newState = !definition.IsActive;
 
                 var changed = await _service.SetDefinitionActiveStateAsync(
-                    SelectedDefinition.Id,
+                    definition.Id,
                     newState);
 
                 if (!changed)
@@ -334,7 +454,6 @@ namespace BarRecoveryApp.ViewModels
                     : "Atributo desactivado correctamente.");
 
                 ClearForm();
-
                 await LoadAsync();
             }
             catch (Exception ex)
@@ -379,20 +498,31 @@ namespace BarRecoveryApp.ViewModels
             }
             else
             {
-                Code = SelectedDefinition.Code;
-                Name = SelectedDefinition.Name;
-                Unit = SelectedDefinition.Unit ?? string.Empty;
-                IsRequired = SelectedDefinition.IsRequired;
-                DisplayOrder = SelectedDefinition.DisplayOrder.ToString();
+                var definition = SelectedDefinition.Definition;
+
+                Code = definition.Code;
+                Name = definition.Name;
+                Unit = definition.Unit ?? string.Empty;
+                IsRequired = definition.IsRequired;
+                DisplayOrder = definition.DisplayOrder.ToString();
+
+                HasRangeValidation = definition.HasRangeValidation;
+                MinValue = definition.MinValue.HasValue
+                    ? definition.MinValue.Value.ToString(CultureInfo.InvariantCulture)
+                    : string.Empty;
+                MaxValue = definition.MaxValue.HasValue
+                    ?   definition.MaxValue.Value.ToString(CultureInfo.InvariantCulture)
+                    : string.Empty;
+                ToleranceText = definition.ToleranceText ?? string.Empty;
 
                 SelectedDataType = DataTypes.FirstOrDefault(
-                    x => x.Value == SelectedDefinition.DataType);
+                    x => x.Value == definition.DataType);
 
                 SelectedPlant = Plants.FirstOrDefault(
-                    x => x.Id == SelectedDefinition.AppliesToPlantId);
+                    x => x.Id == definition.AppliesToPlantId);
 
                 SelectedBarType = BarTypes.FirstOrDefault(
-                    x => x.Id == SelectedDefinition.AppliesToBarTypeId);
+                    x => x.Id == definition.AppliesToBarTypeId);
             }
 
             OnPropertyChanged(nameof(SaveButtonText));
@@ -412,11 +542,29 @@ namespace BarRecoveryApp.ViewModels
             Name = string.Empty;
             Unit = string.Empty;
             IsRequired = false;
+
+            HasRangeValidation = false;
+            MinValue = string.Empty;
+            MaxValue = string.Empty;
+            ToleranceText = string.Empty;
+
             DisplayOrder = "0";
             SelectedPlant = null;
             SelectedBarType = null;
+
             SelectedDataType = DataTypes.FirstOrDefault(
                 x => x.Value == AttributeDataType.Decimal);
+        }
+
+        private static bool TryParseDecimal(
+            string value,
+            out double result)
+        {
+            return double.TryParse(
+                value.Replace(",", "."),
+                NumberStyles.Any,
+                CultureInfo.InvariantCulture,
+                out result);
         }
 
         private void ShowError(string message)

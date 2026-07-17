@@ -1,8 +1,9 @@
-﻿using System.Collections.ObjectModel;
-using BarRecoveryApp.ApplicationF.Services.Operations;
+﻿using BarRecoveryApp.ApplicationF.Services.Operations;
 using BarRecoveryApp.ApplicationF.Services.Operations.DTOs;
 using BarRecoveryApp.Models.Catalogs;
 using BarRecoveryApp.Models.Enums;
+using BarRecoveryApp.ViewModels.Items;
+using System.Collections.ObjectModel;
 
 namespace BarRecoveryApp.ViewModels
 {
@@ -44,6 +45,7 @@ namespace BarRecoveryApp.ViewModels
             Plants = new ObservableCollection<Plant>();
             BarTypes = new ObservableCollection<BarType>();
             Bars = new ObservableCollection<BarInspectionTargetDto>();
+            TechnicalAttributes = new ObservableCollection<QualityInspectionAttributeItemViewModel>();
 
             LoadCommand = new RelayCommand(LoadAsync);
             SearchCommand = new RelayCommand(SearchAsync, CanSearch);
@@ -57,6 +59,8 @@ namespace BarRecoveryApp.ViewModels
         public ObservableCollection<BarType> BarTypes { get; }
 
         public ObservableCollection<BarInspectionTargetDto> Bars { get; }
+
+        public ObservableCollection<QualityInspectionAttributeItemViewModel> TechnicalAttributes { get; }
 
         public Plant? SelectedPlant
         {
@@ -91,7 +95,7 @@ namespace BarRecoveryApp.ViewModels
             {
                 if (SetProperty(ref _selectedBar, value))
                 {
-                    LoadSelectedBar();
+                    _ = LoadSelectedBarAsync();
                     ClearMessages();
                     RefreshCommands();
                 }
@@ -378,7 +382,10 @@ namespace BarRecoveryApp.ViewModels
                 ShowError("Debe seleccionar una barra e ingresar recuperaciones válidas.");
                 return;
             }
+            var attributeValues = BuildAttributeValueInputs();
 
+            if (attributeValues is null)
+                return;
             try
             {
                 IsBusy = true;
@@ -392,7 +399,8 @@ namespace BarRecoveryApp.ViewModels
                     CanBeRecovered,
                     MustBeDisposed,
                     IsApprovedForShipment,
-                    Notes);
+                    Notes,
+                    attributeValues);
 
                 if (!saved)
                 {
@@ -458,8 +466,10 @@ namespace BarRecoveryApp.ViewModels
                    && !(MustBeDisposed && IsApprovedForShipment);
         }
 
-        private void LoadSelectedBar()
+        private async Task LoadSelectedBarAsync()
         {
+            TechnicalAttributes.Clear();
+
             if (SelectedBar is null)
             {
                 RecoveryCount = "0";
@@ -471,11 +481,23 @@ namespace BarRecoveryApp.ViewModels
             else
             {
                 RecoveryCount = SelectedBar.CurrentRecoveryCount.ToString();
-
                 CanBeRecovered = false;
                 MustBeDisposed = false;
                 IsApprovedForShipment = false;
                 Notes = string.Empty;
+
+                var definitions = await _service.GetApplicableAttributeDefinitionsAsync(
+                    SelectedBar.BarId);
+
+                foreach (var definition in definitions)
+                {
+                    TechnicalAttributes.Add(new QualityInspectionAttributeItemViewModel
+                    {
+                        Definition = definition,
+                        WasMeasured = definition.IsRequired
+
+                    });
+                }
             }
 
             OnPropertyChanged(nameof(SelectedBarInfo));
@@ -489,6 +511,7 @@ namespace BarRecoveryApp.ViewModels
             MustBeDisposed = false;
             IsApprovedForShipment = false;
             Notes = string.Empty;
+            TechnicalAttributes.Clear();
 
             OnPropertyChanged(nameof(SelectedBarInfo));
         }
@@ -530,6 +553,100 @@ namespace BarRecoveryApp.ViewModels
 
             OnPropertyChanged(nameof(SelectedBarInfo));
             OnPropertyChanged(nameof(ResultCountText));
+        }
+        private List<QualityInspectionAttributeValueInputDto>? BuildAttributeValueInputs()
+        {
+            var result = new List<QualityInspectionAttributeValueInputDto>();
+
+            foreach (var attribute in TechnicalAttributes)
+            {
+                if (attribute.IsRequired && !attribute.WasMeasured)
+                {
+                    ShowError($"El atributo {attribute.Name} es obligatorio.");
+                    return null;
+                }
+
+                if (!attribute.WasMeasured)
+                {
+                    result.Add(new QualityInspectionAttributeValueInputDto
+                    {
+                        AttributeDefinitionId = attribute.AttributeDefinitionId,
+                        WasMeasured = false
+                    });
+
+                    continue;
+                }
+
+                if (attribute.IsNumeric)
+                {
+                    if (!attribute.TryGetNumericValue(out var numericValue))
+                    {
+                        if (attribute.IsRequired)
+                        {
+                            ShowError($"Debe ingresar un valor numérico para {attribute.Name}.");
+                            return null;
+                        }
+
+                        continue;
+                    }
+
+                    result.Add(new QualityInspectionAttributeValueInputDto
+                    {
+                        AttributeDefinitionId = attribute.AttributeDefinitionId,
+                        WasMeasured = true,
+                        ValueNumber = numericValue,
+                        ValueText = attribute.ValueText
+                    });
+
+                    continue;
+                }
+
+                if (attribute.IsBoolean)
+                {
+                    if (!attribute.ValueBool.HasValue)
+                    {
+                        ShowError($"Debe seleccionar Sí o No para {attribute.Name}, o desmarcar la prueba.");
+                        return null;
+                    }
+
+                    result.Add(new QualityInspectionAttributeValueInputDto
+                    {
+                        AttributeDefinitionId = attribute.AttributeDefinitionId,
+                        WasMeasured = true,
+                        ValueBool = attribute.ValueBool
+                    });
+
+                    continue;
+                }
+
+                if (attribute.IsText)
+                {
+                    if (attribute.IsRequired &&
+                        string.IsNullOrWhiteSpace(attribute.ValueText))
+                    {
+                        ShowError($"Debe ingresar un valor para {attribute.Name}.");
+                        return null;
+                    }
+
+                    result.Add(new QualityInspectionAttributeValueInputDto
+                    {
+                        AttributeDefinitionId = attribute.AttributeDefinitionId,
+                        WasMeasured = true,
+                        ValueText = attribute.ValueText
+                    });
+
+                    continue;
+                }
+
+                result.Add(new QualityInspectionAttributeValueInputDto
+                {
+                    AttributeDefinitionId = attribute.AttributeDefinitionId,
+                    WasMeasured = attribute.WasMeasured,
+                    ValueText = attribute.ValueText
+                });
+            }
+
+            return result;
         }
     }
 }

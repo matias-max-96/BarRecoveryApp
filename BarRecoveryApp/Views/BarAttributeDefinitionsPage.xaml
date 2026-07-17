@@ -56,11 +56,11 @@
 
             <Entry
                 Text="{Binding Code}"
-                Placeholder="Código ej: LARGO, PESO, ANGULO" />
+                Placeholder="Código ej: LARGO, PESO, DUREZA" />
 
             <Entry
                 Text="{Binding Name}"
-                Placeholder="Nombre ej: Largo, Peso, Ángulo" />
+                Placeholder="Nombre ej: Largo, Peso, Dureza" />
 
             <Picker
                 Title="Tipo de dato"
@@ -70,8 +70,31 @@
 
             <Entry
                 Text="{Binding Unit}"
-                Placeholder="Unidad ej: mm, kg, °" />
+                Placeholder="Unidad ej: mm, kg, HRC" />
 
+            <HorizontalStackLayout Spacing="8">
+                <CheckBox
+                     IsChecked="{Binding HasRangeValidation}" />
+
+                <Label
+                     Text="Validar por rango"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <Entry
+                Text="{Binding MinValue}"
+                Placeholder="Valor mínimo ej: 137,5"
+                Keyboard="Numeric" />
+
+            <Entry
+                Text="{Binding MaxValue}"
+                Placeholder="Valor máximo ej: 139"
+                Keyboard="Numeric" />
+
+            <Entry
+                Text="{Binding ToleranceText}"
+                Placeholder="Texto tolerancia ej: 137,5 - 139" />
+            
             <Entry
                 Text="{Binding DisplayOrder}"
                 Placeholder="Orden visual ej: 1, 2, 3"
@@ -144,6 +167,7 @@
                             </Border.StrokeShape>
 
                             <VerticalStackLayout Spacing="4">
+
                                 <Label
                                     Text="{Binding Name}"
                                     FontAttributes="Bold"
@@ -160,16 +184,37 @@
                                     TextColor="Gray" />
 
                                 <Label
+                                    Text="{Binding HasRangeValidationText, StringFormat='Valida rango: {0}'}"
+                                    FontSize="13"
+                                    TextColor="Gray" />
+
+                                <Label
+                                    Text="{Binding ToleranceText, StringFormat='Tolerancia: {0}'}"
+                                    FontSize="13"
+                                    TextColor="Gray" />
+
+                                <Label
                                     Text="{Binding DisplayOrder, StringFormat='Orden: {0}'}"
                                     FontSize="13" />
 
                                 <Label
-                                    Text="{Binding IsRequired, StringFormat='Obligatorio: {0}'}"
+                                    Text="{Binding IsRequiredText, StringFormat='Obligatorio: {0}'}"
                                     FontSize="13" />
 
                                 <Label
-                                    Text="{Binding IsActive, StringFormat='Activo: {0}'}"
+                                    Text="{Binding IsActiveText, StringFormat='Activo: {0}'}"
                                     FontSize="13" />
+
+                                <Label
+                                    Text="{Binding PlantName, StringFormat='Planta: {0}'}"
+                                    FontSize="13"
+                                    TextColor="Gray" />
+
+                                <Label
+                                    Text="{Binding BarTypeName, StringFormat='Tipo barra: {0}'}"
+                                    FontSize="13"
+                                    TextColor="Gray" />
+
                             </VerticalStackLayout>
                         </Border>
                     </DataTemplate>

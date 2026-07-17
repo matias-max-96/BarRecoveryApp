@@ -202,7 +202,103 @@
                 Text="{Binding RecoveryCount}"
                 Placeholder="Recuperaciones acumuladas"
                 Keyboard="Numeric" />
+            
+            <Label
+                Text="Atributos técnicos"
+                FontSize="20"
+                FontAttributes="Bold" />
 
+            <CollectionView ItemsSource="{Binding TechnicalAttributes}">
+                <CollectionView.EmptyView>
+                    <Label
+                        Text="No hay atributos técnicos configurados para la barra seleccionada."
+                        TextColor="Gray"
+                        HorizontalTextAlignment="Center"
+                        Margin="0,12" />
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border
+                            Padding="12"
+                            Margin="0,4"
+                            Stroke="#DDDDDD"
+                            StrokeThickness="1"
+                            BackgroundColor="White">
+
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
+
+                            <VerticalStackLayout Spacing="8">
+
+                                <Label
+                                    Text="{Binding Name}"
+                                    FontAttributes="Bold"
+                                    FontSize="16" />
+
+                                <Label
+                                    Text="{Binding ToleranceText, StringFormat='Tolerancia: {0}'}"
+                                    FontSize="13"
+                                    TextColor="Gray" />
+
+                                <HorizontalStackLayout Spacing="8">
+                                    <CheckBox IsChecked="{Binding WasMeasured}" />
+                                    <Label
+                                        Text="Medido / prueba realizada"
+                                        VerticalOptions="Center" />
+                                </HorizontalStackLayout>
+
+                                <!-- Entrada numérica/texto -->
+                                <Entry
+                                    Text="{Binding ValueText}"
+                                    Placeholder="Valor medido"
+                                    Keyboard="Numeric"
+                                    IsVisible="{Binding ShowNumericInput}">
+
+                                    <Entry.Triggers>
+                                        <DataTrigger
+                                            TargetType="Entry"
+                                            Binding="{Binding IsOutOfRange}"
+                                            Value="True">
+                                            <Setter Property="BackgroundColor" Value="#FFF0F0" />
+                                            <Setter Property="TextColor" Value="#B00020" />
+                                        </DataTrigger>
+                                    </Entry.Triggers>
+                                </Entry>
+
+                                <!-- Booleano Sí / No -->
+                                <VerticalStackLayout 
+                                    IsVisible="{Binding ShowBooleanInput}"
+                                    Spacing="4">
+
+                                    <HorizontalStackLayout Spacing="8">
+                                        <CheckBox IsChecked="{Binding BooleanYes}" />
+                                        <Label
+                                            Text="Sí"
+                                            VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+
+                                    <HorizontalStackLayout Spacing="8">
+                                        <CheckBox IsChecked="{Binding BooleanNo}" />
+                                        <Label
+                                            Text="No"
+                                            VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+
+                                </VerticalStackLayout>
+
+                                <Label
+                                    Text="{Binding StatusText}"
+                                    TextColor="{Binding StatusColor}"
+                                    FontSize="13" />
+
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            
             <Label
                 Text="Resultado de inspección"
                 FontSize="20"

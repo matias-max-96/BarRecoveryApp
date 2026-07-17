@@ -60,15 +60,19 @@ namespace BarRecoveryApp.ApplicationF.Services.Catalogs
         }
 
         public async Task<bool> SaveDefinitionAsync(
-            string? definitionId,
-            string code,
-            string name,
-            AttributeDataType dataType,
-            string? unit,
-            bool isRequired,
-            string? appliesToPlantId,
-            string? appliesToBarTypeId,
-            int displayOrder)
+                                string? definitionId,
+                                string code,
+                                string name,
+                                AttributeDataType dataType,
+                                string? unit,
+                                bool isRequired,
+                                bool hasRangeValidation,
+                                double? minValue,
+                                double? maxValue,
+                                string? toleranceText,
+                                string? appliesToPlantId,
+                                string? appliesToBarTypeId,
+                                int displayOrder)
         {
             if (!_currentUserService.IsAuthenticated)
                 return false;
@@ -87,6 +91,22 @@ namespace BarRecoveryApp.ApplicationF.Services.Catalogs
             if (session is null)
                 return false;
 
+            if (hasRangeValidation)
+            {
+
+                if (dataType != AttributeDataType.Decimal &&
+                    dataType != AttributeDataType.Integer)
+                {
+                    return false;
+                }
+
+                if (!minValue.HasValue || !maxValue.HasValue)
+                    return false;
+
+                if (minValue.Value > maxValue.Value)
+                    return false;
+            }
+
             var normalizedCode = code.Trim().ToUpperInvariant();
             var normalizedName = name.Trim();
             var normalizedUnit = unit?.Trim();
@@ -100,7 +120,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Catalogs
                 : appliesToBarTypeId;
 
             var existing = await _definitionRepository.FirstOrDefaultAsync(
-                x => x.Code == normalizedCode);
+                    x => x.Code == normalizedCode &&
+                    x.AppliesToPlantId == normalizedPlantId &&
+                    x.AppliesToBarTypeId == normalizedBarTypeId);
 
             if (existing is not null &&
                 existing.Id != definitionId)
@@ -118,6 +140,14 @@ namespace BarRecoveryApp.ApplicationF.Services.Catalogs
                     DataType = dataType,
                     Unit = normalizedUnit,
                     IsRequired = isRequired,
+
+                    HasRangeValidation = hasRangeValidation,
+                    MinValue = hasRangeValidation ? minValue : null,
+                    MaxValue = hasRangeValidation ? maxValue : null,
+                    ToleranceText = string.IsNullOrWhiteSpace(toleranceText)
+                                            ? null
+                                            : toleranceText.Trim(),
+
                     AppliesToPlantId = normalizedPlantId,
                     AppliesToBarTypeId = normalizedBarTypeId,
                     DisplayOrder = displayOrder,
@@ -143,6 +173,14 @@ namespace BarRecoveryApp.ApplicationF.Services.Catalogs
                 definition.DataType = dataType;
                 definition.Unit = normalizedUnit;
                 definition.IsRequired = isRequired;
+
+                definition.HasRangeValidation = hasRangeValidation;
+                definition.MinValue = hasRangeValidation ? minValue : null;
+                definition.MaxValue = hasRangeValidation ? maxValue : null;
+                definition.ToleranceText = string.IsNullOrWhiteSpace(toleranceText)
+                    ? null
+                    : toleranceText.Trim();
+
                 definition.AppliesToPlantId = normalizedPlantId;
                 definition.AppliesToBarTypeId = normalizedBarTypeId;
                 definition.DisplayOrder = displayOrder;
