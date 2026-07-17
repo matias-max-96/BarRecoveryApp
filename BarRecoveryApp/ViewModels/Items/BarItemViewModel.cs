@@ -15,6 +15,8 @@ namespace BarRecoveryApp.ViewModels.Items
 
         public string BarTypeName { get; set; } = string.Empty;
 
+        public string DisplayName => $"{BarNumber} - {PlantName} - {BarTypeName}";
+
         public int RecoveryCount => Bar.RecoveryCount;
 
         public bool IsDisposed => Bar.IsDisposed;

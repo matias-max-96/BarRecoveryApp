@@ -28,6 +28,12 @@
         public string SummaryText =>
             $"Recuperaciones: {RecoveryCount} | Estado: {StatusText}";
 
-
+        public string IsDisposedText
+        {
+            get
+            {
+                return IsDisposed ? "Sí" : "No";
+            }
+        }
     }
 }

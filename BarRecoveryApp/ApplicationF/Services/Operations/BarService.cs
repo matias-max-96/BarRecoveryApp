@@ -37,7 +37,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             var bars = await _barRepository.GetAllAsync();
 
             return bars
-                .OrderBy(x => x.BarNumber)
+                .OrderBy(x => x.PlantId)
+                .ThenBy(x => x.BarTypeId)
+                .ThenBy(x => x.BarNumber)
                 .ToList();
         }
 
@@ -93,7 +95,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 return false;
 
             var existing = await _barRepository.FirstOrDefaultAsync(
-                x => x.BarNumber == normalizedBarNumber);
+                        x => x.BarNumber == normalizedBarNumber &&
+                        x.PlantId == plantId &&
+                        x.BarTypeId == barTypeId);
 
             if (existing is not null &&
                 existing.Id != barId)

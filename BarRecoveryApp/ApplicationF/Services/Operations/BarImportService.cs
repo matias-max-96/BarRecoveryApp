@@ -225,12 +225,15 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                     x => x.Code.Trim().ToUpperInvariant(),
                     x => x);
 
-            var existingBarNumbers = existingBars
+            var existingBarKeys = existingBars
                 .Where(x => !string.IsNullOrWhiteSpace(x.BarNumber))
-                .Select(x => x.BarNumber.Trim().ToUpperInvariant())
+                .Select(x => BuildBarUniqueKey(
+                    x.PlantId,
+                    x.BarTypeId,
+                    x.BarNumber))
                 .ToHashSet();
 
-            var fileBarNumbers = new HashSet<string>();
+            var fileBarKeys = new HashSet<string>();
 
             foreach (var row in rows)
             {
@@ -253,22 +256,6 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 if (string.IsNullOrWhiteSpace(normalizedBarTypeCode))
                 {
                     AddError(result, row, "El código de tipo de barra es obligatorio.");
-                    continue;
-                }
-
-                if (!fileBarNumbers.Add(normalizedBarNumber))
-                {
-                    result.SkippedCount++;
-
-                    AddError(result, row, $"La barra '{normalizedBarNumber}' está duplicada dentro del archivo.");
-                    continue;
-                }
-
-                if (existingBarNumbers.Contains(normalizedBarNumber))
-                {
-                    result.SkippedCount++;
-
-                    AddError(result, row, $"La barra '{normalizedBarNumber}' ya existe en la base de datos.");
                     continue;
                 }
 
@@ -296,6 +283,35 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                     continue;
                 }
 
+                var uniqueKey = BuildBarUniqueKey(
+                    plant.Id,
+                    barType.Id,
+                    normalizedBarNumber);
+
+                if (!fileBarKeys.Add(uniqueKey))
+                {
+                    result.SkippedCount++;
+
+                    AddError(
+                        result,
+                        row,
+                        $"La barra '{normalizedBarNumber}' está duplicada dentro del archivo para planta '{normalizedPlantCode}' y tipo '{normalizedBarTypeCode}'.");
+
+                    continue;
+                }
+
+                if (existingBarKeys.Contains(uniqueKey))
+                {
+                    result.SkippedCount++;
+
+                    AddError(
+                        result,
+                        row,
+                        $"La barra '{normalizedBarNumber}' ya existe para planta '{normalizedPlantCode}' y tipo '{normalizedBarTypeCode}'.");
+
+                    continue;
+                }
+
                 var bar = new Bar
                 {
                     Id = Guid.NewGuid().ToString(),
@@ -312,7 +328,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
                 await _barRepository.InsertAsync(bar);
 
-                existingBarNumbers.Add(normalizedBarNumber);
+                existingBarKeys.Add(uniqueKey);
                 result.CreatedCount++;
             }
         }
@@ -435,6 +451,14 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 .Trim()
                 .Replace("\\", "\\\\")
                 .Replace("\"", "'");
+        }
+
+        private static string BuildBarUniqueKey(
+            string plantId,
+            string barTypeId,
+            string barNumber)
+        {
+            return $"{plantId.Trim().ToUpperInvariant()}|{barTypeId.Trim().ToUpperInvariant()}|{barNumber.Trim().ToUpperInvariant()}";
         }
     }
 }

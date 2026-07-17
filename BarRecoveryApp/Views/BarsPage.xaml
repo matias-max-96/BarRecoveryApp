@@ -57,6 +57,10 @@
             <Entry
                 Text="{Binding BarNumber}"
                 Placeholder="Número identificador de barra" />
+            <Label
+                Text="El número puede repetirse si cambia la planta o el tipo de barra."
+                FontSize="12"
+                TextColor="Gray"/>
 
             <Picker
                 Title="Seleccione planta"
@@ -113,7 +117,7 @@
 
                             <VerticalStackLayout Spacing="4">
                                 <Label
-                                    Text="{Binding BarNumber}"
+                                    Text="{Binding DisplayName}"
                                     FontAttributes="Bold"
                                     FontSize="16" />
 

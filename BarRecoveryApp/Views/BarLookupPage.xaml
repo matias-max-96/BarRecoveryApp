@@ -44,7 +44,7 @@
 
             <Entry
                 Text="{Binding SearchText}"
-                Placeholder="Ej: BARRA-004, 004, MAPA-001" />
+                Placeholder="Ej: 001, Santa Fe, Barra 90, MAPA" />
 
             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
 

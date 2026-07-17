@@ -21,7 +21,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations.DTOs
         public BarStatus CurrentStatus { get; set; }
 
         public string DisplayName =>
-            $"{BarNumber} {PlantName} - {BarTypeName}";
+            $"{BarNumber} - {PlantName} - {BarTypeName}";
 
         public string RecoveryText =>
             MaxRecoveries.HasValue

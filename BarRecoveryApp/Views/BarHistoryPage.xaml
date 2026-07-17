@@ -197,7 +197,7 @@
                             TextColor="Gray" />
 
                         <Label
-                            Text="{Binding History.IsDisposed, StringFormat='Dada de baja: {0}'}"
+                            Text="{Binding History.IsDisposedText, StringFormat='Dada de baja: {0}'}"
                             FontSize="13" />
 
                     </VerticalStackLayout>

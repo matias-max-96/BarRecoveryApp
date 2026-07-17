@@ -204,7 +204,7 @@ namespace BarRecoveryApp.ViewModels
 
                 if (!saved)
                 {
-                    ShowError("No fue posible guardar la barra. Verifique permisos o identificador duplicado.");
+                    ShowError("No fue posible guardar la barra. Verifique permisos o si ya existe una barra con la misma planta, tipo de barra y número.");
                     return;
                 }
 

@@ -1,4 +1,6 @@
-﻿using BarRecoveryApp.ApplicationF.Services.Authentication;
+﻿using System.Globalization;
+using System.Text;
+using BarRecoveryApp.ApplicationF.Services.Authentication;
 using BarRecoveryApp.ApplicationF.Services.Operations.DTOs;
 using BarRecoveryApp.Infrastructure.Persistence.Repositories;
 using BarRecoveryApp.Models.Catalogs;
@@ -74,13 +76,35 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 query = query.Where(x => x.BarTypeId == barTypeId);
             }
 
-            if (!string.IsNullOrWhiteSpace(searchText))
-            {
-                var normalizedSearch = searchText.Trim().ToUpperInvariant();
+            var normalizedSearch = NormalizeForSearch(searchText);
 
-                query = query.Where(x =>
-                    !string.IsNullOrWhiteSpace(x.BarNumber) &&
-                    x.BarNumber.ToUpperInvariant().Contains(normalizedSearch));
+            if (!string.IsNullOrWhiteSpace(normalizedSearch))
+            {
+                query = query.Where(bar =>
+                {
+                    var plant = plants.FirstOrDefault(x => x.Id == bar.PlantId);
+                    var barType = barTypes.FirstOrDefault(x => x.Id == bar.BarTypeId);
+
+                    var barNumber = NormalizeForSearch(bar.BarNumber);
+                    var plantName = NormalizeForSearch(plant?.Name);
+                    var plantCode = NormalizeForSearch(plant?.Code);
+                    var barTypeName = NormalizeForSearch(barType?.Name);
+                    var barTypeCode = NormalizeForSearch(barType?.Code);
+
+                    var displayText = NormalizeForSearch(
+                        $"{bar.BarNumber} {plant?.Name} {plant?.Code} {barType?.Name} {barType?.Code}");
+
+                    var operationalKey = NormalizeForSearch(
+                        $"{plant?.Code}-{barType?.Code}-{bar.BarNumber}");
+
+                    return barNumber.Contains(normalizedSearch) ||
+                           plantName.Contains(normalizedSearch) ||
+                           plantCode.Contains(normalizedSearch) ||
+                           barTypeName.Contains(normalizedSearch) ||
+                           barTypeCode.Contains(normalizedSearch) ||
+                           displayText.Contains(normalizedSearch) ||
+                           operationalKey.Contains(normalizedSearch);
+                });
             }
 
             if (status.HasValue)
@@ -326,6 +350,34 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 $"\"RecoveryCount\":{bar.RecoveryCount}," +
                 $"\"IsDisposed\":{bar.IsDisposed.ToString().ToLowerInvariant()}" +
                 "}";
+        }
+
+        private static string NormalizeForSearch(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            var normalized = value
+                .Trim()
+                .ToUpperInvariant()
+                .Normalize(NormalizationForm.FormD);
+
+            var builder = new StringBuilder();
+
+            foreach (var character in normalized)
+            {
+                var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(character);
+
+                if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+                    builder.Append(character);
+            }
+
+            return builder
+                .ToString()
+                .Normalize(NormalizationForm.FormC)
+                .Replace(" ", string.Empty)
+                .Replace("-", string.Empty)
+                .Replace("_", string.Empty);
         }
     }
 }
