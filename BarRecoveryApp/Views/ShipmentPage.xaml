@@ -227,9 +227,14 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+            <Grid
+                ColumnDefinitions="*,*,*"
+                RowDefinitions="Auto,Auto"
+                ColumnSpacing="12"
+                RowSpacing="12">
 
                 <Button
+                    Grid.Row="0"
                     Grid.Column="0"
                     Text="Limpiar selección"
                     Command="{Binding ClearSelectionCommand}"
@@ -237,6 +242,7 @@
                     TextColor="Black" />
 
                 <Button
+                    Grid.Row="0"
                     Grid.Column="1"
                     Text="Limpiar todo"
                     Command="{Binding ClearAllCommand}"
@@ -244,11 +250,55 @@
                     TextColor="White" />
 
                 <Button
+                    Grid.Row="0"
                     Grid.Column="2"
                     Text="Crear envío"
                     Command="{Binding SaveCommand}"
                     BackgroundColor="#198754"
                     TextColor="White" />
+
+                <Border
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="3"
+                    IsVisible="{Binding HasTechnicalReport}"
+                    Padding="12"
+                    Margin="0,8"
+                    Stroke="#198754"
+                    StrokeThickness="1"
+                    BackgroundColor="#F2FFF6">
+
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+
+                    <VerticalStackLayout Spacing="8">
+
+                        <Label
+                            Text="Reporte técnico generado"
+                            FontSize="18"
+                            FontAttributes="Bold"
+                            TextColor="#198754" />
+
+                        <Label
+                            Text="{Binding LastTechnicalReportFileName}"
+                            FontSize="14"
+                            TextColor="Gray" />
+
+                        <Label
+                            Text="{Binding LastTechnicalReportFilePath}"
+                            FontSize="12"
+                            TextColor="Gray"
+                            LineBreakMode="CharacterWrap" />
+
+                        <Button
+                            Text="Compartir reporte técnico"
+                            Command="{Binding ShareTechnicalReportCommand}"
+                            BackgroundColor="#198754"
+                            TextColor="White" />
+
+                    </VerticalStackLayout>
+                </Border>
 
             </Grid>
 

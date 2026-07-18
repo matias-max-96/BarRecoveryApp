@@ -19,6 +19,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
         private readonly IRepository<BarType> _barTypeRepository;
         private readonly ICurrentUserService _currentUserService;
         private readonly IAuditLogService _auditLogService;
+        private readonly IShipmentTechnicalReportExportService _shipmentTechnicalReportExportService;
 
         public ShipmentService(
             IRepository<Shipment> shipmentRepository,
@@ -27,7 +28,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             IRepository<Plant> plantRepository,
             IRepository<BarType> barTypeRepository,
             ICurrentUserService currentUserService,
-            IAuditLogService auditLogService)
+            IAuditLogService auditLogService,
+            IShipmentTechnicalReportExportService shipmentTechnicalReportExportService)
         {
             _shipmentRepository = shipmentRepository
                 ?? throw new ArgumentNullException(nameof(shipmentRepository));
@@ -49,6 +51,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             _auditLogService = auditLogService
                 ?? throw new ArgumentNullException(nameof(auditLogService));
+
+            _shipmentTechnicalReportExportService = shipmentTechnicalReportExportService
+                ?? throw new ArgumentNullException(nameof(shipmentTechnicalReportExportService));
         }
 
         public async Task<List<Plant>> GetActivePlantsAsync()
@@ -153,27 +158,47 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             return result;
         }
 
-        public async Task<bool> CreateShipmentAsync(
+        public async Task<ShipmentCreateResultDto> CreateShipmentAsync(
             string transferOrder,
             string? customerReference,
             List<string> barIds)
         {
             if (!_currentUserService.IsAuthenticated)
-                return false;
+                return new ShipmentCreateResultDto
+                {
+                    Success = false,
+                    Message = "No fue posible crear el envío. Verifique los datos ingresados."
+                };
 
             if (!_currentUserService.HasPermission("SHIPMENT_CREATE"))
-                return false;
+                return new ShipmentCreateResultDto
+                {
+                    Success = false,
+                    Message = "No fue posible crear el envío. Verifique los datos ingresados."
+                };
 
             var session = _currentUserService.CurrentSession;
 
             if (session is null)
-                return false;
+                return new ShipmentCreateResultDto
+                {
+                    Success = false,
+                    Message = "No fue posible crear el envío. Verifique los datos ingresados."
+                };
 
             if (string.IsNullOrWhiteSpace(transferOrder))
-                return false;
+                return new ShipmentCreateResultDto
+                {
+                    Success = false,
+                    Message = "No fue posible crear el envío. Verifique los datos ingresados."
+                };
 
             if (barIds is null || barIds.Count == 0)
-                return false;
+                return new ShipmentCreateResultDto
+                {
+                    Success = false,
+                    Message = "No fue posible crear el envío. Verifique los datos ingresados."
+                };
 
             var normalizedTransferOrder = transferOrder.Trim().ToUpperInvariant();
             var normalizedCustomerReference = customerReference?.Trim();
@@ -271,15 +296,44 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                         barType));
             }
 
-            return true;
+            var technicalReportResult = await _shipmentTechnicalReportExportService.ExportShipmentTechnicalReportAsync(shipment, shippedBars);
+
+            if (technicalReportResult.Success)
+            {
+                await _auditLogService.WriteAsync(
+                    AuditActionCodes.ShipmentTechnicalReportExported,
+                    "Shipment",
+                    shipmentId,
+                    $"Se generó reporte técnico de envío {normalizedTransferOrder} con {shippedBars.Count} barra(s). Archivo generado: {technicalReportResult.FileName}.",
+                    BuildShipmentTechnicalReportMetadataJson(
+                        shipment,
+                        normalizedTransferOrder,
+                        technicalReportResult.FileName,
+                        technicalReportResult.FilePath,
+                        shippedBars.Count));
+            }
+
+            return new ShipmentCreateResultDto
+            {
+                Success = true,
+                Message = technicalReportResult.Success
+                    ? $"Envío creado correctamente. Reporte técnico generado: {technicalReportResult.FileName}"
+                    : "Envío creado correctamente, pero no fue posible generar el reporte técnico.",
+                            TechnicalReportFileName = technicalReportResult.Success
+                    ? technicalReportResult.FileName
+                    : string.Empty,
+                            TechnicalReportFilePath = technicalReportResult.Success
+                    ? technicalReportResult.FilePath
+                    : string.Empty
+            };
         }
         private static string BuildShipmentMetadataJson(
-    Shipment shipment,
-    string transferOrder,
-    string? customerReference,
-    List<Bar> shippedBars,
-    List<Plant> plants,
-    List<BarType> barTypes)
+                                Shipment shipment,
+                                string transferOrder,
+                                string? customerReference,
+                                List<Bar> shippedBars,
+                                List<Plant> plants,
+                                List<BarType> barTypes)
         {
             var safeCustomerReference = string.IsNullOrWhiteSpace(customerReference)
                 ? string.Empty
@@ -358,11 +412,11 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
         }
 
         private static string BuildBarShippedMetadataJson(
-    Bar bar,
-    string shipmentId,
-    string transferOrder,
-    Plant? plant,
-    BarType? barType)
+                                Bar bar,
+                                string shipmentId,
+                                string transferOrder,
+                                Plant? plant,
+                                BarType? barType)
         {
             var plantName = plant?.Name ?? "Planta no encontrada";
             var plantCode = plant?.Code ?? string.Empty;
@@ -395,9 +449,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
         }
 
         private static string BuildBarOperationalKey(
-    Bar bar,
-    Plant? plant,
-    BarType? barType)
+                                Bar bar,
+                                Plant? plant,
+                                BarType? barType)
         {
             var plantCode = string.IsNullOrWhiteSpace(plant?.Code)
                 ? plant?.Name ?? "PLANTA"
@@ -410,10 +464,26 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             return $"{NormalizeKeyPart(plantCode)}-{NormalizeKeyPart(barTypeCode)}-{NormalizeKeyPart(bar.BarNumber)}";
         }
 
+        private static string BuildShipmentTechnicalReportMetadataJson(
+                                Shipment shipment,
+                                string transferOrder,
+                                string fileName,
+                                string filePath,
+                                int barCount)
+        {
+            return
+                "{" +
+                $"\"ShipmentId\":\"{SafeJsonValue(shipment.Id)}\"," +
+                $"\"TransferOrder\":\"{SafeJsonValue(transferOrder)}\"," +
+                $"\"FileName\":\"{SafeJsonValue(fileName)}\"," +
+                $"\"FilePath\":\"{SafeJsonValue(filePath)}\"," +
+                $"\"BarCount\":{barCount}" +
+                "}";
+        }
         private static string BuildBarOperationalLabel(
-            Bar bar,
-            Plant? plant,
-            BarType? barType)
+                                        Bar bar,
+                                        Plant? plant,
+                                        BarType? barType)
         {
             var plantName = plant?.Name ?? "Planta no encontrada";
             var barTypeName = barType?.Name ?? "Tipo no encontrado";

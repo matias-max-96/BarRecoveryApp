@@ -15,7 +15,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             string? searchText,
             int maxResults);
 
-        Task<bool> CreateShipmentAsync(
+        Task<ShipmentCreateResultDto> CreateShipmentAsync(
             string transferOrder,
             string? customerReference,
             List<string> barIds);

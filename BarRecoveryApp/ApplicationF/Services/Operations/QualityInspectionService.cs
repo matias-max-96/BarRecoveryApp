@@ -223,7 +223,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             };
 
             await _inspectionRepository.InsertAsync(inspection);
-            await SaveInspectionAttributeValuesAsync(inspection, bar, attributeValues);
+            var technicalSummary = await SaveInspectionAttributeValuesAsync(inspection, bar, attributeValues);
 
             bar.RecoveryCount = recoveryCountAtInspection;
             bar.UpdatedAtUtc = DateTime.Now;
@@ -251,19 +251,25 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             await _barRepository.UpdateAsync(bar);
 
+            var plant = await _plantRepository.GetByIdAsync(bar.PlantId);
+            var barType = await _barTypeRepository.GetByIdAsync(bar.BarTypeId);
+
             await _auditLogService.WriteAsync(
                 AuditActionCodes.QualityInspectionCreated,
                 "QualityInspection",
                 inspection.Id,
                 $"Se registro inspeccion de calidad para la barra {bar.BarNumber}.",
-                BuildInspectionMetadataJson(
-                    bar,
-                    inspection,
-                    recoveryCountAtInspection,
-                    canBeRecovered,
-                    mustBeDisposed,
-                    isApprovedForShipment,
-                    notes));
+                    BuildInspectionMetadataJson(
+                        bar,
+                        plant,
+                        barType,
+                        inspection,
+                        recoveryCountAtInspection,
+                        canBeRecovered,
+                        mustBeDisposed,
+                        isApprovedForShipment,
+                        notes,
+                        technicalSummary));
 
             if (mustBeDisposed)
             {
@@ -324,29 +330,49 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
         }
 
         private static string BuildInspectionMetadataJson(
-                                Bar bar,
-                                QualityInspection inspection,
-                                int recoveryCountAtInspection,
-                                bool canBeRecovered,
-                                bool mustBeDisposed,
-                                bool isApprovedForShipment,
-                                string? notes)
+    Bar bar,
+    Plant? plant,
+    BarType? barType,
+    QualityInspection inspection,
+    int recoveryCountAtInspection,
+    bool canBeRecovered,
+    bool mustBeDisposed,
+    bool isApprovedForShipment,
+    string? notes,
+    TechnicalAttributeAuditSummary technicalSummary)
         {
-            var safeNotes = string.IsNullOrWhiteSpace(notes)
-                ? string.Empty
-                : notes.Trim().Replace("\"", "'");
+            var safeNotes = SafeJsonValue(notes);
+
+            var plantName = plant?.Name ?? "Planta no encontrada";
+            var plantCode = plant?.Code ?? string.Empty;
+
+            var barTypeName = barType?.Name ?? "Tipo no encontrado";
+            var barTypeCode = barType?.Code ?? string.Empty;
+
+            var outOfRangeAttributes = string.Join(
+                ",",
+                technicalSummary.OutOfRangeAttributes.Distinct());
 
             return
                 "{" +
-                $"\"BarId\":\"{bar.Id}\"," +
-                $"\"BarNumber\":\"{bar.BarNumber}\"," +
-                $"\"InspectionId\":\"{inspection.Id}\"," +
+                $"\"BarId\":\"{SafeJsonValue(bar.Id)}\"," +
+                $"\"BarNumber\":\"{SafeJsonValue(bar.BarNumber)}\"," +
+                $"\"PlantName\":\"{SafeJsonValue(plantName)}\"," +
+                $"\"PlantCode\":\"{SafeJsonValue(plantCode)}\"," +
+                $"\"BarTypeName\":\"{SafeJsonValue(barTypeName)}\"," +
+                $"\"BarTypeCode\":\"{SafeJsonValue(barTypeCode)}\"," +
+                $"\"InspectionId\":\"{SafeJsonValue(inspection.Id)}\"," +
                 $"\"RecoveryCountAtInspection\":{recoveryCountAtInspection}," +
                 $"\"CanBeRecovered\":{canBeRecovered.ToString().ToLowerInvariant()}," +
                 $"\"MustBeDisposed\":{mustBeDisposed.ToString().ToLowerInvariant()}," +
                 $"\"IsApprovedForShipment\":{isApprovedForShipment.ToString().ToLowerInvariant()}," +
                 $"\"ResultingStatus\":\"{bar.CurrentStatus}\"," +
                 $"\"IsDisposed\":{bar.IsDisposed.ToString().ToLowerInvariant()}," +
+                $"\"TechnicalAttributeCount\":{technicalSummary.TechnicalAttributeCount}," +
+                $"\"MeasuredAttributeCount\":{technicalSummary.MeasuredAttributeCount}," +
+                $"\"OutOfRangeCount\":{technicalSummary.OutOfRangeCount}," +
+                $"\"OutOfRangeAttributes\":\"{SafeJsonValue(outOfRangeAttributes)}\"," +
+                $"\"HasTechnicalValues\":{technicalSummary.HasTechnicalValues.ToString().ToLowerInvariant()}," +
                 $"\"Notes\":\"{safeNotes}\"" +
                 "}";
         }
@@ -364,7 +390,16 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 $"\"IsDisposed\":{bar.IsDisposed.ToString().ToLowerInvariant()}" +
                 "}";
         }
+        private static string SafeJsonValue(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
 
+            return value
+                .Trim()
+                .Replace("\\", "\\\\")
+                .Replace("\"", "'");
+        }
         private static string NormalizeForSearch(string? value)
         {
             if (string.IsNullOrWhiteSpace(value))
@@ -434,13 +469,15 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             return applicable;
         }
 
-        private async Task SaveInspectionAttributeValuesAsync(
-    QualityInspection inspection,
-    Bar bar,
-    List<QualityInspectionAttributeValueInputDto> attributeValues)
+        private async Task<TechnicalAttributeAuditSummary> SaveInspectionAttributeValuesAsync(
+            QualityInspection inspection,
+            Bar bar,
+            List<QualityInspectionAttributeValueInputDto> attributeValues)
         {
+            var summary = new TechnicalAttributeAuditSummary();
+
             if (attributeValues is null || attributeValues.Count == 0)
-                return;
+                return summary;
 
             var definitions = await _attributeDefinitionRepository.GetAllAsync();
 
@@ -455,9 +492,20 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 if (definition is null)
                     continue;
 
+                summary.TechnicalAttributeCount++;
+
+                if (input.WasMeasured)
+                    summary.MeasuredAttributeCount++;
+
                 var isOutOfRange = CalculateOutOfRange(
                     definition,
                     input);
+
+                if (isOutOfRange == true)
+                {
+                    summary.OutOfRangeCount++;
+                    summary.OutOfRangeAttributes.Add(definition.Code);
+                }
 
                 var value = new QualityInspectionAttributeValue
                 {
@@ -498,6 +546,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
                 await _inspectionAttributeValueRepository.InsertAsync(value);
             }
+
+            return summary;
         }
         private static bool? CalculateOutOfRange(BarAttributeDefinition definition, QualityInspectionAttributeValueInputDto input)
         {
@@ -529,6 +579,18 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             }
 
             return false;
+        }
+        private sealed class TechnicalAttributeAuditSummary
+        {
+            public int TechnicalAttributeCount { get; set; }
+
+            public int MeasuredAttributeCount { get; set; }
+
+            public int OutOfRangeCount { get; set; }
+
+            public List<string> OutOfRangeAttributes { get; set; } = new();
+
+            public bool HasTechnicalValues => TechnicalAttributeCount > 0;
         }
     }
 }

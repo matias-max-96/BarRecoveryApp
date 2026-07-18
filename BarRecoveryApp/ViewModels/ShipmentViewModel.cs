@@ -45,6 +45,7 @@ namespace BarRecoveryApp.ViewModels
             ClearFiltersCommand = new RelayCommand(ClearFiltersAsync);
             ClearSelectionCommand = new RelayCommand(ClearSelectionAsync);
             ClearAllCommand = new RelayCommand(ClearAllAsync);
+            ShareTechnicalReportCommand = new RelayCommand(ShareTechnicalReportAsync, CanShareTechnicalReport);
         }
 
         public ObservableCollection<Plant> Plants { get; }
@@ -168,6 +169,8 @@ namespace BarRecoveryApp.ViewModels
 
         public RelayCommand ClearAllCommand { get; }
 
+        public RelayCommand ShareTechnicalReportCommand { get; }
+
         private async Task LoadAsync()
         {
             if (IsBusy)
@@ -204,7 +207,36 @@ namespace BarRecoveryApp.ViewModels
                 RefreshCommands();
             }
         }
+        private string _lastTechnicalReportFileName = string.Empty;
+        private string _lastTechnicalReportFilePath = string.Empty;
 
+        public string LastTechnicalReportFileName
+        {
+            get => _lastTechnicalReportFileName;
+            set => SetProperty(ref _lastTechnicalReportFileName, value);
+        }
+
+        public string LastTechnicalReportFilePath
+        {
+            get => _lastTechnicalReportFilePath;
+            set
+            {
+                if (SetProperty(ref _lastTechnicalReportFilePath, value))
+                {
+                    OnPropertyChanged(nameof(HasTechnicalReport));
+                    ShareTechnicalReportCommand?.RaiseCanExecuteChanged();
+                }
+            }
+        }
+
+        public bool HasTechnicalReport
+        {
+            get
+            {
+                return !string.IsNullOrWhiteSpace(LastTechnicalReportFilePath) &&
+                       File.Exists(LastTechnicalReportFilePath);
+            }
+        }
         private async Task SearchAsync()
         {
             if (IsBusy)
@@ -327,13 +359,20 @@ namespace BarRecoveryApp.ViewModels
                     CustomerReference,
                     selectedBarIds);
 
-                if (!saved)
+                if (!saved.Success)
                 {
-                    ShowError("No fue posible crear el envío. Verifique permisos o datos ingresados.");
+                    LastTechnicalReportFileName = string.Empty;
+                    LastTechnicalReportFilePath = string.Empty;
+
+                    ShowError(saved.Message);
                     return;
                 }
 
-                ShowSuccess("Envío creado correctamente.");
+                LastTechnicalReportFileName = saved.TechnicalReportFileName;
+                LastTechnicalReportFilePath = saved.TechnicalReportFilePath;
+
+
+                ShowSuccess(saved.Message);
 
                 TransferOrder = string.Empty;
                 CustomerReference = string.Empty;
@@ -458,9 +497,39 @@ namespace BarRecoveryApp.ViewModels
             ClearFiltersCommand?.RaiseCanExecuteChanged();
             ClearSelectionCommand?.RaiseCanExecuteChanged();
             ClearAllCommand?.RaiseCanExecuteChanged();
+            ShareTechnicalReportCommand?.RaiseCanExecuteChanged();
 
             OnPropertyChanged(nameof(ResultCountText));
             OnPropertyChanged(nameof(SelectedCountText));
+            OnPropertyChanged(nameof(HasTechnicalReport));
+        }
+        private async Task ShareTechnicalReportAsync()
+        {
+            if (!CanShareTechnicalReport())
+            {
+                ShowError("No existe un reporte técnico generado para compartir.");
+                return;
+            }
+
+            try
+            {
+                await Share.Default.RequestAsync(new ShareFileRequest
+                {
+                    Title = "Compartir reporte técnico de envío",
+                    File = new ShareFile(LastTechnicalReportFilePath)
+                });
+            }
+            catch (Exception ex)
+            {
+                ShowError($"Error compartiendo reporte técnico: {ex.Message}");
+            }
+        }
+
+        private bool CanShareTechnicalReport()
+        {
+            return !IsBusy &&
+                   !string.IsNullOrWhiteSpace(LastTechnicalReportFilePath) &&
+                   File.Exists(LastTechnicalReportFilePath);
         }
     }
 }

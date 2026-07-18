@@ -1,4 +1,5 @@
-﻿using BarRecoveryApp.ApplicationF.Services.Catalogs;
+﻿using BarRecoveryApp.ApplicationF.Services.Authentication;
+using BarRecoveryApp.ApplicationF.Services.Catalogs;
 using BarRecoveryApp.Models.Catalogs;
 using BarRecoveryApp.Models.Enums;
 using BarRecoveryApp.ViewModels.Items;
@@ -12,6 +13,7 @@ namespace BarRecoveryApp.ViewModels
     public class BarAttributeDefinitionsViewModel : BaseViewModel
     {
         private readonly IBarAttributeDefinitionService _service;
+        private readonly ICurrentUserService _currentUserService;
 
         private AttributeDataTypeOption? _selectedDataType;
         private Plant? _selectedPlant;
@@ -36,10 +38,14 @@ namespace BarRecoveryApp.ViewModels
         private bool _hasSuccess;
 
         public BarAttributeDefinitionsViewModel(
-            IBarAttributeDefinitionService service)
+            IBarAttributeDefinitionService service,
+            ICurrentUserService currentUserService)
         {
             _service = service
                 ?? throw new ArgumentNullException(nameof(service));
+
+            _currentUserService = currentUserService
+                ?? throw new ArgumentNullException(nameof(currentUserService));
 
             Title = "Atributos técnicos";
 
@@ -278,6 +284,11 @@ namespace BarRecoveryApp.ViewModels
         public string SaveButtonText =>
             SelectedDefinition is null ? "Crear atributo" : "Actualizar atributo";
 
+        public bool CanManageAttributes =>
+            _currentUserService.HasPermission("ATTRIBUTE_MANAGE");
+
+        public bool CannotManageAttributes => !CanManageAttributes;
+
         public RelayCommand LoadCommand { get; }
 
         public RelayCommand SaveCommand { get; }
@@ -348,6 +359,7 @@ namespace BarRecoveryApp.ViewModels
             try
             {
                 IsBusy = true;
+                RefreshCommands(); // deshabilita el botón de inmediato para evitar doble-tap
                 ClearMessages();
 
                 var order = int.Parse(DisplayOrder);
@@ -386,7 +398,7 @@ namespace BarRecoveryApp.ViewModels
                     maxValue = parsedMax;
                 }
 
-                var saved = await _service.SaveDefinitionAsync(
+                var result = await _service.SaveDefinitionAsync(
                     SelectedDefinition?.Definition.Id,
                     Code,
                     Name,
@@ -401,9 +413,26 @@ namespace BarRecoveryApp.ViewModels
                     SelectedBarType?.Id,
                     order);
 
-                if (!saved)
+                if (result != SaveDefinitionResult.Success)
                 {
-                    ShowError("No fue posible guardar el atributo. Verifique permisos, código duplicado o configuración de rango.");
+                    ShowError(result switch
+                    {
+                        SaveDefinitionResult.NotAuthenticated =>
+                            "Su sesión no es válida. Vuelva a iniciar sesión.",
+                        SaveDefinitionResult.NoPermission =>
+                            "No tiene permiso para gestionar atributos técnicos.",
+                        SaveDefinitionResult.InvalidCode =>
+                            "Debe ingresar un código válido.",
+                        SaveDefinitionResult.InvalidName =>
+                            "Debe ingresar un nombre válido.",
+                        SaveDefinitionResult.InvalidRangeConfiguration =>
+                            "La validación por rango solo aplica a Entero/Decimal, y el mínimo no puede ser mayor al máximo.",
+                        SaveDefinitionResult.DuplicateCode =>
+                            "Ya existe un atributo con ese código para la planta y tipo de barra seleccionados.",
+                        SaveDefinitionResult.NotFound =>
+                            "El atributo que intenta editar ya no existe. Actualice la lista.",
+                        _ => "No fue posible guardar el atributo."
+                    });
                     return;
                 }
 
@@ -433,6 +462,7 @@ namespace BarRecoveryApp.ViewModels
             try
             {
                 IsBusy = true;
+                RefreshCommands();
                 ClearMessages();
 
                 var definition = SelectedDefinition.Definition;
@@ -479,6 +509,7 @@ namespace BarRecoveryApp.ViewModels
         private bool CanSave()
         {
             return !IsBusy
+                   && CanManageAttributes
                    && !string.IsNullOrWhiteSpace(Code)
                    && !string.IsNullOrWhiteSpace(Name)
                    && SelectedDataType is not null
@@ -511,7 +542,7 @@ namespace BarRecoveryApp.ViewModels
                     ? definition.MinValue.Value.ToString(CultureInfo.InvariantCulture)
                     : string.Empty;
                 MaxValue = definition.MaxValue.HasValue
-                    ?   definition.MaxValue.Value.ToString(CultureInfo.InvariantCulture)
+                    ? definition.MaxValue.Value.ToString(CultureInfo.InvariantCulture)
                     : string.Empty;
                 ToleranceText = definition.ToleranceText ?? string.Empty;
 
@@ -602,6 +633,8 @@ namespace BarRecoveryApp.ViewModels
             NewCommand.RaiseCanExecuteChanged();
 
             OnPropertyChanged(nameof(SaveButtonText));
+            OnPropertyChanged(nameof(CanManageAttributes));
+            OnPropertyChanged(nameof(CannotManageAttributes));
         }
     }
 }

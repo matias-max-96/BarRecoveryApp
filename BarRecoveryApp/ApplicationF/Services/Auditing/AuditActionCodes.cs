@@ -34,5 +34,6 @@
         public const string CatalogCreated = "CATALOG_CREATED";
         public const string CatalogUpdated = "CATALOG_UPDATED";
         public const string CatalogDeleted = "CATALOG_DELETED";
+        public const string ShipmentTechnicalReportExported = "SHIPMENT_TECHNICAL_REPORT_EXPORTED";
     }
 }

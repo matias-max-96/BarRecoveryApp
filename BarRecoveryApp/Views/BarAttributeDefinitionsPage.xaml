@@ -49,97 +49,118 @@
                     FontAttributes="Bold" />
             </Border>
 
-            <Label
+            <Border
+                IsVisible="{Binding CannotManageAttributes}"
+                Padding="12"
+                Stroke="#856404"
+                StrokeThickness="1"
+                BackgroundColor="#FFF3CD">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+                <Label
+                    Text="No tiene permiso para gestionar atributos técnicos. Solicite acceso a un administrador."
+                    TextColor="#856404"
+                    FontAttributes="Bold" />
+            </Border>
+
+            <VerticalStackLayout
+                IsVisible="{Binding CanManageAttributes}"
+                Spacing="16">
+
+                <Label
                 Text="Datos del atributo"
                 FontSize="20"
                 FontAttributes="Bold" />
 
-            <Entry
+                <Entry
                 Text="{Binding Code}"
                 Placeholder="Código ej: LARGO, PESO, DUREZA" />
 
-            <Entry
+                <Entry
                 Text="{Binding Name}"
                 Placeholder="Nombre ej: Largo, Peso, Dureza" />
 
-            <Picker
+                <Picker
                 Title="Tipo de dato"
                 ItemsSource="{Binding DataTypes}"
                 SelectedItem="{Binding SelectedDataType}"
                 ItemDisplayBinding="{Binding Name}" />
 
-            <Entry
+                <Entry
                 Text="{Binding Unit}"
                 Placeholder="Unidad ej: mm, kg, HRC" />
 
-            <HorizontalStackLayout Spacing="8">
-                <CheckBox
+                <HorizontalStackLayout Spacing="8">
+                    <CheckBox
                      IsChecked="{Binding HasRangeValidation}" />
 
-                <Label
+                    <Label
                      Text="Validar por rango"
                     VerticalOptions="Center" />
-            </HorizontalStackLayout>
+                </HorizontalStackLayout>
 
-            <Entry
+                <Entry
                 Text="{Binding MinValue}"
                 Placeholder="Valor mínimo ej: 137,5"
                 Keyboard="Numeric" />
 
-            <Entry
+                <Entry
                 Text="{Binding MaxValue}"
                 Placeholder="Valor máximo ej: 139"
                 Keyboard="Numeric" />
 
-            <Entry
+                <Entry
                 Text="{Binding ToleranceText}"
                 Placeholder="Texto tolerancia ej: 137,5 - 139" />
-            
-            <Entry
+
+                <Entry
                 Text="{Binding DisplayOrder}"
                 Placeholder="Orden visual ej: 1, 2, 3"
                 Keyboard="Numeric" />
 
-            <HorizontalStackLayout Spacing="8">
-                <CheckBox
+                <HorizontalStackLayout Spacing="8">
+                    <CheckBox
                     IsChecked="{Binding IsRequired}" />
-                <Label
+                    <Label
                     Text="Obligatorio"
                     VerticalOptions="Center" />
-            </HorizontalStackLayout>
+                </HorizontalStackLayout>
 
-            <Label
+                <Label
                 Text="Aplicación del atributo"
                 FontSize="20"
                 FontAttributes="Bold" />
 
-            <Picker
+                <Picker
                 Title="Aplica a planta específica (opcional)"
                 ItemsSource="{Binding Plants}"
                 SelectedItem="{Binding SelectedPlant}"
                 ItemDisplayBinding="{Binding Name}" />
 
-            <Picker
+                <Picker
                 Title="Aplica a tipo de barra específico (opcional)"
                 ItemsSource="{Binding BarTypes}"
                 SelectedItem="{Binding SelectedBarType}"
                 ItemDisplayBinding="{Binding Name}" />
 
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                <Button
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <Button
                     Grid.Column="0"
                     Text="Nuevo"
                     Command="{Binding NewCommand}"
                     BackgroundColor="#6C757D"
                     TextColor="White" />
 
-                <Button
+                    <Button
                     Grid.Column="1"
                     Text="{Binding SaveButtonText}"
                     Command="{Binding SaveCommand}"
                     BackgroundColor="#0D6EFD"
                     TextColor="White" />
-            </Grid>
+                </Grid>
+
+            </VerticalStackLayout>
 
             <BoxView HeightRequest="1" Color="#DDDDDD" Margin="0,12" />
 
@@ -222,6 +243,7 @@
             </CollectionView>
 
             <Button
+                IsVisible="{Binding CanManageAttributes}"
                 Text="Activar / Desactivar seleccionado"
                 Command="{Binding ToggleActiveCommand}"
                 BackgroundColor="#FFC107"

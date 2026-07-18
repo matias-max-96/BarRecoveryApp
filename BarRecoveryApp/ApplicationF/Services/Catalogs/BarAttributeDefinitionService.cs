@@ -59,7 +59,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Catalogs
                 .ToList();
         }
 
-        public async Task<bool> SaveDefinitionAsync(
+        public async Task<SaveDefinitionResult> SaveDefinitionAsync(
                                 string? definitionId,
                                 string code,
                                 string name,
@@ -75,21 +75,21 @@ namespace BarRecoveryApp.ApplicationF.Services.Catalogs
                                 int displayOrder)
         {
             if (!_currentUserService.IsAuthenticated)
-                return false;
+                return SaveDefinitionResult.NotAuthenticated;
 
             if (!_currentUserService.HasPermission("ATTRIBUTE_MANAGE"))
-                return false;
+                return SaveDefinitionResult.NoPermission;
 
             if (string.IsNullOrWhiteSpace(code))
-                return false;
+                return SaveDefinitionResult.InvalidCode;
 
             if (string.IsNullOrWhiteSpace(name))
-                return false;
+                return SaveDefinitionResult.InvalidName;
 
             var session = _currentUserService.CurrentSession;
 
             if (session is null)
-                return false;
+                return SaveDefinitionResult.NotAuthenticated;
 
             if (hasRangeValidation)
             {
@@ -97,14 +97,14 @@ namespace BarRecoveryApp.ApplicationF.Services.Catalogs
                 if (dataType != AttributeDataType.Decimal &&
                     dataType != AttributeDataType.Integer)
                 {
-                    return false;
+                    return SaveDefinitionResult.InvalidRangeConfiguration;
                 }
 
                 if (!minValue.HasValue || !maxValue.HasValue)
-                    return false;
+                    return SaveDefinitionResult.InvalidRangeConfiguration;
 
                 if (minValue.Value > maxValue.Value)
-                    return false;
+                    return SaveDefinitionResult.InvalidRangeConfiguration;
             }
 
             var normalizedCode = code.Trim().ToUpperInvariant();
@@ -127,7 +127,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Catalogs
             if (existing is not null &&
                 existing.Id != definitionId)
             {
-                return false;
+                return SaveDefinitionResult.DuplicateCode;
             }
 
             if (string.IsNullOrWhiteSpace(definitionId))
@@ -159,14 +159,14 @@ namespace BarRecoveryApp.ApplicationF.Services.Catalogs
 
                 await _definitionRepository.InsertAsync(definition);
 
-                return true;
+                return SaveDefinitionResult.Success;
             }
             else
             {
                 var definition = await _definitionRepository.GetByIdAsync(definitionId);
 
                 if (definition is null)
-                    return false;
+                    return SaveDefinitionResult.NotFound;
 
                 definition.Code = normalizedCode;
                 definition.Name = normalizedName;
@@ -188,7 +188,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Catalogs
 
                 await _definitionRepository.UpdateAsync(definition);
 
-                return true;
+                return SaveDefinitionResult.Success;
             }
         }
 

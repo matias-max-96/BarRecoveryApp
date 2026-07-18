@@ -10,7 +10,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Catalogs
 
         Task<List<BarType>> GetActiveBarTypesAsync();
 
-        Task<bool> SaveDefinitionAsync(
+        Task<SaveDefinitionResult> SaveDefinitionAsync(
                     string? definitionId,
                     string code,
                     string name,

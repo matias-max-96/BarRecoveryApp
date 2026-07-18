@@ -83,17 +83,17 @@ namespace BarRecoveryApp.Infrastructure.Persistence.Repositories
             return await db.UpdateAsync(entity);
         }
 
-        public async Task<int> SaveAsync (T entity)
+        public async Task<int> SaveAsync(T entity)
         {
-            if(string.IsNullOrWhiteSpace(entity.Id))
+            if (string.IsNullOrWhiteSpace(entity.Id))
                 return await InsertAsync(entity);
 
             var existing = await GetByIdAsync(entity.Id);
 
             if (existing != null)
-                return await InsertAsync(entity);
+                return await UpdateAsync(entity); // existe -> actualizar
 
-            return await UpdateAsync(entity);
+            return await InsertAsync(entity); // no existe -> insertar
         }
 
 
