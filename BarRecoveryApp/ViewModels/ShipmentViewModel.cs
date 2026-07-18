@@ -347,6 +347,7 @@ namespace BarRecoveryApp.ViewModels
             try
             {
                 IsBusy = true;
+                RefreshCommands(); // deshabilita el botón de inmediato para evitar doble-tap
                 ClearMessages();
 
                 var selectedBarIds = SelectedBars

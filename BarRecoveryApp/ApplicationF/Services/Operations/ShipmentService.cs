@@ -80,15 +80,18 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             string? searchText,
             int maxResults)
         {
-            var bars = await _barRepository.GetAllAsync();
+            // Filtramos en SQL lo que no necesita cruzar con Plant/BarType,
+            // en vez de traer toda la tabla Bar (que acumula barras en todos los
+            // estados: enviadas, recuperadas, dadas de baja, etc.) a memoria.
+            var bars = await _barRepository.WhereAsync(x =>
+                x.IsActive &&
+                !x.IsDisposed &&
+                x.CurrentStatus == BarStatus.ReadyToShip);
+
             var plants = await _plantRepository.GetAllAsync();
             var barTypes = await _barTypeRepository.GetAllAsync();
 
-            var query = bars.AsEnumerable()
-                .Where(x =>
-                    x.IsActive &&
-                    !x.IsDisposed &&
-                    x.CurrentStatus == BarStatus.ReadyToShip);
+            var query = bars.AsEnumerable();
 
             if (!string.IsNullOrWhiteSpace(plantId))
             {
@@ -109,24 +112,15 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                     var plant = plants.FirstOrDefault(x => x.Id == bar.PlantId);
                     var barType = barTypes.FirstOrDefault(x => x.Id == bar.BarTypeId);
 
-                    var barNumber = NormalizeForSearch(bar.BarNumber);
-                    var plantName = NormalizeForSearch(plant?.Name);
-                    var plantCode = NormalizeForSearch(plant?.Code);
-                    var barTypeName = NormalizeForSearch(barType?.Name);
-                    var barTypeCode = NormalizeForSearch(barType?.Code);
-
+                    // displayText ya incluye BarNumber + PlantName + PlantCode + BarTypeName + BarTypeCode,
+                    // así que comparar cada campo por separado además del combinado era redundante.
                     var displayText = NormalizeForSearch(
                         $"{bar.BarNumber} {plant?.Name} {plant?.Code} {barType?.Name} {barType?.Code}");
 
                     var operationalKey = NormalizeForSearch(
                         $"{plant?.Code}-{barType?.Code}-{bar.BarNumber}");
 
-                    return barNumber.Contains(normalizedSearch) ||
-                           plantName.Contains(normalizedSearch) ||
-                           plantCode.Contains(normalizedSearch) ||
-                           barTypeName.Contains(normalizedSearch) ||
-                           barTypeCode.Contains(normalizedSearch) ||
-                           displayText.Contains(normalizedSearch) ||
+                    return displayText.Contains(normalizedSearch) ||
                            operationalKey.Contains(normalizedSearch);
                 });
             }
@@ -167,14 +161,14 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 return new ShipmentCreateResultDto
                 {
                     Success = false,
-                    Message = "No fue posible crear el envío. Verifique los datos ingresados."
+                    Message = "Su sesión no es válida. Vuelva a iniciar sesión."
                 };
 
             if (!_currentUserService.HasPermission("SHIPMENT_CREATE"))
                 return new ShipmentCreateResultDto
                 {
                     Success = false,
-                    Message = "No fue posible crear el envío. Verifique los datos ingresados."
+                    Message = "No tiene permiso para crear envíos."
                 };
 
             var session = _currentUserService.CurrentSession;
@@ -183,21 +177,21 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 return new ShipmentCreateResultDto
                 {
                     Success = false,
-                    Message = "No fue posible crear el envío. Verifique los datos ingresados."
+                    Message = "Su sesión no es válida. Vuelva a iniciar sesión."
                 };
 
             if (string.IsNullOrWhiteSpace(transferOrder))
                 return new ShipmentCreateResultDto
                 {
                     Success = false,
-                    Message = "No fue posible crear el envío. Verifique los datos ingresados."
+                    Message = "Debe ingresar la orden de traslado."
                 };
 
             if (barIds is null || barIds.Count == 0)
                 return new ShipmentCreateResultDto
                 {
                     Success = false,
-                    Message = "No fue posible crear el envío. Verifique los datos ingresados."
+                    Message = "Debe seleccionar al menos una barra para el envío."
                 };
 
             var normalizedTransferOrder = transferOrder.Trim().ToUpperInvariant();
@@ -223,11 +217,18 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             await _shipmentRepository.InsertAsync(shipment);
 
+            var distinctBarIds = barIds.Distinct().ToList();
+
+            // Antes: un GetByIdAsync por cada barra (N round-trips a la BD).
+            // Ahora: una sola consulta trae todas las barras candidatas.
+            var candidateBars = await _barRepository.WhereAsync(
+                x => distinctBarIds.Contains(x.Id));
+
             var shippedBars = new List<Bar>();
 
-            foreach (var barId in barIds.Distinct())
+            foreach (var barId in distinctBarIds)
             {
-                var bar = await _barRepository.GetByIdAsync(barId);
+                var bar = candidateBars.FirstOrDefault(x => x.Id == barId);
 
                 if (bar is null)
                     continue;
@@ -319,10 +320,10 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 Message = technicalReportResult.Success
                     ? $"Envío creado correctamente. Reporte técnico generado: {technicalReportResult.FileName}"
                     : "Envío creado correctamente, pero no fue posible generar el reporte técnico.",
-                            TechnicalReportFileName = technicalReportResult.Success
+                TechnicalReportFileName = technicalReportResult.Success
                     ? technicalReportResult.FileName
                     : string.Empty,
-                            TechnicalReportFilePath = technicalReportResult.Success
+                TechnicalReportFilePath = technicalReportResult.Success
                     ? technicalReportResult.FilePath
                     : string.Empty
             };
