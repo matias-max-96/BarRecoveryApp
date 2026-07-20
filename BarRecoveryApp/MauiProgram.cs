@@ -10,6 +10,7 @@ using BarRecoveryApp.Infrastructure.Persistence.Repositories;
 using BarRecoveryApp.Infrastructure.Persistence.Seed;
 using BarRecoveryApp.ViewModels;
 using BarRecoveryApp.Views;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SQLitePCL;
 
@@ -68,6 +69,8 @@ namespace BarRecoveryApp
             builder.Services.AddSingleton<ISyncCredentialStore, SecureStorageSyncCredentialStore>();
             builder.Services.AddHttpClient<ISyncApiClient, PomeriumSyncApiClient>();
             builder.Services.AddTransient<ISyncEngineService, SyncEngineService>();
+            builder.Services.AddSingleton<ISyncBackgroundRunner, SyncBackgroundRunner>();
+            builder.Services.AddTransient<IShipmentSyncPayloadBuilder, ShipmentSyncPayloadBuilder>();
 
             //Login View Model
             builder.Services.AddTransient<LoginViewModel>();
@@ -139,7 +142,13 @@ namespace BarRecoveryApp
             //Appshell
             builder.Services.AddSingleton<AppShell>();
 
-            return builder.Build();
+            var app = builder.Build();
+
+            // Arranca el loop de sync en background una sola vez, apenas la
+            // app termina de armar el contenedor de dependencias.
+            app.Services.GetRequiredService<ISyncBackgroundRunner>().Start();
+
+            return app;
         }
     }
 }
