@@ -94,4 +94,8 @@ public partial class AdminHomePage : ContentPage
     {
         await Shell.Current.GoToAsync(nameof(AuditExportPage));
     }
+    private async void OnMissingWorkReportsClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(MissingWorkReportPage));
+    }
 }

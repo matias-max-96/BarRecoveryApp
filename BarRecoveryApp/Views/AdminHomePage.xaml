@@ -42,6 +42,8 @@
                     Clicked="OnDashboardClicked"/>
             <Button Text="Exportar reportes"
                     Clicked="OnReportExportClicked"/>
+            <Button Text="Registros de operadores faltantes"
+                    Clicked="OnMissingWorkReportsClicked"/>
             <Button 
                     x:Name="AuditLogButton"
                     Text="Exportar Auditoría"

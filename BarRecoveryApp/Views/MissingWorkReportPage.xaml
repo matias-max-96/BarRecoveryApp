@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="BarRecoveryApp.Views.MissingWorkReportPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Registros faltantes">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16">
+
+            <Label
+                Text="Registros Faltantes"
+                FontSize="26"
+                FontAttributes="Bold"
+                HorizontalOptions="Center" />
+
+            <Label
+                Text="Muestra operadores activos que no registraron trabajo en días hábiles dentro del rango seleccionado."
+                FontSize="14"
+                TextColor="Gray"
+                HorizontalTextAlignment="Center" />
+
+            <ActivityIndicator
+                IsRunning="{Binding IsBusy}"
+                IsVisible="{Binding IsBusy}"
+                HorizontalOptions="Center" />
+
+            <Border
+                IsVisible="{Binding HasError}"
+                Padding="12"
+                Stroke="#D9534F"
+                StrokeThickness="1"
+                BackgroundColor="White">
+
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+
+                <Label
+                    Text="{Binding ErrorMessage}"
+                    TextColor="#B00020"
+                    FontAttributes="Bold" />
+            </Border>
+
+            <Label
+                Text="Rango de fechas"
+                FontSize="20"
+                FontAttributes="Bold" />
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+
+                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                    <Label
+                        Text="Desde"
+                        FontSize="13"
+                        TextColor="Gray" />
+
+                    <DatePicker
+                        Date="{Binding FromDate}" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                    <Label
+                        Text="Hasta"
+                        FontSize="13"
+                        TextColor="Gray" />
+
+                    <DatePicker
+                        Date="{Binding ToDate}" />
+                </VerticalStackLayout>
+
+            </Grid>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+
+                <Button
+                    Grid.Column="0"
+                    Text="Limpiar"
+                    Command="{Binding ClearCommand}"
+                    BackgroundColor="#6C757D"
+                    TextColor="White" />
+
+                <Button
+                    Grid.Column="1"
+                    Text="Buscar"
+                    Command="{Binding SearchCommand}"
+                    BackgroundColor="#FD7E14"
+                    TextColor="White" />
+
+            </Grid>
+
+            <Label
+                Text="{Binding ResultCountText}"
+                FontSize="13"
+                TextColor="Gray" />
+
+            <BoxView
+                HeightRequest="1"
+                Color="#DDDDDD"
+                Margin="0,8" />
+
+            <Label
+                Text="Detalle"
+                FontSize="20"
+                FontAttributes="Bold" />
+
+            <CollectionView ItemsSource="{Binding MissingReports}">
+
+                <CollectionView.EmptyView>
+                    <Label
+                        Text="No hay registros faltantes para mostrar."
+                        TextColor="Gray"
+                        HorizontalTextAlignment="Center"
+                        Margin="0,24" />
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border
+                            Padding="12"
+                            Margin="0,4"
+                            Stroke="#FD7E14"
+                            StrokeThickness="1"
+                            BackgroundColor="#FFF7ED">
+
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
+
+                            <VerticalStackLayout Spacing="4">
+
+                                <Label
+                                    Text="{Binding OperatorName}"
+                                    FontAttributes="Bold"
+                                    FontSize="16" />
+
+                                <Label
+                                    Text="{Binding WorkDateText, StringFormat='Fecha: {0}'}"
+                                    FontSize="13"
+                                    TextColor="Gray" />
+
+                                <Label
+                                    Text="{Binding WeekDayName, StringFormat='Día: {0}'}"
+                                    FontSize="13"
+                                    TextColor="Gray" />
+
+                                <Label
+                                    Text="No registró trabajo"
+                                    FontSize="13"
+                                    TextColor="#B45309"
+                                    FontAttributes="Bold" />
+
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+            </CollectionView>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
