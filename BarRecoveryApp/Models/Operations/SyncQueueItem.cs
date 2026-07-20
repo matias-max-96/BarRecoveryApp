@@ -17,13 +17,13 @@ namespace BarRecoveryApp.Models.Operations
 
         public string PayloadJson { get; set; } = string.Empty;
 
-        public SyncStatus SumcStatis { get; set; } = SyncStatus.Pending;
+        public SyncStatus SyncStatus { get; set; } = SyncStatus.Pending;
 
         public int Retries { get; set; } = 0;
 
         public DateTime? LastAttemptUtc { get; set; }
 
-        public string? ErrorMessage {get; set; }
+        public string? ErrorMessage { get; set; }
 
 
     }

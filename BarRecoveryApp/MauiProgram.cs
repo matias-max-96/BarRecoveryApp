@@ -3,6 +3,7 @@ using BarRecoveryApp.ApplicationF.Services.Authentication;
 using BarRecoveryApp.ApplicationF.Services.Catalogs;
 using BarRecoveryApp.ApplicationF.Services.Navigation;
 using BarRecoveryApp.ApplicationF.Services.Operations;
+using BarRecoveryApp.ApplicationF.Services.Sync;
 using BarRecoveryApp.ApplicationF.Services.Users;
 using BarRecoveryApp.Infrastructure.Persistence;
 using BarRecoveryApp.Infrastructure.Persistence.Repositories;
@@ -29,11 +30,11 @@ namespace BarRecoveryApp
                 });
 
 #if DEBUG
-    		builder.Logging.AddDebug();
+            builder.Logging.AddDebug();
 #endif
             //db
             builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
-            builder.Services.AddSingleton<IDatabaseSeeder,  DatabaseSeeder>();
+            builder.Services.AddSingleton<IDatabaseSeeder, DatabaseSeeder>();
 
             //Repositories
             builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
@@ -62,7 +63,11 @@ namespace BarRecoveryApp
             builder.Services.AddTransient<IBarLookupService, BarLookupService>();
             builder.Services.AddTransient<IAuditLogService, AuditLogService>();
             builder.Services.AddTransient<IShipmentTechnicalReportExportService, ShipmentTechnicalReportExportService>();
-            builder.Services.AddTransient<IMissingWorkReportService, MissingWorkReportService>();
+
+            //Sync
+            builder.Services.AddSingleton<ISyncCredentialStore, SecureStorageSyncCredentialStore>();
+            builder.Services.AddHttpClient<ISyncApiClient, PomeriumSyncApiClient>();
+            builder.Services.AddTransient<ISyncEngineService, SyncEngineService>();
 
             //Login View Model
             builder.Services.AddTransient<LoginViewModel>();
@@ -78,7 +83,7 @@ namespace BarRecoveryApp
             builder.Services.AddTransient<UsersViewModel>();
             builder.Services.AddTransient<UsersPage>();
             //PlantsPage
-            builder.Services.AddTransient<PlantsViewModel>(); 
+            builder.Services.AddTransient<PlantsViewModel>();
             builder.Services.AddTransient<PlantsPage>();
             //BarPage
             builder.Services.AddTransient<BarTypesViewModel>();
@@ -131,9 +136,6 @@ namespace BarRecoveryApp
             //Audit
             builder.Services.AddTransient<AuditExportViewModel>();
             builder.Services.AddTransient<AuditExportPage>();
-            //MisingWorkReport
-            builder.Services.AddTransient<MissingWorkReportViewModel>();
-            builder.Services.AddTransient<MissingWorkReportPage>();
             //Appshell
             builder.Services.AddSingleton<AppShell>();
 
