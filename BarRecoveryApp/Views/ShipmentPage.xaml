@@ -66,6 +66,10 @@
                 Text="{Binding CustomerReference}"
                 Placeholder="Referencia cliente / destino opcional" />
 
+            <Entry
+                Text="{Binding DispatchGuideNumber}"
+                Placeholder="N° de guía de despacho (documento agencia externa)" />
+
             <BoxView HeightRequest="1" Color="#DDDDDD" Margin="0,8" />
 
             <Label

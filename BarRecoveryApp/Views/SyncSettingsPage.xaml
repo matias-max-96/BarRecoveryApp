@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="BarRecoveryApp.Views.SyncSettingsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Configuración de sincronización">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16">
+
+            <Label
+                Text="Conexión con Pomerium"
+                FontSize="26"
+                FontAttributes="Bold"
+                HorizontalOptions="Center" />
+
+            <Label
+                Text="Datos de conexión al portal remoto. El cookie de sesión se guarda cifrado en el dispositivo (SecureStorage) y nunca se muestra de vuelta en pantalla."
+                FontSize="12"
+                TextColor="Gray"
+                HorizontalTextAlignment="Center" />
+
+            <ActivityIndicator
+                IsRunning="{Binding IsBusy}"
+                IsVisible="{Binding IsBusy}"
+                HorizontalOptions="Center" />
+
+            <Border
+                IsVisible="{Binding HasError}"
+                Padding="12"
+                Stroke="#D9534F"
+                StrokeThickness="1"
+                BackgroundColor="White">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+                <Label
+                    Text="{Binding ErrorMessage}"
+                    TextColor="#B00020"
+                    FontAttributes="Bold" />
+            </Border>
+
+            <Border
+                IsVisible="{Binding HasSuccess}"
+                Padding="12"
+                Stroke="#2E7D32"
+                StrokeThickness="1"
+                BackgroundColor="White">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+                <Label
+                    Text="{Binding SuccessMessage}"
+                    TextColor="#2E7D32"
+                    FontAttributes="Bold" />
+            </Border>
+
+            <Label
+                Text="URL base"
+                FontSize="13"
+                TextColor="Gray" />
+            <Entry
+                Text="{Binding BaseUrl}"
+                Placeholder="https://report-portal.oss-solutions.local:2443" />
+
+            <Label
+                Text="CustomerId"
+                FontSize="13"
+                TextColor="Gray" />
+            <Entry
+                Text="{Binding CustomerId}"
+                Placeholder="13c5ac81-74bc-4f6c-b8a2-a0bb045b6dc9" />
+
+            <Label
+                Text="Cookie _pomerium (dejar en blanco para conservar el actual)"
+                FontSize="13"
+                TextColor="Gray" />
+            <Entry
+                Text="{Binding PomeriumCookie}"
+                Placeholder="Pegar valor del cookie de sesión"
+                IsPassword="True" />
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Button
+                    Grid.Column="0"
+                    Text="Eliminar configuración"
+                    Command="{Binding ClearCommand}"
+                    BackgroundColor="#DC3545"
+                    TextColor="White" />
+
+                <Button
+                    Grid.Column="1"
+                    Text="Guardar"
+                    Command="{Binding SaveCommand}"
+                    BackgroundColor="#0D6EFD"
+                    TextColor="White" />
+            </Grid>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

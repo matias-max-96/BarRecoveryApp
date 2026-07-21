@@ -61,6 +61,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Sync
             var hrc5054Pct = CalculatePercentage(hrc5054, totalEnviado);
             var hrc5559Pct = CalculatePercentage(hrc5559, totalEnviado);
 
+            //DispatchGuideNumber
+            //$"\"guia\":\"{SafeJsonValue(shipment.DispatchGuideNumber)}\"," +
             return
                 "{" +
                 $"\"fecha\":\"{shipment.ShippedAtUtc:yyyy-MM-dd}\"," +

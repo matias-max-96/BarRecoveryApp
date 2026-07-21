@@ -14,7 +14,13 @@ public class Shipment : EntityBase
     [MaxLength(150)]
     public string? CustomerReference { get; set; }
 
-    public DateTime ShippedAtUtc { get; set; } = DateTime.UtcNow;
+    // Número de guía de despacho, tal como aparece en el documento físico
+    // entregado por Saalasti. Texto libre a propósito el formato varía y 
+    // no se puede normalizar de forma confiable a un correlativo numérico. 
+    [MaxLength(100)]
+    public string? DispatchGuideNumber { get; set; }
+
+    public DateTime ShippedAtUtc { get; set; } = DateTime.Now;
 
     [Indexed]
     [MaxLength(36)]

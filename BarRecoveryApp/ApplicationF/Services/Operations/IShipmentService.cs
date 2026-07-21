@@ -18,6 +18,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
         Task<ShipmentCreateResultDto> CreateShipmentAsync(
             string transferOrder,
             string? customerReference,
+            string? dispatchGuideNumber,
             List<string> barIds);
     }
 }

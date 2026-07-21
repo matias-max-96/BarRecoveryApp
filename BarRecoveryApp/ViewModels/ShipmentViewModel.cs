@@ -17,6 +17,7 @@ namespace BarRecoveryApp.ViewModels
         private string _searchText = string.Empty;
         private string _transferOrder = string.Empty;
         private string _customerReference = string.Empty;
+        private string _dispatchGuideNumber = string.Empty;
 
         private string _errorMessage = string.Empty;
         private bool _hasError;
@@ -114,6 +115,19 @@ namespace BarRecoveryApp.ViewModels
             set
             {
                 if (SetProperty(ref _customerReference, value))
+                {
+                    ClearMessages();
+                    RefreshCommands();
+                }
+            }
+        }
+
+        public string DispatchGuideNumber
+        {
+            get => _dispatchGuideNumber;
+            set
+            {
+                if (SetProperty(ref _dispatchGuideNumber, value))
                 {
                     ClearMessages();
                     RefreshCommands();
@@ -358,6 +372,7 @@ namespace BarRecoveryApp.ViewModels
                 var saved = await _shipmentService.CreateShipmentAsync(
                     TransferOrder,
                     CustomerReference,
+                    DispatchGuideNumber,
                     selectedBarIds);
 
                 if (!saved.Success)
@@ -377,6 +392,7 @@ namespace BarRecoveryApp.ViewModels
 
                 TransferOrder = string.Empty;
                 CustomerReference = string.Empty;
+                DispatchGuideNumber = string.Empty;
 
                 SelectedBars.Clear();
                 Bars.Clear();
@@ -433,6 +449,7 @@ namespace BarRecoveryApp.ViewModels
             SearchText = string.Empty;
             TransferOrder = string.Empty;
             CustomerReference = string.Empty;
+            DispatchGuideNumber = string.Empty;
 
             foreach (var bar in Bars)
                 bar.IsSelected = false;

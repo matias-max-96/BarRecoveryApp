@@ -1,6 +1,7 @@
 ﻿using BarRecoveryApp.ApplicationF.Services.Auditing;
 using BarRecoveryApp.ApplicationF.Services.Authentication;
 using BarRecoveryApp.ApplicationF.Services.Operations.DTOs;
+using BarRecoveryApp.ApplicationF.Services.Sync;
 using BarRecoveryApp.Infrastructure.Persistence.Repositories;
 using BarRecoveryApp.Models.Catalogs;
 using BarRecoveryApp.Models.Enums;
@@ -20,6 +21,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
         private readonly ICurrentUserService _currentUserService;
         private readonly IAuditLogService _auditLogService;
         private readonly IShipmentTechnicalReportExportService _shipmentTechnicalReportExportService;
+        private readonly IShipmentSyncPayloadBuilder _shipmentSyncPayloadBuilder;
+        private readonly IRepository<SyncQueueItem> _syncQueueRepository;
+        private readonly ISyncBackgroundRunner _syncBackgroundRunner;
 
         public ShipmentService(
             IRepository<Shipment> shipmentRepository,
@@ -29,7 +33,10 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             IRepository<BarType> barTypeRepository,
             ICurrentUserService currentUserService,
             IAuditLogService auditLogService,
-            IShipmentTechnicalReportExportService shipmentTechnicalReportExportService)
+            IShipmentTechnicalReportExportService shipmentTechnicalReportExportService,
+            IShipmentSyncPayloadBuilder shipmentSyncPayloadBuilder,
+            IRepository<SyncQueueItem> syncQueueRepository,
+            ISyncBackgroundRunner syncBackgroundRunner)
         {
             _shipmentRepository = shipmentRepository
                 ?? throw new ArgumentNullException(nameof(shipmentRepository));
@@ -54,6 +61,15 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             _shipmentTechnicalReportExportService = shipmentTechnicalReportExportService
                 ?? throw new ArgumentNullException(nameof(shipmentTechnicalReportExportService));
+
+            _shipmentSyncPayloadBuilder = shipmentSyncPayloadBuilder
+                ?? throw new ArgumentNullException(nameof(shipmentSyncPayloadBuilder));
+
+            _syncQueueRepository = syncQueueRepository
+                ?? throw new ArgumentNullException(nameof(syncQueueRepository));
+
+            _syncBackgroundRunner = syncBackgroundRunner
+                ?? throw new ArgumentNullException(nameof(syncBackgroundRunner));
         }
 
         public async Task<List<Plant>> GetActivePlantsAsync()
@@ -155,6 +171,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
         public async Task<ShipmentCreateResultDto> CreateShipmentAsync(
             string transferOrder,
             string? customerReference,
+            string? dispatchGuideNumber,
             List<string> barIds)
         {
             if (!_currentUserService.IsAuthenticated)
@@ -196,6 +213,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             var normalizedTransferOrder = transferOrder.Trim().ToUpperInvariant();
             var normalizedCustomerReference = customerReference?.Trim();
+            var normalizedDispatchGuideNumber = dispatchGuideNumber?.Trim();
 
             var shipmentId = Guid.NewGuid().ToString();
 
@@ -206,6 +224,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 CustomerReference = string.IsNullOrWhiteSpace(normalizedCustomerReference)
                     ? null
                     : normalizedCustomerReference,
+                DispatchGuideNumber = string.IsNullOrWhiteSpace(normalizedDispatchGuideNumber)
+                    ? null
+                    : normalizedDispatchGuideNumber,
                 ShippedAtUtc = DateTime.Now,
                 ResponsibleUserId = session.UserId,
                 DeviceId = DeviceInfo.Current.Name ?? string.Empty,
@@ -312,6 +333,39 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                         technicalReportResult.FileName,
                         technicalReportResult.FilePath,
                         shippedBars.Count));
+            }
+
+            // Encola el envío para sincronizarse con el portal remoto (Pomerium).
+            // Si esto falla, no se revierte la creación del envío: el envío ya
+            // es válido localmente, solo queda pendiente de sync — el motor de
+            // sync lo va a reintentar solo.
+            try
+            {
+                var syncPayloadJson = await _shipmentSyncPayloadBuilder.BuildAsync(shipment, shippedBars);
+
+                var syncQueueItem = new SyncQueueItem
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    EntityType = "Shipment",
+                    EntityLocalId = shipmentId,
+                    OperationType = SyncOperationType.Create,
+                    PayloadJson = syncPayloadJson,
+                    SyncStatus = SyncStatus.Pending,
+                    Retries = 0,
+                    IsActive = true,
+                    CreatedAtUtc = DateTime.Now,
+                    UpdatedAtUtc = DateTime.Now
+                };
+
+                await _syncQueueRepository.InsertAsync(syncQueueItem);
+
+                _syncBackgroundRunner.TriggerNow();
+            }
+            catch (Exception)
+            {
+                // No dejamos que un error armando el payload de sync tumbe la
+                // creación del envío, que ya es válida y quedó guardada.
+                // TODO: cuando exista logging centralizado, registrar esto.
             }
 
             return new ShipmentCreateResultDto

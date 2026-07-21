@@ -64,6 +64,7 @@ namespace BarRecoveryApp
             builder.Services.AddTransient<IBarLookupService, BarLookupService>();
             builder.Services.AddTransient<IAuditLogService, AuditLogService>();
             builder.Services.AddTransient<IShipmentTechnicalReportExportService, ShipmentTechnicalReportExportService>();
+            builder.Services.AddTransient<IMissingWorkReportService, MissingWorkReportService>();
 
             //Sync
             builder.Services.AddSingleton<ISyncCredentialStore, SecureStorageSyncCredentialStore>();
@@ -139,13 +140,17 @@ namespace BarRecoveryApp
             //Audit
             builder.Services.AddTransient<AuditExportViewModel>();
             builder.Services.AddTransient<AuditExportPage>();
+            //MissingWorkReportPage
+            builder.Services.AddTransient<MissingWorkReportViewModel>();
+            builder.Services.AddTransient<MissingWorkReportPage>();
+            //SyncSettingsPage
+            builder.Services.AddTransient<SyncSettingsViewModel>();
+            builder.Services.AddTransient<SyncSettingsPage>();
             //Appshell
             builder.Services.AddSingleton<AppShell>();
 
             var app = builder.Build();
 
-            // Arranca el loop de sync en background una sola vez, apenas la
-            // app termina de armar el contenedor de dependencias.
             app.Services.GetRequiredService<ISyncBackgroundRunner>().Start();
 
             return app;

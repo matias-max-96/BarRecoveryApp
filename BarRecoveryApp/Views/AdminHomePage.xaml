@@ -51,8 +51,19 @@
                     IsVisible="False"
                     BackgroundColor="#6F42C1"
                     TextColor="WhiteSmoke"/>
-            
-            <Button Text="Sincronización"/>
+
+            <Button
+                x:Name="SyncButton"
+                Text="Sincronización"
+                Clicked="OnSyncClicked"
+                BackgroundColor="#0DCAF0"
+                TextColor="Black"/>
+
+            <Button
+                Text="Configuración de sincronización"
+                Clicked="OnSyncSettingsClicked"
+                BackgroundColor="#20C997"
+                TextColor="Black"/>
 
             <Button
                 Text="Cerrar sesión"
@@ -62,7 +73,7 @@
 
 
         </VerticalStackLayout>
-        
+
     </ScrollView>
-    
+
 </ContentPage>
