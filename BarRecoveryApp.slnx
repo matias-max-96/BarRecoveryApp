@@ -1,3 +1,6 @@
 <Solution>
-  <Project Path="BarRecoveryApp/BarRecoveryApp.csproj" />
+  <Project Path="BarRecoveryApp.Api/BarRecoveryApp.Api.csproj" />
+  <Project Path="BarRecoveryApp/BarRecoveryApp.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
 </Solution>
