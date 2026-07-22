@@ -62,3 +62,6 @@ Thumbs.db
 *.xls
 *.docx
 *.csv
+
+#SQL Specific
+.db3
