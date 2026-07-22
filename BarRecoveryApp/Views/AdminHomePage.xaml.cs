@@ -38,6 +38,8 @@ public partial class AdminHomePage : ContentPage
         var roleCode = _currentUserService.CurrentSession?.RoleCode;
 
         AuditLogButton.IsVisible = roleCode == "SUPER_ADMIN";
+        SyncButton.IsVisible = roleCode == "SUPER_ADMIN";
+        SyncConfigButton.IsVisible = roleCode == "SUPER_ADMIN";
     }
 
     private async void OnUsersClicked(Object sender, EventArgs e)

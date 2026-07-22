@@ -56,12 +56,15 @@
                 x:Name="SyncButton"
                 Text="Sincronización"
                 Clicked="OnSyncClicked"
+                IsVisible="False"
                 BackgroundColor="#0DCAF0"
                 TextColor="Black"/>
 
             <Button
+                x:Name="SyncConfigButton"
                 Text="Configuración de sincronización"
                 Clicked="OnSyncSettingsClicked"
+                IsVisible="False"
                 BackgroundColor="#20C997"
                 TextColor="Black"/>
 
