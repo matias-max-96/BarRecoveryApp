@@ -1,6 +1,9 @@
 ﻿using BarRecoveryApp.ApplicationF.Services.Authentication;
+using BarRecoveryApp.ApplicationF.Services.Sync;
 using BarRecoveryApp.Infrastructure.Persistence.Repositories;
 using BarRecoveryApp.Models.Catalogs;
+using BarRecoveryApp.Models.Enums;
+using BarRecoveryApp.Models.Operations;
 
 namespace BarRecoveryApp.ApplicationF.Services.Catalogs
 {
@@ -8,16 +11,26 @@ namespace BarRecoveryApp.ApplicationF.Services.Catalogs
     {
         private readonly IRepository<Plant> _plantRepository;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IRepository<SyncQueueItem> _syncQueueRepository;
+        private readonly ISyncBackgroundRunner _syncBackgroundRunner;
 
         public PlantService(
             IRepository<Plant> plantRepository,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            IRepository<SyncQueueItem> syncQueueRepository,
+            ISyncBackgroundRunner syncBackgroundRunner)
         {
             _plantRepository = plantRepository
                 ?? throw new ArgumentNullException(nameof(plantRepository));
 
             _currentUserService = currentUserService
                 ?? throw new ArgumentNullException(nameof(currentUserService));
+
+            _syncQueueRepository = syncQueueRepository
+                ?? throw new ArgumentNullException(nameof(syncQueueRepository));
+
+            _syncBackgroundRunner = syncBackgroundRunner
+                ?? throw new ArgumentNullException(nameof(syncBackgroundRunner));
         }
 
         public async Task<List<Plant>> GetPlantsAsync()
@@ -75,6 +88,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Catalogs
 
                 await _plantRepository.InsertAsync(plant);
 
+                await EnqueueSyncAsync(plant.Id, SyncOperationType.Create);
+
                 return true;
             }
             else
@@ -90,6 +105,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Catalogs
                 plant.UpdatedAtUtc = DateTime.Now;
 
                 await _plantRepository.UpdateAsync(plant);
+
+                await EnqueueSyncAsync(plant.Id, SyncOperationType.Update);
 
                 return true;
             }
@@ -118,7 +135,42 @@ namespace BarRecoveryApp.ApplicationF.Services.Catalogs
 
             await _plantRepository.UpdateAsync(plant);
 
+            await EnqueueSyncAsync(plant.Id, SyncOperationType.Update);
+
             return true;
+        }
+
+        private async Task EnqueueSyncAsync(string plantId, SyncOperationType operationType)
+        {
+            // No usamos PayloadJson acá (a diferencia del sync con Pomerium):
+            // PlantSyncEngine lee el registro actual de Plant directo desde
+            // el repositorio al momento de subirlo, así siempre manda el
+            // estado más reciente aunque hayan pasado varios cambios entre
+            // que se encoló y que efectivamente se sincronizó.
+            try
+            {
+                await _syncQueueRepository.InsertAsync(new SyncQueueItem
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    EntityType = "Plant",
+                    EntityLocalId = plantId,
+                    OperationType = operationType,
+                    PayloadJson = string.Empty,
+                    SyncStatus = SyncStatus.Pending,
+                    Retries = 0,
+                    IsActive = true,
+                    CreatedAtUtc = DateTime.Now,
+                    UpdatedAtUtc = DateTime.Now
+                });
+
+                _syncBackgroundRunner.TriggerNow();
+            }
+            catch (Exception)
+            {
+                // No dejamos que un error encolando el sync tumbe la
+                // operación local, que ya se guardó correctamente.
+                // TODO: logging centralizado.
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using BarRecoveryApp.ApplicationF.Services.CentralSync;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BarRecoveryApp.ApplicationF.Services.Sync
 {
@@ -76,9 +77,27 @@ namespace BarRecoveryApp.ApplicationF.Services.Sync
                 // queremos retener instancias creadas al arrancar.
                 using var scope = _serviceProvider.CreateScope();
 
-                var engine = scope.ServiceProvider.GetRequiredService<ISyncEngineService>();
+                // Dos sistemas de sync independientes, cada uno con su propio
+                // try/catch: si uno falla, no debe impedir que el otro corra.
+                try
+                {
+                    var pomeriumEngine = scope.ServiceProvider.GetRequiredService<ISyncEngineService>();
+                    await pomeriumEngine.ProcessPendingAsync();
+                }
+                catch (Exception)
+                {
+                    // TODO: logging centralizado.
+                }
 
-                await engine.ProcessPendingAsync();
+                try
+                {
+                    var plantSyncEngine = scope.ServiceProvider.GetRequiredService<IPlantSyncEngine>();
+                    await plantSyncEngine.SyncAsync();
+                }
+                catch (Exception)
+                {
+                    // TODO: logging centralizado.
+                }
             }
             catch (Exception)
             {

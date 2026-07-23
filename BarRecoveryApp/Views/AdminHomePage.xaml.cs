@@ -1,4 +1,5 @@
 using BarRecoveryApp.ApplicationF.Services.Authentication;
+using BarRecoveryApp.ApplicationF.Services.CentralSync;
 using BarRecoveryApp.ApplicationF.Services.Navigation;
 using BarRecoveryApp.ApplicationF.Services.Sync;
 
@@ -9,11 +10,13 @@ public partial class AdminHomePage : ContentPage
     private readonly IRoleNavigationService _roleNavigationService;
     private readonly ICurrentUserService _currentUserService;
     private readonly ISyncEngineService _syncEngineService;
+    private readonly IPlantSyncEngine _plantSyncEngine;
 
     public AdminHomePage(
         IRoleNavigationService roleNavigationService,
         ICurrentUserService currentUserService,
-        ISyncEngineService syncEngineService)
+        ISyncEngineService syncEngineService,
+        IPlantSyncEngine plantSyncEngine)
     {
         InitializeComponent();
 
@@ -25,6 +28,9 @@ public partial class AdminHomePage : ContentPage
 
         _syncEngineService = syncEngineService
             ?? throw new ArgumentNullException(nameof(syncEngineService));
+
+        _plantSyncEngine = plantSyncEngine
+            ?? throw new ArgumentNullException(nameof(plantSyncEngine));
     }
     protected override void OnAppearing()
     {
@@ -38,8 +44,6 @@ public partial class AdminHomePage : ContentPage
         var roleCode = _currentUserService.CurrentSession?.RoleCode;
 
         AuditLogButton.IsVisible = roleCode == "SUPER_ADMIN";
-        SyncButton.IsVisible = roleCode == "SUPER_ADMIN";
-        SyncConfigButton.IsVisible = roleCode == "SUPER_ADMIN";
     }
 
     private async void OnUsersClicked(Object sender, EventArgs e)
@@ -113,6 +117,11 @@ public partial class AdminHomePage : ContentPage
         await Shell.Current.GoToAsync(nameof(SyncSettingsPage));
     }
 
+    private async void OnCentralApiSettingsClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(CentralApiSettingsPage));
+    }
+
     private async void OnSyncClicked(object sender, EventArgs e)
     {
         // Deshabilitar de inmediato: evita disparar dos corridas del motor
@@ -123,29 +132,32 @@ public partial class AdminHomePage : ContentPage
         try
         {
             var summary = await _syncEngineService.ProcessPendingAsync();
+            var plantSummary = await _plantSyncEngine.SyncAsync();
+
+            var messageLines = new List<string>
+            {
+                $"Reportes (Pomerium) — Procesados: {summary.Processed} | Exitosos: {summary.Succeeded} | Fallidos: {summary.Failed}"
+            };
+
+            if (plantSummary.NotConfigured)
+            {
+                messageLines.Add("Plantas (backend central) — no hay conexión configurada.");
+            }
+            else
+            {
+                messageLines.Add(
+                    $"Plantas (backend central) — Bajadas: {plantSummary.Pulled} | Subidas: {plantSummary.Pushed} | Conflictos resueltos: {plantSummary.PushConflicts}");
+            }
 
             if (summary.RequiresReAuthentication)
             {
-                await DisplayAlertAsync(
-                    "Sincronización",
-                    $"Procesados: {summary.Processed} | Exitosos: {summary.Succeeded} | Fallidos: {summary.Failed}\n\n" +
-                    "No hay una sesión válida con el servidor remoto configurada, o venció. Debe configurarla/reautenticarse antes de sincronizar.",
-                    "OK");
-                return;
-            }
-
-            if (summary.Processed == 0)
-            {
-                await DisplayAlertAsync(
-                    "Sincronización",
-                    "No hay elementos pendientes por sincronizar.",
-                    "OK");
-                return;
+                messageLines.Add("");
+                messageLines.Add("La sesión con el servidor remoto de reportes no está configurada, o venció.");
             }
 
             await DisplayAlertAsync(
                 "Sincronización",
-                $"Procesados: {summary.Processed} | Exitosos: {summary.Succeeded} | Fallidos: {summary.Failed}",
+                string.Join("\n", messageLines),
                 "OK");
         }
         catch (Exception ex)

@@ -11,9 +11,6 @@ namespace BarRecoveryApp.Api.Data
 
         public DbSet<Plant> Plants => Set<Plant>();
 
-        // Fase 2+: agregar aquí DbSet<BarType>, DbSet<RecoveryWorkReport>, etc.
-        // a medida que cada entidad entre a su fase del plan de sync.
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Plant>(entity =>

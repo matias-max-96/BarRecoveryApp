@@ -56,17 +56,20 @@
                 x:Name="SyncButton"
                 Text="Sincronización"
                 Clicked="OnSyncClicked"
-                IsVisible="False"
                 BackgroundColor="#0DCAF0"
                 TextColor="Black"/>
 
             <Button
-                x:Name="SyncConfigButton"
                 Text="Configuración de sincronización"
                 Clicked="OnSyncSettingsClicked"
-                IsVisible="False"
                 BackgroundColor="#20C997"
                 TextColor="Black"/>
+
+            <Button
+                Text="Configuración de backend central"
+                Clicked="OnCentralApiSettingsClicked"
+                BackgroundColor="#6610F2"
+                TextColor="White"/>
 
             <Button
                 Text="Cerrar sesión"

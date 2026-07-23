@@ -41,10 +41,7 @@ namespace BarRecoveryApp.Api.Controllers
             return Ok(result);
         }
 
-        // Push: la tablet manda un cambio local. Se aplica Last-Write-Wins
-        // por UpdatedAtUtc. Si el servidor tiene una versión más nueva,
-        // se rechaza con 409 y se devuelve esa versión para que la tablet
-        // la adopte localmente en vez de perder el cambio de otra tablet.
+ 
         [HttpPost]
         public async Task<IActionResult> Push([FromBody] PlantSyncDto dto)
         {

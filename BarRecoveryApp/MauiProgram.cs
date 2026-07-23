@@ -1,5 +1,6 @@
 ﻿using BarRecoveryApp.ApplicationF.Services.Auditing;
 using BarRecoveryApp.ApplicationF.Services.Authentication;
+using BarRecoveryApp.ApplicationF.Services.CentralSync;
 using BarRecoveryApp.ApplicationF.Services.Catalogs;
 using BarRecoveryApp.ApplicationF.Services.Navigation;
 using BarRecoveryApp.ApplicationF.Services.Operations;
@@ -72,6 +73,12 @@ namespace BarRecoveryApp
             builder.Services.AddTransient<ISyncEngineService, SyncEngineService>();
             builder.Services.AddSingleton<ISyncBackgroundRunner, SyncBackgroundRunner>();
             builder.Services.AddTransient<IShipmentSyncPayloadBuilder, ShipmentSyncPayloadBuilder>();
+
+            //CentralSync (backend propio, compartido entre las 5 tablets)
+            builder.Services.AddSingleton<ICentralApiCredentialStore, SecureStorageCentralApiCredentialStore>();
+            builder.Services.AddHttpClient<ICentralApiAuthClient, CentralApiAuthClient>();
+            builder.Services.AddHttpClient<IPlantSyncApiClient, PlantSyncApiClient>();
+            builder.Services.AddTransient<IPlantSyncEngine, PlantSyncEngine>();
 
             //Login View Model
             builder.Services.AddTransient<LoginViewModel>();
@@ -146,11 +153,16 @@ namespace BarRecoveryApp
             //SyncSettingsPage
             builder.Services.AddTransient<SyncSettingsViewModel>();
             builder.Services.AddTransient<SyncSettingsPage>();
+            //CentralApiSettingsPage
+            builder.Services.AddTransient<CentralApiSettingsViewModel>();
+            builder.Services.AddTransient<CentralApiSettingsPage>();
             //Appshell
             builder.Services.AddSingleton<AppShell>();
 
             var app = builder.Build();
 
+            // Arranca el loop de sync en background una sola vez, apenas la
+            // app termina de armar el contenedor de dependencias.
             app.Services.GetRequiredService<ISyncBackgroundRunner>().Start();
 
             return app;
