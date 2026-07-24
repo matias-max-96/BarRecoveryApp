@@ -50,7 +50,14 @@ if (app.Environment.IsDevelopment())
     db.Database.Migrate();
 }
 
-app.UseHttpsRedirection();
+// Solo se fuerza HTTPS fuera de Development. En el piloto local (emulador
+// Android + certificado autofirmado), la app le habla al puerto HTTP a
+// propósito — ver la nota en network_security_config.xml del lado MAUI.
+// Antes de un despliegue real, esto debe volver a exigir HTTPS siempre.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

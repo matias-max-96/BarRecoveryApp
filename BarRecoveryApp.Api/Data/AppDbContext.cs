@@ -1,5 +1,6 @@
 using BarRecoveryApp.Api.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BarRecoveryApp.Api.Data
 {
@@ -10,6 +11,9 @@ namespace BarRecoveryApp.Api.Data
         }
 
         public DbSet<Plant> Plants => Set<Plant>();
+
+        // Fase 2+: agregar aquí DbSet<BarType>, DbSet<RecoveryWorkReport>, etc.
+        // a medida que cada entidad entre a su fase del plan de sync.
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -26,6 +30,29 @@ namespace BarRecoveryApp.Api.Data
             });
 
             base.OnModelCreating(modelBuilder);
+
+            var utcConverter = new ValueConverter<DateTime, DateTime>(
+                v => DateTime.SpecifyKind(v, DateTimeKind.Utc),
+                v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+
+            var nullableUtcConverter = new ValueConverter<DateTime?, DateTime?>(
+                v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : v,
+                v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : v);
+
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                foreach (var property in entityType.GetProperties())
+                {
+                    if (property.ClrType == typeof(DateTime))
+                    {
+                        property.SetValueConverter(utcConverter);
+                    }
+                    else if (property.ClrType == typeof(DateTime?))
+                    {
+                        property.SetValueConverter(nullableUtcConverter);
+                    }
+                }
+            }
         }
     }
 }
