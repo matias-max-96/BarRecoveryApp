@@ -48,7 +48,15 @@ namespace BarRecoveryApp.ApplicationF.Services.Sync
                 return summary;
             }
 
+            // Filtrar por EntityType es crítico acá: SyncQueue es una tabla
+            // compartida entre este motor (reportes a Pomerium) y otros
+            // motores de sync (ej. PlantSyncEngine, backend central). Sin
+            // este filtro, este motor agarra filas de otras entidades con
+            // PayloadJson vacío (a propósito, para esas otras entidades) y
+            // las quema con reintentos fallidos antes de que su motor
+            // correspondiente alcance a procesarlas.
             var pendingItems = (await _queueRepository.WhereAsync(x =>
+                    x.EntityType == "Shipment" &&
                     (x.SyncStatus == SyncStatus.Pending || x.SyncStatus == SyncStatus.Error) &&
                     x.Retries < MaxRetries))
                 .OrderBy(x => x.CreatedAtUtc)
