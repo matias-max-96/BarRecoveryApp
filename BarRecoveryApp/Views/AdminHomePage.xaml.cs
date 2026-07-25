@@ -14,6 +14,7 @@ public partial class AdminHomePage : ContentPage
     private readonly IRecoveryWorkReportSyncEngine _recoveryWorkReportSyncEngine;
     private readonly IQualityInspectionSyncEngine _qualityInspectionSyncEngine;
     private readonly IShipmentCentralSyncEngine _shipmentCentralSyncEngine;
+    private readonly IBarReturnReceiptSyncEngine _barReturnReceiptSyncEngine;
 
     public AdminHomePage(
         IRoleNavigationService roleNavigationService,
@@ -22,7 +23,8 @@ public partial class AdminHomePage : ContentPage
         IPlantSyncEngine plantSyncEngine,
         IRecoveryWorkReportSyncEngine recoveryWorkReportSyncEngine,
         IQualityInspectionSyncEngine qualityInspectionSyncEngine,
-        IShipmentCentralSyncEngine shipmentCentralSyncEngine)
+        IShipmentCentralSyncEngine shipmentCentralSyncEngine,
+        IBarReturnReceiptSyncEngine barReturnReceiptSyncEngine)
     {
         InitializeComponent();
 
@@ -46,6 +48,9 @@ public partial class AdminHomePage : ContentPage
 
         _shipmentCentralSyncEngine = shipmentCentralSyncEngine
             ?? throw new ArgumentNullException(nameof(shipmentCentralSyncEngine));
+
+        _barReturnReceiptSyncEngine = barReturnReceiptSyncEngine
+            ?? throw new ArgumentNullException(nameof(barReturnReceiptSyncEngine));
     }
     protected override void OnAppearing()
     {
@@ -151,6 +156,7 @@ public partial class AdminHomePage : ContentPage
             var reportSummary = await _recoveryWorkReportSyncEngine.SyncAsync();
             var inspectionSummary = await _qualityInspectionSyncEngine.SyncAsync();
             var shipmentCentralSummary = await _shipmentCentralSyncEngine.SyncAsync();
+            var barReturnSummary = await _barReturnReceiptSyncEngine.SyncAsync();
 
             var messageLines = new List<string>
             {
@@ -183,6 +189,12 @@ public partial class AdminHomePage : ContentPage
             {
                 messageLines.Add(
                     $"Envíos (backend central) — Bajados: {shipmentCentralSummary.Pulled} | Subidos: {shipmentCentralSummary.Pushed}");
+            }
+
+            if (!barReturnSummary.NotConfigured)
+            {
+                messageLines.Add(
+                    $"Retornos de barras (backend central) — Bajados: {barReturnSummary.Pulled} | Subidos: {barReturnSummary.Pushed}");
             }
 
             if (summary.RequiresReAuthentication)

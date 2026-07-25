@@ -18,8 +18,9 @@ namespace BarRecoveryApp.Api.Data
 
         public DbSet<Shipment> Shipments => Set<Shipment>();
 
-        // Fase 2+: agregar aquí DbSet<BarReturnReceipt>, etc. a medida que
-        // cada entidad entre a su fase del plan de sync.
+        public DbSet<BarReturnReceipt> BarReturnReceipts => Set<BarReturnReceipt>();
+
+        // Fase 3: agregar aquí DbSet<Bar> cuando llegue su turno.
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -129,6 +130,28 @@ namespace BarRecoveryApp.Api.Data
             modelBuilder.Entity<ShipmentBar>(entity =>
             {
                 entity.ToTable("shipment_bars");
+                entity.HasKey(x => x.Id);
+                entity.Property(x => x.BarId).HasMaxLength(36).IsRequired();
+            });
+
+            modelBuilder.Entity<BarReturnReceipt>(entity =>
+            {
+                entity.ToTable("bar_return_receipts");
+                entity.HasKey(x => x.Id);
+                entity.Property(x => x.ReturnDocument).HasMaxLength(100);
+                entity.Property(x => x.ResponsibleUserId).HasMaxLength(36).IsRequired();
+                entity.Property(x => x.Notes).HasMaxLength(1000);
+                entity.HasIndex(x => x.UpdatedAtUtc);
+
+                entity.HasMany(x => x.Bars)
+                    .WithOne()
+                    .HasForeignKey(x => x.BarReturnReceiptId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<BarReturnReceiptBar>(entity =>
+            {
+                entity.ToTable("bar_return_receipt_bars");
                 entity.HasKey(x => x.Id);
                 entity.Property(x => x.BarId).HasMaxLength(36).IsRequired();
             });

@@ -1,6 +1,7 @@
 ﻿using BarRecoveryApp.ApplicationF.Services.Auditing;
 using BarRecoveryApp.ApplicationF.Services.Authentication;
 using BarRecoveryApp.ApplicationF.Services.Operations.DTOs;
+using BarRecoveryApp.ApplicationF.Services.Sync;
 using BarRecoveryApp.Infrastructure.Persistence.Repositories;
 using BarRecoveryApp.Models.Catalogs;
 using BarRecoveryApp.Models.Enums;
@@ -19,6 +20,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
         private readonly IRepository<BarType> _barTypeRepository;
         private readonly ICurrentUserService _currentUserService;
         private readonly IAuditLogService _auditLogService;
+        private readonly IRepository<SyncQueueItem> _syncQueueRepository;
+        private readonly ISyncBackgroundRunner _syncBackgroundRunner;
 
         public BarReturnService(
             IRepository<BarReturnReceipt> receiptRepository,
@@ -27,7 +30,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             IRepository<Plant> plantRepository,
             IRepository<BarType> barTypeRepository,
             ICurrentUserService currentUserService,
-            IAuditLogService auditLogService)
+            IAuditLogService auditLogService,
+            IRepository<SyncQueueItem> syncQueueRepository,
+            ISyncBackgroundRunner syncBackgroundRunner)
         {
             _receiptRepository = receiptRepository
                 ?? throw new ArgumentNullException(nameof(receiptRepository));
@@ -49,6 +54,12 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             _auditLogService = auditLogService
                 ?? throw new ArgumentNullException(nameof(auditLogService));
+
+            _syncQueueRepository = syncQueueRepository
+                ?? throw new ArgumentNullException(nameof(syncQueueRepository));
+
+            _syncBackgroundRunner = syncBackgroundRunner
+                ?? throw new ArgumentNullException(nameof(syncBackgroundRunner));
         }
 
         public async Task<List<Plant>> GetActivePlantsAsync()
@@ -236,6 +247,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
                 returnedBars.Add(bar);
             }
+
+            await EnqueueSyncAsync(receiptId);
 
             var plants = await _plantRepository.GetAllAsync();
             var barTypes = await _barTypeRepository.GetAllAsync();
@@ -428,6 +441,37 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 .Trim()
                 .Replace("\\", "\\\\")
                 .Replace("\"", "'");
+        }
+
+        private async Task EnqueueSyncAsync(string receiptId)
+        {
+            // PayloadJson vacío a propósito: BarReturnReceiptSyncEngine
+            // relee el agregado completo (recibo + barras) directo de los
+            // repositorios al momento de subirlo.
+            try
+            {
+                await _syncQueueRepository.InsertAsync(new SyncQueueItem
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    EntityType = "BarReturnReceipt",
+                    EntityLocalId = receiptId,
+                    OperationType = SyncOperationType.Create,
+                    PayloadJson = string.Empty,
+                    SyncStatus = SyncStatus.Pending,
+                    Retries = 0,
+                    IsActive = true,
+                    CreatedAtUtc = DateTime.Now,
+                    UpdatedAtUtc = DateTime.Now
+                });
+
+                _syncBackgroundRunner.TriggerNow();
+            }
+            catch (Exception)
+            {
+                // No dejamos que un error encolando el sync tumbe la
+                // creación del recibo, que ya se guardó correctamente.
+                // TODO: logging centralizado.
+            }
         }
 
         private static string NormalizeForSearch(string? value)
