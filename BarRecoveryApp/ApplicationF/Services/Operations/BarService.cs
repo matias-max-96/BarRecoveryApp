@@ -1,4 +1,5 @@
 ﻿using BarRecoveryApp.ApplicationF.Services.Authentication;
+using BarRecoveryApp.ApplicationF.Services.Sync;
 using BarRecoveryApp.Infrastructure.Persistence.Repositories;
 using BarRecoveryApp.Models.Catalogs;
 using BarRecoveryApp.Models.Enums;
@@ -12,12 +13,16 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
         private readonly IRepository<Plant> _plantRepository;
         private readonly IRepository<BarType> _barTypeRepository;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IRepository<SyncQueueItem> _syncQueueRepository;
+        private readonly ISyncBackgroundRunner _syncBackgroundRunner;
 
         public BarService(
             IRepository<Bar> barRepository,
             IRepository<Plant> plantRepository,
             IRepository<BarType> barTypeRepository,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            IRepository<SyncQueueItem> syncQueueRepository,
+            ISyncBackgroundRunner syncBackgroundRunner)
         {
             _barRepository = barRepository
                 ?? throw new ArgumentNullException(nameof(barRepository));
@@ -30,6 +35,12 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             _currentUserService = currentUserService
                 ?? throw new ArgumentNullException(nameof(currentUserService));
+
+            _syncQueueRepository = syncQueueRepository
+                ?? throw new ArgumentNullException(nameof(syncQueueRepository));
+
+            _syncBackgroundRunner = syncBackgroundRunner
+                ?? throw new ArgumentNullException(nameof(syncBackgroundRunner));
         }
 
         public async Task<List<Bar>> GetBarsAsync()
@@ -123,6 +134,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
                 await _barRepository.InsertAsync(bar);
 
+                await EnqueueSyncAsync(bar.Id);
+
                 return true;
             }
             else
@@ -138,6 +151,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 bar.UpdatedAtUtc = DateTime.Now;
 
                 await _barRepository.UpdateAsync(bar);
+
+                await EnqueueSyncAsync(bar.Id);
 
                 return true;
             }
@@ -166,7 +181,40 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             await _barRepository.UpdateAsync(bar);
 
+            await EnqueueSyncAsync(bar.Id);
+
             return true;
+        }
+
+        private async Task EnqueueSyncAsync(string barId)
+        {
+            // PayloadJson vacío a propósito: BarSyncEngine relee el
+            // registro actual de Bar directo del repositorio al momento
+            // de subirlo, mismo patrón que Plant.
+            try
+            {
+                await _syncQueueRepository.InsertAsync(new SyncQueueItem
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    EntityType = "Bar",
+                    EntityLocalId = barId,
+                    OperationType = SyncOperationType.Update,
+                    PayloadJson = string.Empty,
+                    SyncStatus = SyncStatus.Pending,
+                    Retries = 0,
+                    IsActive = true,
+                    CreatedAtUtc = DateTime.Now,
+                    UpdatedAtUtc = DateTime.Now
+                });
+
+                _syncBackgroundRunner.TriggerNow();
+            }
+            catch (Exception)
+            {
+                // No dejamos que un error encolando el sync tumbe la
+                // operación local, que ya se guardó correctamente.
+                // TODO: logging centralizado.
+            }
         }
     }
 }

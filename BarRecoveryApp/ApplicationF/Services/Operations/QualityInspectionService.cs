@@ -264,6 +264,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             await _barRepository.UpdateAsync(bar);
 
+            await EnqueueBarSyncAsync(bar.Id);
+
             var plant = await _plantRepository.GetByIdAsync(bar.PlantId);
             var barType = await _barTypeRepository.GetByIdAsync(bar.BarTypeId);
 
@@ -606,6 +608,35 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             public bool HasTechnicalValues => TechnicalAttributeCount > 0;
         }
 
+        private async Task EnqueueBarSyncAsync(string barId)
+        {
+            // Enqueue separado del de QualityInspection: Bar es una
+            // entidad propia con su propio motor de sync (BarSyncEngine),
+            // que usa Last-Write-Wins en vez del patrón create-only.
+            try
+            {
+                await _syncQueueRepository.InsertAsync(new SyncQueueItem
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    EntityType = "Bar",
+                    EntityLocalId = barId,
+                    OperationType = SyncOperationType.Update,
+                    PayloadJson = string.Empty,
+                    SyncStatus = SyncStatus.Pending,
+                    Retries = 0,
+                    IsActive = true,
+                    CreatedAtUtc = DateTime.Now,
+                    UpdatedAtUtc = DateTime.Now
+                });
+
+                _syncBackgroundRunner.TriggerNow();
+            }
+            catch (Exception)
+            {
+                // TODO: logging centralizado.
+            }
+        }
+
         private async Task EnqueueSyncAsync(string inspectionId)
         {
             // PayloadJson vacío a propósito: QualityInspectionSyncEngine
@@ -631,7 +662,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             }
             catch (Exception)
             {
-
+                // No dejamos que un error encolando el sync tumbe la
+                // creación de la inspección, que ya se guardó correctamente.
+                // TODO: logging centralizado.
             }
         }
     }

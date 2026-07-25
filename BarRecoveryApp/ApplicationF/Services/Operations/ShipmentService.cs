@@ -277,6 +277,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
                 await _barRepository.UpdateAsync(bar);
 
+                await EnqueueBarSyncAsync(bar.Id);
+
                 shippedBars.Add(bar);
             }
             var plants = await _plantRepository.GetAllAsync();
@@ -465,6 +467,34 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 $"\"BarCount\":{shippedBars.Count}," +
                 $"\"Bars\":[{barsJsonText}]" +
                 "}";
+        }
+
+        private async Task EnqueueBarSyncAsync(string barId)
+        {
+            // Enqueue separado del de Shipment (EntityType="Shipment"/
+            // "ShipmentCentral"): Bar tiene su propio motor con LWW.
+            try
+            {
+                await _syncQueueRepository.InsertAsync(new SyncQueueItem
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    EntityType = "Bar",
+                    EntityLocalId = barId,
+                    OperationType = SyncOperationType.Update,
+                    PayloadJson = string.Empty,
+                    SyncStatus = SyncStatus.Pending,
+                    Retries = 0,
+                    IsActive = true,
+                    CreatedAtUtc = DateTime.Now,
+                    UpdatedAtUtc = DateTime.Now
+                });
+
+                _syncBackgroundRunner.TriggerNow();
+            }
+            catch (Exception)
+            {
+                // TODO: logging centralizado.
+            }
         }
 
         private static string NormalizeForSearch(string? value)

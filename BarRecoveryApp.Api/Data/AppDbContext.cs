@@ -20,7 +20,9 @@ namespace BarRecoveryApp.Api.Data
 
         public DbSet<BarReturnReceipt> BarReturnReceipts => Set<BarReturnReceipt>();
 
-        // Fase 3: agregar aquí DbSet<Bar> cuando llegue su turno.
+        public DbSet<Bar> Bars => Set<Bar>();
+
+        // Fase 4: agregar aquí DbSet<User> cuando llegue su turno.
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -154,6 +156,17 @@ namespace BarRecoveryApp.Api.Data
                 entity.ToTable("bar_return_receipt_bars");
                 entity.HasKey(x => x.Id);
                 entity.Property(x => x.BarId).HasMaxLength(36).IsRequired();
+            });
+
+            modelBuilder.Entity<Bar>(entity =>
+            {
+                entity.ToTable("bars");
+                entity.HasKey(x => x.Id);
+                entity.Property(x => x.BarNumber).HasMaxLength(100).IsRequired();
+                entity.Property(x => x.PlantId).HasMaxLength(36).IsRequired();
+                entity.Property(x => x.BarTypeId).HasMaxLength(36).IsRequired();
+                entity.HasIndex(x => x.UpdatedAtUtc);
+                entity.HasIndex(x => new { x.PlantId, x.BarTypeId, x.BarNumber }).IsUnique();
             });
 
             base.OnModelCreating(modelBuilder);

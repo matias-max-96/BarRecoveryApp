@@ -7,7 +7,7 @@ namespace BarRecoveryApp.Models.Operations
     [Table("Bars")]
     public class Bar : EntityBase
     {
-        [MaxLength(100000)]
+        [MaxLength(100)]
         public string BarNumber { get; set; } = string.Empty;
 
         [Indexed]

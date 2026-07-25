@@ -245,6 +245,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
                 await _barRepository.UpdateAsync(bar);
 
+                await EnqueueBarSyncAsync(bar.Id);
+
                 returnedBars.Add(bar);
             }
 
@@ -470,6 +472,34 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             {
                 // No dejamos que un error encolando el sync tumbe la
                 // creación del recibo, que ya se guardó correctamente.
+                // TODO: logging centralizado.
+            }
+        }
+
+        private async Task EnqueueBarSyncAsync(string barId)
+        {
+            // Enqueue separado del de BarReturnReceipt: Bar tiene su
+            // propio motor con LWW.
+            try
+            {
+                await _syncQueueRepository.InsertAsync(new SyncQueueItem
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    EntityType = "Bar",
+                    EntityLocalId = barId,
+                    OperationType = SyncOperationType.Update,
+                    PayloadJson = string.Empty,
+                    SyncStatus = SyncStatus.Pending,
+                    Retries = 0,
+                    IsActive = true,
+                    CreatedAtUtc = DateTime.Now,
+                    UpdatedAtUtc = DateTime.Now
+                });
+
+                _syncBackgroundRunner.TriggerNow();
+            }
+            catch (Exception)
+            {
                 // TODO: logging centralizado.
             }
         }

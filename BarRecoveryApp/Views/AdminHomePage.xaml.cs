@@ -15,6 +15,7 @@ public partial class AdminHomePage : ContentPage
     private readonly IQualityInspectionSyncEngine _qualityInspectionSyncEngine;
     private readonly IShipmentCentralSyncEngine _shipmentCentralSyncEngine;
     private readonly IBarReturnReceiptSyncEngine _barReturnReceiptSyncEngine;
+    private readonly IBarSyncEngine _barSyncEngine;
 
     public AdminHomePage(
         IRoleNavigationService roleNavigationService,
@@ -24,7 +25,8 @@ public partial class AdminHomePage : ContentPage
         IRecoveryWorkReportSyncEngine recoveryWorkReportSyncEngine,
         IQualityInspectionSyncEngine qualityInspectionSyncEngine,
         IShipmentCentralSyncEngine shipmentCentralSyncEngine,
-        IBarReturnReceiptSyncEngine barReturnReceiptSyncEngine)
+        IBarReturnReceiptSyncEngine barReturnReceiptSyncEngine,
+        IBarSyncEngine barSyncEngine)
     {
         InitializeComponent();
 
@@ -51,6 +53,9 @@ public partial class AdminHomePage : ContentPage
 
         _barReturnReceiptSyncEngine = barReturnReceiptSyncEngine
             ?? throw new ArgumentNullException(nameof(barReturnReceiptSyncEngine));
+
+        _barSyncEngine = barSyncEngine
+            ?? throw new ArgumentNullException(nameof(barSyncEngine));
     }
     protected override void OnAppearing()
     {
@@ -157,6 +162,7 @@ public partial class AdminHomePage : ContentPage
             var inspectionSummary = await _qualityInspectionSyncEngine.SyncAsync();
             var shipmentCentralSummary = await _shipmentCentralSyncEngine.SyncAsync();
             var barReturnSummary = await _barReturnReceiptSyncEngine.SyncAsync();
+            var barSummary = await _barSyncEngine.SyncAsync();
 
             var messageLines = new List<string>
             {
@@ -195,6 +201,16 @@ public partial class AdminHomePage : ContentPage
             {
                 messageLines.Add(
                     $"Retornos de barras (backend central) — Bajados: {barReturnSummary.Pulled} | Subidos: {barReturnSummary.Pushed}");
+            }
+
+            if (barSummary.NotConfigured)
+            {
+                messageLines.Add("Barras (backend central) — no hay conexión configurada.");
+            }
+            else
+            {
+                messageLines.Add(
+                    $"Barras (backend central) — Bajadas: {barSummary.Pulled} | Subidas: {barSummary.Pushed} | Conflictos resueltos: {barSummary.PushConflicts}");
             }
 
             if (summary.RequiresReAuthentication)
