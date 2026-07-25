@@ -59,6 +59,424 @@ namespace BarRecoveryApp.Api.Migrations
 
                     b.ToTable("plants", (string)null);
                 });
+
+            modelBuilder.Entity("BarRecoveryApp.Api.Entities.QualityInspection", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BarId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<bool>("CanBeRecovered")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("InspectionAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("InspectorUserId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsApprovedForShipment")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("MustBeDisposed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("RecoveryCountAtInspection")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UpdatedAtUtc");
+
+                    b.ToTable("quality_inspections", (string)null);
+                });
+
+            modelBuilder.Entity("BarRecoveryApp.Api.Entities.QualityInspectionAttributeValue", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("AttributeCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("AttributeDefinitionId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<string>("AttributeName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("BarId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DataType")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool?>("IsOutOfRange")
+                        .HasColumnType("boolean");
+
+                    b.Property<double?>("MaxValueAtInspection")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("MinValueAtInspection")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("QualityInspectionId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ToleranceTextAtInspection")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("UnitAtInspection")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool?>("ValueBool")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("ValueDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double?>("ValueNumber")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("ValueText")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("WasMeasured")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QualityInspectionId");
+
+                    b.ToTable("quality_inspection_attribute_values", (string)null);
+                });
+
+            modelBuilder.Entity("BarRecoveryApp.Api.Entities.RecoveryWorkActivity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ActivityId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double>("HoursWorked")
+                        .HasColumnType("double precision");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("RecoveryWorkReportCategoryId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecoveryWorkReportCategoryId");
+
+                    b.ToTable("recovery_work_activities", (string)null);
+                });
+
+            modelBuilder.Entity("BarRecoveryApp.Api.Entities.RecoveryWorkReport", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("ShiftName")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<DateTime>("WorkDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UpdatedAtUtc");
+
+                    b.ToTable("recovery_work_reports", (string)null);
+                });
+
+            modelBuilder.Entity("BarRecoveryApp.Api.Entities.RecoveryWorkReportCategory", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BarTypeId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<int>("BarsWorkedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ExportLabel")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PlantId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<string>("RecoveryWorkReportId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("WorkType")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecoveryWorkReportId");
+
+                    b.ToTable("recovery_work_report_categories", (string)null);
+                });
+
+            modelBuilder.Entity("BarRecoveryApp.Api.Entities.RecoveryWorkSupply", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<double>("Quantity")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("RecoveryWorkReportCategoryId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SupplyId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecoveryWorkReportCategoryId");
+
+                    b.ToTable("recovery_work_supplies", (string)null);
+                });
+
+            modelBuilder.Entity("BarRecoveryApp.Api.Entities.Shipment", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CustomerReference")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("DispatchGuideNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ResponsibleUserId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<DateTime>("ShippedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TransferOrder")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UpdatedAtUtc");
+
+                    b.ToTable("shipments", (string)null);
+                });
+
+            modelBuilder.Entity("BarRecoveryApp.Api.Entities.ShipmentBar", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BarId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ShipmentId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShipmentId");
+
+                    b.ToTable("shipment_bars", (string)null);
+                });
+
+            modelBuilder.Entity("BarRecoveryApp.Api.Entities.QualityInspectionAttributeValue", b =>
+                {
+                    b.HasOne("BarRecoveryApp.Api.Entities.QualityInspection", null)
+                        .WithMany("AttributeValues")
+                        .HasForeignKey("QualityInspectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BarRecoveryApp.Api.Entities.RecoveryWorkActivity", b =>
+                {
+                    b.HasOne("BarRecoveryApp.Api.Entities.RecoveryWorkReportCategory", null)
+                        .WithMany("Activities")
+                        .HasForeignKey("RecoveryWorkReportCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BarRecoveryApp.Api.Entities.RecoveryWorkReportCategory", b =>
+                {
+                    b.HasOne("BarRecoveryApp.Api.Entities.RecoveryWorkReport", null)
+                        .WithMany("Categories")
+                        .HasForeignKey("RecoveryWorkReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BarRecoveryApp.Api.Entities.RecoveryWorkSupply", b =>
+                {
+                    b.HasOne("BarRecoveryApp.Api.Entities.RecoveryWorkReportCategory", null)
+                        .WithMany("Supplies")
+                        .HasForeignKey("RecoveryWorkReportCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BarRecoveryApp.Api.Entities.ShipmentBar", b =>
+                {
+                    b.HasOne("BarRecoveryApp.Api.Entities.Shipment", null)
+                        .WithMany("Bars")
+                        .HasForeignKey("ShipmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BarRecoveryApp.Api.Entities.QualityInspection", b =>
+                {
+                    b.Navigation("AttributeValues");
+                });
+
+            modelBuilder.Entity("BarRecoveryApp.Api.Entities.RecoveryWorkReport", b =>
+                {
+                    b.Navigation("Categories");
+                });
+
+            modelBuilder.Entity("BarRecoveryApp.Api.Entities.RecoveryWorkReportCategory", b =>
+                {
+                    b.Navigation("Activities");
+
+                    b.Navigation("Supplies");
+                });
+
+            modelBuilder.Entity("BarRecoveryApp.Api.Entities.Shipment", b =>
+                {
+                    b.Navigation("Bars");
+                });
 #pragma warning restore 612, 618
         }
     }
