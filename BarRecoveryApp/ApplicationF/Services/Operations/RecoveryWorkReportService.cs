@@ -1,5 +1,6 @@
 ﻿using BarRecoveryApp.ApplicationF.Services.Authentication;
 using BarRecoveryApp.ApplicationF.Services.Operations.DTOs;
+using BarRecoveryApp.ApplicationF.Services.Sync;
 using BarRecoveryApp.Infrastructure.Persistence.Repositories;
 using BarRecoveryApp.Models.Catalogs;
 using BarRecoveryApp.Models.Enums;
@@ -23,6 +24,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
         private readonly ICurrentUserService _currentUserService;
         private readonly IAuditLogService _auditLogService;
+        private readonly IRepository<SyncQueueItem> _syncQueueRepository;
+        private readonly ISyncBackgroundRunner _syncBackgroundRunner;
 
 
         public RecoveryWorkReportService(
@@ -35,7 +38,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             IRepository<Plant> plantRepository,
             IRepository<BarType> barTypeRepository,
             ICurrentUserService currentUserService,
-            IAuditLogService auditLogService)
+            IAuditLogService auditLogService,
+            IRepository<SyncQueueItem> syncQueueRepository,
+            ISyncBackgroundRunner syncBackgroundRunner)
         {
             _reportRepository = reportRepository
                 ?? throw new ArgumentNullException(nameof(reportRepository));
@@ -66,6 +71,12 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             _auditLogService = auditLogService
                 ?? throw new ArgumentNullException(nameof(auditLogService));
+
+            _syncQueueRepository = syncQueueRepository
+                ?? throw new ArgumentNullException(nameof(syncQueueRepository));
+
+            _syncBackgroundRunner = syncBackgroundRunner
+                ?? throw new ArgumentNullException(nameof(syncBackgroundRunner));
         }
 
         public async Task<List<ActivityModel>> GetActiveActivitiesAsync()
@@ -170,6 +181,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             {
                 await InsertCategoryAsync(reportId, categoryInput);
             }
+
+            await EnqueueSyncAsync(reportId);
 
             var totalBarsWorked = categories.Sum(x => x.BarsWorkedCount);
             var totalActivities = categories.Sum(x => x.Activities.Count);
@@ -460,6 +473,37 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             }
 
             return categoryDto;
+        }
+
+        private async Task EnqueueSyncAsync(string reportId)
+        {
+            // PayloadJson vacío a propósito: RecoveryWorkReportSyncEngine
+            // relee el agregado completo (reporte + categorías + actividades
+            // + insumos) directo de los repositorios al momento de subirlo.
+            try
+            {
+                await _syncQueueRepository.InsertAsync(new SyncQueueItem
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    EntityType = "RecoveryWorkReport",
+                    EntityLocalId = reportId,
+                    OperationType = SyncOperationType.Create,
+                    PayloadJson = string.Empty,
+                    SyncStatus = SyncStatus.Pending,
+                    Retries = 0,
+                    IsActive = true,
+                    CreatedAtUtc = DateTime.Now,
+                    UpdatedAtUtc = DateTime.Now
+                });
+
+                _syncBackgroundRunner.TriggerNow();
+            }
+            catch (Exception)
+            {
+                // No dejamos que un error encolando el sync tumbe la
+                // creación del reporte, que ya se guardó correctamente.
+                // TODO: logging centralizado.
+            }
         }
 
         private static string BuildExportLabel(
