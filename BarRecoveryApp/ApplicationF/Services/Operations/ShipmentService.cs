@@ -368,6 +368,35 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 // TODO: cuando exista logging centralizado, registrar esto.
             }
 
+            // Segundo enqueue, independiente del anterior: este va al
+            // backend central compartido entre tablets (no a Pomerium).
+            // EntityType distinto ("ShipmentCentral" vs "Shipment") a
+            // propósito, para que el motor de Pomerium no agarre esta fila.
+            try
+            {
+                var centralSyncQueueItem = new SyncQueueItem
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    EntityType = "ShipmentCentral",
+                    EntityLocalId = shipmentId,
+                    OperationType = SyncOperationType.Create,
+                    PayloadJson = string.Empty,
+                    SyncStatus = SyncStatus.Pending,
+                    Retries = 0,
+                    IsActive = true,
+                    CreatedAtUtc = DateTime.Now,
+                    UpdatedAtUtc = DateTime.Now
+                };
+
+                await _syncQueueRepository.InsertAsync(centralSyncQueueItem);
+
+                _syncBackgroundRunner.TriggerNow();
+            }
+            catch (Exception)
+            {
+                // TODO: logging centralizado.
+            }
+
             return new ShipmentCreateResultDto
             {
                 Success = true,

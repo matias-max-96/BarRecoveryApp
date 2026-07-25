@@ -11,12 +11,18 @@ public partial class AdminHomePage : ContentPage
     private readonly ICurrentUserService _currentUserService;
     private readonly ISyncEngineService _syncEngineService;
     private readonly IPlantSyncEngine _plantSyncEngine;
+    private readonly IRecoveryWorkReportSyncEngine _recoveryWorkReportSyncEngine;
+    private readonly IQualityInspectionSyncEngine _qualityInspectionSyncEngine;
+    private readonly IShipmentCentralSyncEngine _shipmentCentralSyncEngine;
 
     public AdminHomePage(
         IRoleNavigationService roleNavigationService,
         ICurrentUserService currentUserService,
         ISyncEngineService syncEngineService,
-        IPlantSyncEngine plantSyncEngine)
+        IPlantSyncEngine plantSyncEngine,
+        IRecoveryWorkReportSyncEngine recoveryWorkReportSyncEngine,
+        IQualityInspectionSyncEngine qualityInspectionSyncEngine,
+        IShipmentCentralSyncEngine shipmentCentralSyncEngine)
     {
         InitializeComponent();
 
@@ -31,6 +37,15 @@ public partial class AdminHomePage : ContentPage
 
         _plantSyncEngine = plantSyncEngine
             ?? throw new ArgumentNullException(nameof(plantSyncEngine));
+
+        _recoveryWorkReportSyncEngine = recoveryWorkReportSyncEngine
+            ?? throw new ArgumentNullException(nameof(recoveryWorkReportSyncEngine));
+
+        _qualityInspectionSyncEngine = qualityInspectionSyncEngine
+            ?? throw new ArgumentNullException(nameof(qualityInspectionSyncEngine));
+
+        _shipmentCentralSyncEngine = shipmentCentralSyncEngine
+            ?? throw new ArgumentNullException(nameof(shipmentCentralSyncEngine));
     }
     protected override void OnAppearing()
     {
@@ -133,6 +148,9 @@ public partial class AdminHomePage : ContentPage
         {
             var summary = await _syncEngineService.ProcessPendingAsync();
             var plantSummary = await _plantSyncEngine.SyncAsync();
+            var reportSummary = await _recoveryWorkReportSyncEngine.SyncAsync();
+            var inspectionSummary = await _qualityInspectionSyncEngine.SyncAsync();
+            var shipmentCentralSummary = await _shipmentCentralSyncEngine.SyncAsync();
 
             var messageLines = new List<string>
             {
@@ -147,6 +165,24 @@ public partial class AdminHomePage : ContentPage
             {
                 messageLines.Add(
                     $"Plantas (backend central) — Bajadas: {plantSummary.Pulled} | Subidas: {plantSummary.Pushed} | Conflictos resueltos: {plantSummary.PushConflicts}");
+            }
+
+            if (!reportSummary.NotConfigured)
+            {
+                messageLines.Add(
+                    $"Registros de trabajo (backend central) — Bajados: {reportSummary.Pulled} | Subidos: {reportSummary.Pushed}");
+            }
+
+            if (!inspectionSummary.NotConfigured)
+            {
+                messageLines.Add(
+                    $"Inspecciones de calidad (backend central) — Bajadas: {inspectionSummary.Pulled} | Subidas: {inspectionSummary.Pushed}");
+            }
+
+            if (!shipmentCentralSummary.NotConfigured)
+            {
+                messageLines.Add(
+                    $"Envíos (backend central) — Bajados: {shipmentCentralSummary.Pulled} | Subidos: {shipmentCentralSummary.Pushed}");
             }
 
             if (summary.RequiresReAuthentication)

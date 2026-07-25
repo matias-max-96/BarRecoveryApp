@@ -79,6 +79,12 @@ namespace BarRecoveryApp
             builder.Services.AddHttpClient<ICentralApiAuthClient, CentralApiAuthClient>();
             builder.Services.AddHttpClient<IPlantSyncApiClient, PlantSyncApiClient>();
             builder.Services.AddTransient<IPlantSyncEngine, PlantSyncEngine>();
+            builder.Services.AddHttpClient<IRecoveryWorkReportSyncApiClient, RecoveryWorkReportSyncApiClient>();
+            builder.Services.AddTransient<IRecoveryWorkReportSyncEngine, RecoveryWorkReportSyncEngine>();
+            builder.Services.AddHttpClient<IQualityInspectionSyncApiClient, QualityInspectionSyncApiClient>();
+            builder.Services.AddTransient<IQualityInspectionSyncEngine, QualityInspectionSyncEngine>();
+            builder.Services.AddHttpClient<IShipmentCentralSyncApiClient, ShipmentCentralSyncApiClient>();
+            builder.Services.AddTransient<IShipmentCentralSyncEngine, ShipmentCentralSyncEngine>();
 
             //Login View Model
             builder.Services.AddTransient<LoginViewModel>();

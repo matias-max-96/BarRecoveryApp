@@ -98,6 +98,36 @@ namespace BarRecoveryApp.ApplicationF.Services.Sync
                 {
                     // TODO: logging centralizado.
                 }
+
+                try
+                {
+                    var recoveryWorkReportSyncEngine = scope.ServiceProvider.GetRequiredService<IRecoveryWorkReportSyncEngine>();
+                    await recoveryWorkReportSyncEngine.SyncAsync();
+                }
+                catch (Exception)
+                {
+                    // TODO: logging centralizado.
+                }
+
+                try
+                {
+                    var qualityInspectionSyncEngine = scope.ServiceProvider.GetRequiredService<IQualityInspectionSyncEngine>();
+                    await qualityInspectionSyncEngine.SyncAsync();
+                }
+                catch (Exception)
+                {
+                    // TODO: logging centralizado.
+                }
+
+                try
+                {
+                    var shipmentCentralSyncEngine = scope.ServiceProvider.GetRequiredService<IShipmentCentralSyncEngine>();
+                    await shipmentCentralSyncEngine.SyncAsync();
+                }
+                catch (Exception)
+                {
+                    // TODO: logging centralizado.
+                }
             }
             catch (Exception)
             {
