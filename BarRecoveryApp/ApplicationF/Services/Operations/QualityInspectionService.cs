@@ -2,6 +2,7 @@
 using System.Text;
 using BarRecoveryApp.ApplicationF.Services.Authentication;
 using BarRecoveryApp.ApplicationF.Services.Operations.DTOs;
+using BarRecoveryApp.ApplicationF.Services.Sync;
 using BarRecoveryApp.Infrastructure.Persistence.Repositories;
 using BarRecoveryApp.Models.Catalogs;
 using BarRecoveryApp.Models.Enums;
@@ -21,6 +22,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
         private readonly IAuditLogService _auditLogService;
         private readonly IRepository<BarAttributeDefinition> _attributeDefinitionRepository;
         private readonly IRepository<QualityInspectionAttributeValue> _inspectionAttributeValueRepository;
+        private readonly IRepository<SyncQueueItem> _syncQueueRepository;
+        private readonly ISyncBackgroundRunner _syncBackgroundRunner;
 
         public QualityInspectionService(
             IRepository<Bar> barRepository,
@@ -31,7 +34,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             IRepository<BarAttributeDefinition> attributeDefinitionRepository,
             IRepository<QualityInspectionAttributeValue> inspectionAttributeValueRepository,
             ICurrentUserService currentUserService,
-            IAuditLogService auditLogService)
+            IAuditLogService auditLogService,
+            IRepository<SyncQueueItem> syncQueueRepository,
+            ISyncBackgroundRunner syncBackgroundRunner)
         {
             _barRepository = barRepository
                 ?? throw new ArgumentNullException(nameof(barRepository));
@@ -59,13 +64,19 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             _auditLogService = auditLogService
                 ?? throw new ArgumentNullException(nameof(auditLogService));
+
+            _syncQueueRepository = syncQueueRepository
+                ?? throw new ArgumentNullException(nameof(syncQueueRepository));
+
+            _syncBackgroundRunner = syncBackgroundRunner
+                ?? throw new ArgumentNullException(nameof(syncBackgroundRunner));
         }
 
         public async Task<List<BarInspectionTargetDto>> SearchBarsForInspectionAsync(
-            string? plantId, 
-            string? barTypeId, 
+            string? plantId,
+            string? barTypeId,
             string? searchText,
-            BarStatus? status, 
+            BarStatus? status,
             bool includeDisposed,
             int? recoveryCountFilter,
             int maxResults)
@@ -224,6 +235,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             await _inspectionRepository.InsertAsync(inspection);
             var technicalSummary = await SaveInspectionAttributeValuesAsync(inspection, bar, attributeValues);
+
+            await EnqueueSyncAsync(inspection.Id);
 
             bar.RecoveryCount = recoveryCountAtInspection;
             bar.UpdatedAtUtc = DateTime.Now;
@@ -591,6 +604,35 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             public List<string> OutOfRangeAttributes { get; set; } = new();
 
             public bool HasTechnicalValues => TechnicalAttributeCount > 0;
+        }
+
+        private async Task EnqueueSyncAsync(string inspectionId)
+        {
+            // PayloadJson vacío a propósito: QualityInspectionSyncEngine
+            // relee el agregado completo (inspección + valores de atributos)
+            // directo de los repositorios al momento de subirlo.
+            try
+            {
+                await _syncQueueRepository.InsertAsync(new SyncQueueItem
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    EntityType = "QualityInspection",
+                    EntityLocalId = inspectionId,
+                    OperationType = SyncOperationType.Create,
+                    PayloadJson = string.Empty,
+                    SyncStatus = SyncStatus.Pending,
+                    Retries = 0,
+                    IsActive = true,
+                    CreatedAtUtc = DateTime.Now,
+                    UpdatedAtUtc = DateTime.Now
+                });
+
+                _syncBackgroundRunner.TriggerNow();
+            }
+            catch (Exception)
+            {
+
+            }
         }
     }
 }
