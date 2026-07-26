@@ -89,6 +89,8 @@ namespace BarRecoveryApp
             builder.Services.AddTransient<IBarReturnReceiptSyncEngine, BarReturnReceiptSyncEngine>();
             builder.Services.AddHttpClient<IBarSyncApiClient, BarSyncApiClient>();
             builder.Services.AddTransient<IBarSyncEngine, BarSyncEngine>();
+            builder.Services.AddHttpClient<IUserSyncApiClient, UserSyncApiClient>();
+            builder.Services.AddTransient<IUserSyncEngine, UserSyncEngine>();
 
             //Login View Model
             builder.Services.AddTransient<LoginViewModel>();

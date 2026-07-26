@@ -1,7 +1,10 @@
 ﻿using BarRecoveryApp.ApplicationF.Services.Auditing;
 using BarRecoveryApp.ApplicationF.Services.Authentication;
+using BarRecoveryApp.ApplicationF.Services.Sync;
 using BarRecoveryApp.Infrastructure.Persistence.Repositories;
 using BarRecoveryApp.Infrastructure.Persistence.Seed;
+using BarRecoveryApp.Models.Enums;
+using BarRecoveryApp.Models.Operations;
 using BarRecoveryApp.Models.Security;
 
 namespace BarRecoveryApp.ApplicationF.Services.Users
@@ -12,6 +15,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Users
         private readonly IRepository<Role> _roleRepository;
         private readonly ICurrentUserService _currentUserService;
         private readonly IAuditLogService _auditLogService;
+        private readonly IRepository<SyncQueueItem> _syncQueueRepository;
+        private readonly ISyncBackgroundRunner _syncBackgroundRunner;
 
         private const string SuperAdminRoleCode = "SUPER_ADMIN";
         private const string AdminRoleCode = "ADMIN";
@@ -20,7 +25,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Users
             IRepository<User> userRepository,
             IRepository<Role> roleRepository,
             ICurrentUserService currentUserService,
-            IAuditLogService auditLogService)
+            IAuditLogService auditLogService,
+            IRepository<SyncQueueItem> syncQueueRepository,
+            ISyncBackgroundRunner syncBackgroundRunner)
         {
             _userRepository = userRepository
                 ?? throw new ArgumentNullException(nameof(userRepository));
@@ -30,9 +37,15 @@ namespace BarRecoveryApp.ApplicationF.Services.Users
 
             _currentUserService = currentUserService
                 ?? throw new ArgumentNullException(nameof(currentUserService));
-            
+
             _auditLogService = auditLogService
                 ?? throw new ArgumentNullException(nameof(auditLogService));
+
+            _syncQueueRepository = syncQueueRepository
+                ?? throw new ArgumentNullException(nameof(syncQueueRepository));
+
+            _syncBackgroundRunner = syncBackgroundRunner
+                ?? throw new ArgumentNullException(nameof(syncBackgroundRunner));
         }
 
         public async Task<List<User>> GetUsersAsync()
@@ -138,6 +151,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Users
 
             await _userRepository.InsertAsync(user);
 
+            await EnqueueSyncAsync(user.Id);
+
             await _auditLogService.WriteAsync(
                 AuditActionCodes.UserCreated,
                 "User",
@@ -188,6 +203,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Users
             user.UpdatedAtUtc = DateTime.Now;
 
             await _userRepository.UpdateAsync(user);
+
+            await EnqueueSyncAsync(user.Id);
 
             var actionCode = isActive
                 ? AuditActionCodes.UserActivated
@@ -253,6 +270,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Users
 
             await _userRepository.UpdateAsync(user);
 
+            await EnqueueSyncAsync(user.Id);
+
             await _auditLogService.WriteAsync(
                 AuditActionCodes.UserPinReset,
                 "User",
@@ -264,6 +283,35 @@ namespace BarRecoveryApp.ApplicationF.Services.Users
                     currentSession.UserId));
 
             return true;
+        }
+
+        private async Task EnqueueSyncAsync(string userId)
+        {
+            // PayloadJson vacío a propósito: UserSyncEngine relee el
+            // registro actual de User (y resuelve su Role a RoleCode)
+            // directo de los repositorios al momento de subirlo.
+            try
+            {
+                await _syncQueueRepository.InsertAsync(new SyncQueueItem
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    EntityType = "User",
+                    EntityLocalId = userId,
+                    OperationType = SyncOperationType.Update,
+                    PayloadJson = string.Empty,
+                    SyncStatus = SyncStatus.Pending,
+                    Retries = 0,
+                    IsActive = true,
+                    CreatedAtUtc = DateTime.Now,
+                    UpdatedAtUtc = DateTime.Now
+                });
+
+                _syncBackgroundRunner.TriggerNow();
+            }
+            catch (Exception)
+            {
+                // TODO: logging centralizado.
+            }
         }
 
         private static bool IsValidPin(string pin)

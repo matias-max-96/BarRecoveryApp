@@ -1,4 +1,5 @@
-﻿using BarRecoveryApp.Infrastructure.Persistence.Repositories;
+﻿using BarRecoveryApp.ApplicationF.Services.CentralSync;
+using BarRecoveryApp.Infrastructure.Persistence.Repositories;
 using BarRecoveryApp.Infrastructure.Persistence.Seed;
 using BarRecoveryApp.Models.Security;
 
@@ -12,6 +13,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Authentication
         private readonly IRepository<Permission> _permissionRepository;
         private readonly IRepository<RolePermission> _rolePermissionRepository;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IUserSyncApiClient _userSyncApiClient;
 
 
         public AuthenticationService(
@@ -19,7 +21,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Authentication
                     IRepository<Role> roleRepository,
                     IRepository<Permission> permissionRepository,
                     IRepository<RolePermission> rolePermissionRepository,
-                    ICurrentUserService currentUserService)
+                    ICurrentUserService currentUserService,
+                    IUserSyncApiClient userSyncApiClient)
         {
             _userRepository = userRepository
                 ?? throw new ArgumentNullException(nameof(userRepository));
@@ -31,6 +34,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Authentication
                 ?? throw new ArgumentNullException(nameof(rolePermissionRepository));
             _currentUserService = currentUserService
                 ?? throw new ArgumentNullException(nameof(currentUserService));
+            _userSyncApiClient = userSyncApiClient
+                ?? throw new ArgumentNullException(nameof(userSyncApiClient));
         }
 
         public async Task<List<User>> GetActiveUsersAsync()
@@ -103,11 +108,36 @@ namespace BarRecoveryApp.ApplicationF.Services.Authentication
 
             _currentUserService.SetSession(session);
 
+            // Verificación oportunista, no bloqueante: si hay conexión al
+            // backend central en este momento, confirma que el usuario
+            // sigue activo ahí. Si no hay red, falla, o el usuario aún no
+            // sincronizó al servidor (null), no se hace nada — el login
+            // local ya es válido y no depende de esto para funcionar.
+            _ = VerifyStillActiveInBackgroundAsync(user.Id);
+
             return AuthResult.Ok(
                 user,
                 role,
                 permissions,
                 user.MustChangePin);
+        }
+
+        private async Task VerifyStillActiveInBackgroundAsync(string userId)
+        {
+            try
+            {
+                var isActive = await _userSyncApiClient.CheckUserActiveAsync(userId);
+
+                if (isActive == false)
+                {
+                    _currentUserService.ForceCloseSession(
+                        "Su cuenta fue desactivada. Contacte a un administrador.");
+                }
+            }
+            catch (Exception)
+            {
+                // Nunca debe afectar la sesión ya iniciada localmente.
+            }
         }
 
         public async Task<bool> ChangePinAsync(

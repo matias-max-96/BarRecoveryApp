@@ -22,7 +22,7 @@ namespace BarRecoveryApp.Api.Data
 
         public DbSet<Bar> Bars => Set<Bar>();
 
-        // Fase 4: agregar aquí DbSet<User> cuando llegue su turno.
+        public DbSet<User> Users => Set<User>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -167,6 +167,21 @@ namespace BarRecoveryApp.Api.Data
                 entity.Property(x => x.BarTypeId).HasMaxLength(36).IsRequired();
                 entity.HasIndex(x => x.UpdatedAtUtc);
                 entity.HasIndex(x => new { x.PlantId, x.BarTypeId, x.BarNumber }).IsUnique();
+            });
+
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.ToTable("users");
+                entity.HasKey(x => x.Id);
+                entity.Property(x => x.Username).HasMaxLength(120).IsRequired();
+                entity.Property(x => x.DisplayName).HasMaxLength(150).IsRequired();
+                entity.Property(x => x.RoleCode).HasMaxLength(50).IsRequired();
+                entity.Property(x => x.PinHash).HasMaxLength(500).IsRequired();
+                entity.Property(x => x.PinSalt).HasMaxLength(200).IsRequired();
+                entity.Property(x => x.CreatedByUserId).HasMaxLength(36).IsRequired();
+                entity.Property(x => x.UpdatedByUserId).HasMaxLength(36);
+                entity.HasIndex(x => x.UpdatedAtUtc);
+                entity.HasIndex(x => x.Username).IsUnique();
             });
 
             base.OnModelCreating(modelBuilder);

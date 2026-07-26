@@ -1,4 +1,5 @@
-﻿using BarRecoveryApp.Views;
+﻿using BarRecoveryApp.ApplicationF.Services.Authentication;
+using BarRecoveryApp.Views;
 
 namespace BarRecoveryApp
 {
@@ -68,6 +69,23 @@ namespace BarRecoveryApp
             Routing.RegisterRoute(nameof(MissingWorkReportPage), typeof(MissingWorkReportPage));
             Routing.RegisterRoute(nameof(SyncSettingsPage), typeof(SyncSettingsPage));
             Routing.RegisterRoute(nameof(CentralApiSettingsPage), typeof(CentralApiSettingsPage));
+
+            // Verificación oportunista post-login (Fase 4 del sync): si el
+            // backend central confirma en segundo plano que el usuario fue
+            // desactivado en otra tablet, la sesión se limpia igual aunque
+            // esta pantalla no lo sepa — acá reaccionamos visualmente,
+            // redirigiendo a Login con el motivo. El evento puede dispararse
+            // desde un hilo de background, por eso el MainThread.
+            var currentUserService = _serviceProvider.GetRequiredService<ICurrentUserService>();
+
+            currentUserService.SessionForceClosed += (sender, reason) =>
+            {
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    await Current!.DisplayAlert("Sesión finalizada", reason, "OK");
+                    await Current!.GoToAsync($"//{nameof(LoginPage)}");
+                });
+            };
         }
     }
 }

@@ -32,5 +32,17 @@
 
             return CurrentSession.HasPermission(permissionCode);
         }
+
+        public event EventHandler<string>? SessionForceClosed;
+
+        public void ForceCloseSession(string reason)
+        {
+            if (CurrentSession is null)
+                return;
+
+            CurrentSession = null;
+
+            SessionForceClosed?.Invoke(this, reason);
+        }
     }
 }

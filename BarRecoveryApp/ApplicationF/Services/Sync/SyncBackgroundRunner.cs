@@ -148,6 +148,16 @@ namespace BarRecoveryApp.ApplicationF.Services.Sync
                 {
                     // TODO: logging centralizado.
                 }
+
+                try
+                {
+                    var userSyncEngine = scope.ServiceProvider.GetRequiredService<IUserSyncEngine>();
+                    await userSyncEngine.SyncAsync();
+                }
+                catch (Exception)
+                {
+                    // TODO: logging centralizado.
+                }
             }
             catch (Exception)
             {

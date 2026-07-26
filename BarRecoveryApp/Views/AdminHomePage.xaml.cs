@@ -16,6 +16,7 @@ public partial class AdminHomePage : ContentPage
     private readonly IShipmentCentralSyncEngine _shipmentCentralSyncEngine;
     private readonly IBarReturnReceiptSyncEngine _barReturnReceiptSyncEngine;
     private readonly IBarSyncEngine _barSyncEngine;
+    private readonly IUserSyncEngine _userSyncEngine;
 
     public AdminHomePage(
         IRoleNavigationService roleNavigationService,
@@ -26,7 +27,8 @@ public partial class AdminHomePage : ContentPage
         IQualityInspectionSyncEngine qualityInspectionSyncEngine,
         IShipmentCentralSyncEngine shipmentCentralSyncEngine,
         IBarReturnReceiptSyncEngine barReturnReceiptSyncEngine,
-        IBarSyncEngine barSyncEngine)
+        IBarSyncEngine barSyncEngine,
+        IUserSyncEngine userSyncEngine)
     {
         InitializeComponent();
 
@@ -56,6 +58,9 @@ public partial class AdminHomePage : ContentPage
 
         _barSyncEngine = barSyncEngine
             ?? throw new ArgumentNullException(nameof(barSyncEngine));
+
+        _userSyncEngine = userSyncEngine
+            ?? throw new ArgumentNullException(nameof(userSyncEngine));
     }
     protected override void OnAppearing()
     {
@@ -163,6 +168,7 @@ public partial class AdminHomePage : ContentPage
             var shipmentCentralSummary = await _shipmentCentralSyncEngine.SyncAsync();
             var barReturnSummary = await _barReturnReceiptSyncEngine.SyncAsync();
             var barSummary = await _barSyncEngine.SyncAsync();
+            var userSummary = await _userSyncEngine.SyncAsync();
 
             var messageLines = new List<string>
             {
@@ -211,6 +217,12 @@ public partial class AdminHomePage : ContentPage
             {
                 messageLines.Add(
                     $"Barras (backend central) — Bajadas: {barSummary.Pulled} | Subidas: {barSummary.Pushed} | Conflictos resueltos: {barSummary.PushConflicts}");
+            }
+
+            if (!userSummary.NotConfigured)
+            {
+                messageLines.Add(
+                    $"Usuarios (backend central) — Bajados: {userSummary.Pulled} | Subidos: {userSummary.Pushed} | Conflictos resueltos: {userSummary.PushConflicts}");
             }
 
             if (summary.RequiresReAuthentication)
