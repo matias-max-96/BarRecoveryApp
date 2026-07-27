@@ -173,10 +173,6 @@ namespace BarRecoveryApp
 
             var app = builder.Build();
 
-            // Arranca el loop de sync en background una sola vez, apenas la
-            // app termina de armar el contenedor de dependencias.
-            app.Services.GetRequiredService<ISyncBackgroundRunner>().Start();
-
             return app;
         }
     }

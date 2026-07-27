@@ -55,6 +55,7 @@ namespace BarRecoveryApp
 
                 await _databaseSeeder.SeedAsync();
 
+
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     MainPage = _serviceProvider.GetRequiredService<AppShell>();

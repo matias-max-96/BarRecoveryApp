@@ -159,7 +159,6 @@ namespace BarRecoveryApp.ViewModels
         {
             if (IsBusy)
                 return;
-
             try
             {
                 IsBusy = true;

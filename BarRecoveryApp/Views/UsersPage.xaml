@@ -18,6 +18,7 @@
                 IsRunning="{Binding IsBusy}"
                 IsVisible="{Binding IsBusy}"
                 HorizontalOptions="Center" />
+            
             <Border
                 IsVisible="{Binding HasError}"
                 Padding="12"
