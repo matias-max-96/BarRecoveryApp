@@ -68,4 +68,5 @@ Thumbs.db
 *.db3
 
 #Specific
-*.json
+appsettings.json
+appsettings.*.json
