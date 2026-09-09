@@ -41,6 +41,9 @@ namespace BarRecoveryApp
             //Repositories
             builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
 
+            //Pomerium Sync
+            builder.Services.AddHttpClient<IPomeriumProgrammaticAuthService, PomeriumProgrammaticAuthService>();
+
             //Services
             builder.Services.AddSingleton<ICurrentUserService, CurrentUserService>();
             builder.Services.AddTransient<IAuthenticationService, AuthenticationService>();
