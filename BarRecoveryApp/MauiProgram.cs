@@ -41,9 +41,6 @@ namespace BarRecoveryApp
             //Repositories
             builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
 
-            //Pomerium Sync
-            builder.Services.AddHttpClient<IPomeriumProgrammaticAuthService, PomeriumProgrammaticAuthService>();
-
             //Services
             builder.Services.AddSingleton<ICurrentUserService, CurrentUserService>();
             builder.Services.AddTransient<IAuthenticationService, AuthenticationService>();
@@ -72,7 +69,28 @@ namespace BarRecoveryApp
 
             //Sync
             builder.Services.AddSingleton<ISyncCredentialStore, SecureStorageSyncCredentialStore>();
+
+#if DEBUG
+            //  SOLO para pruebas locales contra Pomerium en Docker con
+            // certificado autofirmado. NUNCA debe compilarse así en Release
+
+            builder.Services.AddHttpClient<IPomeriumProgrammaticAuthService, PomeriumProgrammaticAuthService>()
+                .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback =
+                        HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                });
+
+            builder.Services.AddHttpClient<ISyncApiClient, PomeriumSyncApiClient>()
+                .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback =
+                        HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                });
+#else
+            builder.Services.AddHttpClient<IPomeriumProgrammaticAuthService, PomeriumProgrammaticAuthService>();
             builder.Services.AddHttpClient<ISyncApiClient, PomeriumSyncApiClient>();
+#endif
             builder.Services.AddTransient<ISyncEngineService, SyncEngineService>();
             builder.Services.AddSingleton<ISyncBackgroundRunner, SyncBackgroundRunner>();
             builder.Services.AddTransient<IShipmentSyncPayloadBuilder, ShipmentSyncPayloadBuilder>();

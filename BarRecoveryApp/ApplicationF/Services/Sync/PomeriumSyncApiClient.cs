@@ -11,6 +11,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Sync
     {
         private readonly HttpClient _httpClient;
         private readonly ISyncCredentialStore _credentialStore;
+        private readonly IPomeriumProgrammaticAuthService _programmaticAuthService;
 
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
@@ -19,13 +20,39 @@ namespace BarRecoveryApp.ApplicationF.Services.Sync
 
         public PomeriumSyncApiClient(
             HttpClient httpClient,
-            ISyncCredentialStore credentialStore)
+            ISyncCredentialStore credentialStore,
+            IPomeriumProgrammaticAuthService programmaticAuthService)
         {
             _httpClient = httpClient
                 ?? throw new ArgumentNullException(nameof(httpClient));
 
             _credentialStore = credentialStore
                 ?? throw new ArgumentNullException(nameof(credentialStore));
+
+            _programmaticAuthService = programmaticAuthService
+                ?? throw new ArgumentNullException(nameof(programmaticAuthService));
+        }
+
+        // Resuelve qué credencial usar. Prioridad:
+        //   1. Token del flujo programático (Authorization: Pomerium <token>)
+        //      — validado contra un Pomerium real: con token válido pasa,
+        //        con token inválido devuelve 401.
+        //   2. Cookie manual (Cookie: _pomerium=<valor>) — mecanismo viejo,
+        //      se mantiene como respaldo para pruebas contra mocks y para
+        //      no romper instalaciones ya configuradas.
+        // Devuelve null si no hay ninguna de las dos.
+        private async Task<(string HeaderName, string HeaderValue)?> ResolveAuthHeaderAsync(
+            SyncConnectionSettings settings)
+        {
+            var programmaticToken = await _programmaticAuthService.GetStoredTokenAsync();
+
+            if (!string.IsNullOrWhiteSpace(programmaticToken))
+                return ("Authorization", $"Pomerium {programmaticToken}");
+
+            if (!string.IsNullOrWhiteSpace(settings.PomeriumCookie))
+                return ("Cookie", $"_pomerium={settings.PomeriumCookie}");
+
+            return null;
         }
 
         public async Task<SyncApiResult<List<CustomerDto>>> GetCustomersAsync()
@@ -37,9 +64,16 @@ namespace BarRecoveryApp.ApplicationF.Services.Sync
                     "No hay una sesión de Pomerium configurada.",
                     requiresReAuthentication: true);
 
+            var authHeader = await ResolveAuthHeaderAsync(settings);
+
+            if (authHeader is null)
+                return SyncApiResult<List<CustomerDto>>.Fail(
+                    "No hay una sesión de Pomerium configurada.",
+                    requiresReAuthentication: true);
+
             var url = $"{settings.BaseUrl.TrimEnd('/')}/api/v1/customers/";
 
-            using var request = BuildRequest(HttpMethod.Get, url, settings.PomeriumCookie);
+            using var request = BuildRequest(HttpMethod.Get, url, authHeader.Value);
 
             return await SendAsync<List<CustomerDto>>(request, async response =>
             {
@@ -62,9 +96,16 @@ namespace BarRecoveryApp.ApplicationF.Services.Sync
                     "No hay una sesión de Pomerium configurada.",
                     requiresReAuthentication: true);
 
+            var authHeader = await ResolveAuthHeaderAsync(settings);
+
+            if (authHeader is null)
+                return SyncApiResult<string>.Fail(
+                    "No hay una sesión de Pomerium configurada.",
+                    requiresReAuthentication: true);
+
             var url = $"{settings.BaseUrl.TrimEnd('/')}/api/v1/customers/{customerId}/";
 
-            using var request = BuildRequest(HttpMethod.Get, url, settings.PomeriumCookie);
+            using var request = BuildRequest(HttpMethod.Get, url, authHeader.Value);
 
             return await SendAsync<string>(request, async response =>
                 await response.Content.ReadAsStringAsync());
@@ -85,9 +126,16 @@ namespace BarRecoveryApp.ApplicationF.Services.Sync
                     "No hay una sesión de Pomerium configurada.",
                     requiresReAuthentication: true);
 
+            var authHeader = await ResolveAuthHeaderAsync(settings);
+
+            if (authHeader is null)
+                return SyncApiResult.Fail(
+                    "No hay una sesión de Pomerium configurada.",
+                    requiresReAuthentication: true);
+
             var url = $"{settings.BaseUrl.TrimEnd('/')}/api/v1/customers/{customerId}/";
 
-            using var request = BuildRequest(HttpMethod.Post, url, settings.PomeriumCookie);
+            using var request = BuildRequest(HttpMethod.Post, url, authHeader.Value);
             request.Content = new StringContent(payloadJson, Encoding.UTF8, "application/json");
 
             var result = await SendAsync<object?>(request, _ => Task.FromResult<object?>(null));
@@ -100,14 +148,14 @@ namespace BarRecoveryApp.ApplicationF.Services.Sync
                     result.RequiresReAuthentication);
         }
 
+        // Solo valida que exista la URL base. La credencial se resuelve
+        // aparte, en ResolveAuthHeaderAsync, porque ahora puede venir de dos
+        // orígenes distintos (token programático o cookie manual).
         private async Task<SyncConnectionSettings?> GetSettingsOrNullAsync()
         {
             var settings = await _credentialStore.GetAsync();
 
-            if (settings is null || string.IsNullOrWhiteSpace(settings.PomeriumCookie))
-                return null;
-
-            if (string.IsNullOrWhiteSpace(settings.BaseUrl))
+            if (settings is null || string.IsNullOrWhiteSpace(settings.BaseUrl))
                 return null;
 
             return settings;
@@ -116,13 +164,12 @@ namespace BarRecoveryApp.ApplicationF.Services.Sync
         private static HttpRequestMessage BuildRequest(
             HttpMethod method,
             string url,
-            string pomeriumCookie)
+            (string HeaderName, string HeaderValue) authHeader)
         {
             var request = new HttpRequestMessage(method, url);
 
-            // Pomerium identifica la sesión por este cookie (JWT). No se loguea
-            // ni se incluye en mensajes de error.
-            request.Headers.Add("Cookie", $"_pomerium={pomeriumCookie}");
+            // La credencial nunca se loguea ni se incluye en mensajes de error.
+            request.Headers.Add(authHeader.HeaderName, authHeader.HeaderValue);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             return request;
