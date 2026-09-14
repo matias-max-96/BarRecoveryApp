@@ -98,15 +98,12 @@
                     Grid.Column="0"
                     Text="Limpiar filtros"
                     Command="{Binding ClearFiltersCommand}"
-                    BackgroundColor="#6C757D"
-                    TextColor="White" />
+                    Style="{StaticResource OutlineButton}" />
 
                 <Button
                     Grid.Column="1"
                     Text="Buscar barras"
-                    Command="{Binding SearchCommand}"
-                    BackgroundColor="#0D6EFD"
-                    TextColor="White" />
+                    Command="{Binding SearchCommand}" />
 
             </Grid>
 
@@ -362,15 +359,12 @@
                     Grid.Column="0"
                     Text="Limpiar inspección"
                     Command="{Binding ClearCommand}"
-                    BackgroundColor="#6C757D"
-                    TextColor="White" />
+                    Style="{StaticResource OutlineButton}" />
 
                 <Button
                     Grid.Column="1"
                     Text="Guardar inspección"
-                    Command="{Binding SaveCommand}"
-                    BackgroundColor="#0D6EFD"
-                    TextColor="White" />
+                    Command="{Binding SaveCommand}" />
 
             </Grid>
 

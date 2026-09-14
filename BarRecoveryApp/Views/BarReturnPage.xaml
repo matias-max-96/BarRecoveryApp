@@ -104,15 +104,12 @@
                     Grid.Column="0"
                     Text="Limpiar filtros"
                     Command="{Binding ClearFiltersCommand}"
-                    BackgroundColor="#6C757D"
-                    TextColor="White" />
+                    Style="{StaticResource OutlineButton}" />
 
                 <Button
                     Grid.Column="1"
                     Text="Buscar barras"
-                    Command="{Binding SearchCommand}"
-                    BackgroundColor="#0D6EFD"
-                    TextColor="White" />
+                    Command="{Binding SearchCommand}" />
 
             </Grid>
 
@@ -237,8 +234,7 @@
                                         Grid.Column="1"
                                         Text="Quitar"
                                         Clicked="OnRemoveSelectedBarClicked"
-                                        BackgroundColor="#DC3545"
-                                        TextColor="White" />
+                                        Style="{StaticResource DangerButton}" />
 
                                 </Grid>
 
@@ -260,22 +256,18 @@
                     Grid.Column="0"
                     Text="Limpiar selección"
                     Command="{Binding ClearSelectionCommand}"
-                    BackgroundColor="#FFC107"
-                    TextColor="Black" />
+                    Style="{StaticResource OutlineButton}" />
 
                 <Button
                     Grid.Column="1"
                     Text="Limpiar todo"
                     Command="{Binding ClearAllCommand}"
-                    BackgroundColor="#6C757D"
-                    TextColor="White" />
+                    Style="{StaticResource OutlineButton}" />
 
                 <Button
                     Grid.Column="2"
                     Text="Registrar recepción"
-                    Command="{Binding SaveCommand}"
-                    BackgroundColor="#198754"
-                    TextColor="White" />
+                    Command="{Binding SaveCommand}" />
 
             </Grid>
 
