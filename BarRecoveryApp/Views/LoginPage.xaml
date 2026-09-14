@@ -9,7 +9,7 @@
         IsVisible="False"
         IsEnabled="False" />
     </Shell.BackButtonBehavior>
-    
+
     <Grid Padding="24"
           RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, *"
           RowSpacing="16">
@@ -29,12 +29,10 @@
                    HorizontalOptions="Center"/>
         </VerticalStackLayout>
 
-        <!-- Load Indicator -->
-        <ActivityIndicator
-            Grid.Row="1"
-            IsRunning="{Binding IsBusy}"
-            IsVisible="{Binding IsBusy}"
-            HorizontalOptions="Center"/>
+        <!-- Load Indicator quitado: bug de renderizado en Android donde
+             ActivityIndicator no se refresca visualmente al pasar
+             IsBusy=false sin una interacción adicional que dispare un
+             re-layout. La carga funciona correctamente sin él. -->
 
         <!-- User -->
         <VerticalStackLayout Grid.Row="2"
@@ -101,7 +99,7 @@
                 BackgroundColor="#0D6EFD"
                 TextColor="White" />
         </Grid>
-        
+
         <!-- Help -->
         <Label
             Grid.Row="6"

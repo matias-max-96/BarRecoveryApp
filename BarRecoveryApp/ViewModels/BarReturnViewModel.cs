@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Globalization;
 using BarRecoveryApp.ApplicationF.Services.Operations;
 using BarRecoveryApp.ApplicationF.Services.Operations.DTOs;
 using BarRecoveryApp.Models.Catalogs;
@@ -263,6 +264,8 @@ namespace BarRecoveryApp.ViewModels
             {
                 if (!SelectedBars.Any(x => x.BarId == bar.BarId))
                 {
+                    bar.WeightKgText = string.Empty;
+                    bar.PropertyChanged += OnSelectedBarPropertyChanged;
                     SelectedBars.Add(bar);
                 }
             }
@@ -272,6 +275,8 @@ namespace BarRecoveryApp.ViewModels
 
                 if (existing is not null)
                 {
+                    existing.PropertyChanged -= OnSelectedBarPropertyChanged;
+                    existing.WeightKgText = string.Empty;
                     SelectedBars.Remove(existing);
                 }
             }
@@ -281,12 +286,25 @@ namespace BarRecoveryApp.ViewModels
             RefreshCommands();
         }
 
+        // El peso es obligatorio por barra — cada vez que cambia, hay que
+        // reevaluar si "Registrar recepción" puede habilitarse.
+        private void OnSelectedBarPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ShipmentBarTargetDto.WeightKgText))
+            {
+                ClearMessages();
+                RefreshCommands();
+            }
+        }
+
         public void RemoveSelectedBar(ShipmentBarTargetDto bar)
         {
             var existing = SelectedBars.FirstOrDefault(x => x.BarId == bar.BarId);
 
             if (existing is not null)
             {
+                existing.PropertyChanged -= OnSelectedBarPropertyChanged;
+                existing.WeightKgText = string.Empty;
                 SelectedBars.Remove(existing);
             }
 
@@ -308,7 +326,9 @@ namespace BarRecoveryApp.ViewModels
 
             if (!CanSave())
             {
-                ShowError("Debe seleccionar al menos una barra enviada.");
+                ShowError(SelectedBars.Count == 0
+                    ? "Debe seleccionar al menos una barra enviada."
+                    : "Debe ingresar el peso de todas las barras seleccionadas.");
                 return;
             }
 
@@ -317,26 +337,47 @@ namespace BarRecoveryApp.ViewModels
                 IsBusy = true;
                 ClearMessages();
 
-                var selectedBarIds = SelectedBars
-                    .Select(x => x.BarId)
-                    .Distinct()
-                    .ToList();
+                var weightInputs = new List<BarReturnWeightInputDto>();
 
-                var saved = await _barReturnService.CreateReturnReceiptAsync(
+                foreach (var bar in SelectedBars)
+                {
+                    if (!TryParseWeight(bar.WeightKgText, out var weightKg))
+                    {
+                        ShowError($"El peso ingresado para la barra {bar.BarNumber} no es válido.");
+                        return;
+                    }
+
+                    weightInputs.Add(new BarReturnWeightInputDto
+                    {
+                        BarId = bar.BarId,
+                        WeightKg = weightKg
+                    });
+                }
+
+                var result = await _barReturnService.CreateReturnReceiptAsync(
                     ReturnDocument,
                     Notes,
-                    selectedBarIds);
+                    weightInputs);
 
-                if (!saved)
+                if (!result.Success)
                 {
-                    ShowError("No fue posible registrar la recepción. Verifique permisos o datos.");
+                    ShowError(result.ErrorMessage ?? "No fue posible registrar la recepción.");
                     return;
                 }
 
-                ShowSuccess("Recepción registrada correctamente.");
+                var successMessage = "Recepción registrada correctamente.";
+
+                if (result.DisposedBarNumbers.Count > 0)
+                {
+                    successMessage += " Dada(s) de baja automáticamente por peso bajo el mínimo: " +
+                        string.Join(", ", result.DisposedBarNumbers) + ".";
+                }
+
+                ShowSuccess(successMessage);
 
                 ReturnDocument = string.Empty;
                 Notes = string.Empty;
+                UnsubscribeSelectedBars();
                 SelectedBars.Clear();
                 Bars.Clear();
 
@@ -353,6 +394,33 @@ namespace BarRecoveryApp.ViewModels
                 IsBusy = false;
                 RefreshCommands();
             }
+        }
+
+        private void UnsubscribeSelectedBars()
+        {
+            foreach (var bar in SelectedBars)
+            {
+                bar.PropertyChanged -= OnSelectedBarPropertyChanged;
+            }
+        }
+
+        private static bool TryParseWeight(string? text, out double weightKg)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                weightKg = 0;
+                return false;
+            }
+
+            // Acepta tanto punto como coma decimal — el teclado numérico del
+            // dispositivo puede usar cualquiera según el idioma configurado.
+            if (double.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out weightKg))
+                return weightKg > 0;
+
+            if (double.TryParse(text, NumberStyles.Number, CultureInfo.CurrentCulture, out weightKg))
+                return weightKg > 0;
+
+            return false;
         }
 
         private Task ClearFiltersAsync()
@@ -375,6 +443,7 @@ namespace BarRecoveryApp.ViewModels
             foreach (var bar in Bars)
                 bar.IsSelected = false;
 
+            UnsubscribeSelectedBars();
             SelectedBars.Clear();
 
             UpdateSelectedCountText();
@@ -396,6 +465,7 @@ namespace BarRecoveryApp.ViewModels
                 bar.IsSelected = false;
 
             Bars.Clear();
+            UnsubscribeSelectedBars();
             SelectedBars.Clear();
 
             ResultCountText = string.Empty;
@@ -409,7 +479,13 @@ namespace BarRecoveryApp.ViewModels
 
         private bool CanSave()
         {
-            return !IsBusy && SelectedBars.Count > 0;
+            if (IsBusy || SelectedBars.Count == 0)
+                return false;
+
+            // El pesaje es obligatorio para el 100% de las barras
+            // recepcionadas — no se habilita "Registrar recepción" hasta
+            // que todas tengan un peso válido cargado.
+            return SelectedBars.All(x => TryParseWeight(x.WeightKgText, out _));
         }
 
         private void UpdateSelectedCountText()

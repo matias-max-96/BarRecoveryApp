@@ -15,9 +15,14 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             string? searchText,
             int maxResults);
 
-        Task<bool> CreateReturnReceiptAsync(
+        // El pesaje es obligatorio para el 100% de las barras recepcionadas
+        // — por eso ahora recibe el peso de cada barra en vez de solo sus
+        // Ids. Si el peso queda bajo el mínimo configurado para esa
+        // Planta/TipoBarra, la barra se da de baja automáticamente (mismo
+        // mecanismo que en Inspección de Calidad).
+        Task<BarReturnCreateResultDto> CreateReturnReceiptAsync(
             string? returnDocument,
             string? notes,
-            List<string> barIds);
+            List<BarReturnWeightInputDto> barWeights);
     }
 }

@@ -14,10 +14,8 @@
                 FontAttributes="Bold"
                 HorizontalOptions="Center" />
 
-            <ActivityIndicator
-                IsRunning="{Binding IsBusy}"
-                IsVisible="{Binding IsBusy}"
-                HorizontalOptions="Center" />
+            <!-- ActivityIndicator quitado: bug de renderizado en Android,
+                 ver LoginPage.xaml para el detalle. -->
 
             <!-- Error Message -->
             <Border
@@ -219,28 +217,37 @@
                                 <RoundRectangle CornerRadius="8" />
                             </Border.StrokeShape>
 
-                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="8">
 
-                                <VerticalStackLayout Grid.Column="0" Spacing="4">
-                                    <Label
-                                        Text="{Binding DisplayName}"
-                                        FontAttributes="Bold"
-                                        FontSize="16" />
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
 
-                                    <Label
-                                        Text="{Binding DetailText}"
-                                        FontSize="13"
-                                        TextColor="Gray" />
-                                </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                        <Label
+                                            Text="{Binding DisplayName}"
+                                            FontAttributes="Bold"
+                                            FontSize="16" />
 
-                                <Button
-                                    Grid.Column="1"
-                                    Text="Quitar"
-                                    Clicked="OnRemoveSelectedBarClicked"
-                                    BackgroundColor="#DC3545"
-                                    TextColor="White" />
+                                        <Label
+                                            Text="{Binding DetailText}"
+                                            FontSize="13"
+                                            TextColor="Gray" />
+                                    </VerticalStackLayout>
 
-                            </Grid>
+                                    <Button
+                                        Grid.Column="1"
+                                        Text="Quitar"
+                                        Clicked="OnRemoveSelectedBarClicked"
+                                        BackgroundColor="#DC3545"
+                                        TextColor="White" />
+
+                                </Grid>
+
+                                <Entry
+                                    Text="{Binding WeightKgText}"
+                                    Placeholder="Peso al recepcionar (kg) — obligatorio"
+                                    Keyboard="Numeric" />
+
+                            </VerticalStackLayout>
                         </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>

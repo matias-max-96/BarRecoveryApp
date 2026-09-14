@@ -13,6 +13,10 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 {
     public class BarReturnService : IBarReturnService
     {
+        // Debe coincidir con el mismo Code usado en QualityInspectionService
+        // / QualityInspectionViewModel para identificar el atributo "Peso".
+        private const string WeightAttributeCode = "PESO";
+
         private readonly IRepository<BarReturnReceipt> _receiptRepository;
         private readonly IRepository<BarReturnReceiptBar> _receiptBarRepository;
         private readonly IRepository<Bar> _barRepository;
@@ -22,6 +26,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
         private readonly IAuditLogService _auditLogService;
         private readonly IRepository<SyncQueueItem> _syncQueueRepository;
         private readonly ISyncBackgroundRunner _syncBackgroundRunner;
+        private readonly IQualityInspectionService _qualityInspectionService;
 
         public BarReturnService(
             IRepository<BarReturnReceipt> receiptRepository,
@@ -32,7 +37,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             ICurrentUserService currentUserService,
             IAuditLogService auditLogService,
             IRepository<SyncQueueItem> syncQueueRepository,
-            ISyncBackgroundRunner syncBackgroundRunner)
+            ISyncBackgroundRunner syncBackgroundRunner,
+            IQualityInspectionService qualityInspectionService)
         {
             _receiptRepository = receiptRepository
                 ?? throw new ArgumentNullException(nameof(receiptRepository));
@@ -60,6 +66,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             _syncBackgroundRunner = syncBackgroundRunner
                 ?? throw new ArgumentNullException(nameof(syncBackgroundRunner));
+
+            _qualityInspectionService = qualityInspectionService
+                ?? throw new ArgumentNullException(nameof(qualityInspectionService));
         }
 
         public async Task<List<Plant>> GetActivePlantsAsync()
@@ -167,24 +176,67 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             return result;
         }
 
-        public async Task<bool> CreateReturnReceiptAsync(
+        public async Task<BarReturnCreateResultDto> CreateReturnReceiptAsync(
             string? returnDocument,
             string? notes,
-            List<string> barIds)
+            List<BarReturnWeightInputDto> barWeights)
         {
             if (!_currentUserService.IsAuthenticated)
-                return false;
+                return BarReturnCreateResultDto.Fail("Su sesión no es válida. Vuelva a iniciar sesión.");
 
             if (!_currentUserService.HasPermission("SHIPMENT_CREATE"))
-                return false;
+                return BarReturnCreateResultDto.Fail("No tiene permiso para registrar recepciones.");
 
             var session = _currentUserService.CurrentSession;
 
             if (session is null)
-                return false;
+                return BarReturnCreateResultDto.Fail("Su sesión no es válida. Vuelva a iniciar sesión.");
 
-            if (barIds is null || barIds.Count == 0)
-                return false;
+            if (barWeights is null || barWeights.Count == 0)
+                return BarReturnCreateResultDto.Fail("Debe seleccionar al menos una barra para recepcionar.");
+
+            var distinctWeights = barWeights
+                .GroupBy(x => x.BarId)
+                .Select(g => g.First())
+                .ToList();
+
+            // Primera pasada: valida que exista el atributo "Peso" aplicable
+            // para cada barra ANTES de crear nada. El pesaje es obligatorio
+            // para el 100% de las barras recepcionadas — si falta configurar
+            // el umbral para alguna combinación Planta/TipoBarra, se corta
+            // acá en vez de dejar un recibo a medio armar.
+            var validBars = new List<(Bar Bar, double WeightKg, string WeightAttributeDefinitionId)>();
+
+            foreach (var input in distinctWeights)
+            {
+                var bar = await _barRepository.GetByIdAsync(input.BarId);
+
+                if (bar is null || !bar.IsActive || bar.IsDisposed || bar.CurrentStatus != BarStatus.Shipped)
+                    continue; // igual que antes: barras ya no válidas se ignoran en silencio
+
+                var applicableDefinitions = await _qualityInspectionService
+                    .GetApplicableAttributeDefinitionsAsync(bar.Id);
+
+                var weightDefinition = applicableDefinitions.FirstOrDefault(x =>
+                    string.Equals(x.Code, WeightAttributeCode, StringComparison.OrdinalIgnoreCase));
+
+                if (weightDefinition is null)
+                {
+                    var plant = await _plantRepository.GetByIdAsync(bar.PlantId);
+                    var barType = await _barTypeRepository.GetByIdAsync(bar.BarTypeId);
+
+                    return BarReturnCreateResultDto.Fail(
+                        $"Falta configurar el atributo \"Peso\" para {plant?.Name ?? "esta planta"} / " +
+                        $"{barType?.Name ?? "este tipo de barra"} — no es posible recepcionar la barra " +
+                        $"{bar.BarNumber} sin él.");
+                }
+
+                validBars.Add((bar, input.WeightKg, weightDefinition.Id));
+            }
+
+            if (validBars.Count == 0)
+                return BarReturnCreateResultDto.Fail(
+                    "Ninguna de las barras seleccionadas está disponible para recepcionar.");
 
             var receiptId = Guid.NewGuid().ToString();
 
@@ -211,23 +263,10 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
             await _receiptRepository.InsertAsync(receipt);
 
             var returnedBars = new List<Bar>();
+            var disposedBarNumbers = new List<string>();
 
-            foreach (var barId in barIds.Distinct())
+            foreach (var (bar, weightKg, weightDefinitionId) in validBars)
             {
-                var bar = await _barRepository.GetByIdAsync(barId);
-
-                if (bar is null)
-                    continue;
-
-                if (!bar.IsActive)
-                    continue;
-
-                if (bar.IsDisposed)
-                    continue;
-
-                if (bar.CurrentStatus != BarStatus.Shipped)
-                    continue;
-
                 var receiptBar = new BarReturnReceiptBar
                 {
                     Id = Guid.NewGuid().ToString(),
@@ -240,6 +279,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
                 await _receiptBarRepository.InsertAsync(receiptBar);
 
+                // Primero se marca la llegada física de la barra...
                 bar.CurrentStatus = BarStatus.Returned;
                 bar.UpdatedAtUtc = DateTime.Now;
 
@@ -247,7 +287,42 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
                 await EnqueueBarSyncAsync(bar.Id);
 
-                returnedBars.Add(bar);
+                // ...y luego se registra la inspección obligatoria de peso.
+                // Se pide "puede recuperarse" como punto de partida — si el
+                // peso queda bajo el mínimo configurado para esta
+                // Planta/TipoBarra, QualityInspectionService fuerza la baja
+                // automáticamente (misma regla que en Inspección de
+                // Calidad), anulando lo que se pidió acá.
+                await _qualityInspectionService.CreateInspectionAsync(
+                    bar.Id,
+                    bar.RecoveryCount,
+                    canBeRecovered: true,
+                    mustBeDisposed: false,
+                    isApprovedForShipment: false,
+                    notes: string.IsNullOrWhiteSpace(returnDocument)
+                        ? "Pesaje obligatorio de recepción de retorno."
+                        : $"Pesaje obligatorio de recepción de retorno ({returnDocument.Trim()}).",
+                    attributeValues: new List<QualityInspectionAttributeValueInputDto>
+                    {
+                        new QualityInspectionAttributeValueInputDto
+                        {
+                            AttributeDefinitionId = weightDefinitionId,
+                            WasMeasured = true,
+                            ValueNumber = weightKg
+                        }
+                    });
+
+                // Se relee la barra porque CreateInspectionAsync pudo haber
+                // cambiado su estado (ej. a Disposed si el peso quedó bajo
+                // el mínimo) — sin esto, el resumen quedaría desactualizado.
+                var updatedBar = await _barRepository.GetByIdAsync(bar.Id) ?? bar;
+
+                if (updatedBar.IsDisposed)
+                {
+                    disposedBarNumbers.Add(updatedBar.BarNumber);
+                }
+
+                returnedBars.Add(updatedBar);
             }
 
             await EnqueueSyncAsync(receiptId);
@@ -259,7 +334,8 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                 AuditActionCodes.BarReturnCreated,
                 "BarReturnReceipt",
                 receiptId,
-                $"Se registró recepción de retorno con {returnedBars.Count} barra(s).",
+                $"Se registró recepción de retorno con {returnedBars.Count} barra(s), " +
+                $"{disposedBarNumbers.Count} dada(s) de baja automáticamente por peso.",
                 BuildReturnReceiptMetadataJson(
                     receipt,
                     returnDocument,
@@ -291,7 +367,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
                         barType));
             }
 
-            return true;
+            return BarReturnCreateResultDto.Ok(disposedBarNumbers);
         }
 
         private static string BuildReturnReceiptMetadataJson(

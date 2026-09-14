@@ -13,6 +13,9 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 {
     public class QualityInspectionService : IQualityInspectionService
     {
+        // Debe coincidir con WeightAttributeCode en QualityInspectionViewModel
+        // y BarReturnService.
+        private const string WeightAttributeCode = "PESO";
         private readonly IRepository<Bar> _barRepository;
         private readonly IRepository<Plant> _plantRepository;
         private readonly IRepository<BarType> _barTypeRepository;
@@ -214,6 +217,18 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             if (!bar.IsActive)
                 return false;
+
+            // Red de seguridad del lado servidor: aunque el cliente ya
+            // fuerza esto en tiempo real (QualityInspectionViewModel), no
+            // confiamos ciegamente en lo que llega — si el atributo "PESO"
+            // medido quedó bajo su mínimo, se fuerza la baja acá también,
+            // ignorando lo que haya mandado el llamador para estos 3 valores.
+            if (await ShouldForceDisposalForWeightAsync(attributeValues))
+            {
+                mustBeDisposed = true;
+                canBeRecovered = false;
+                isApprovedForShipment = false;
+            }
 
             var inspection = new QualityInspection
             {
@@ -564,6 +579,41 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations
 
             return summary;
         }
+        private async Task<bool> ShouldForceDisposalForWeightAsync(
+            List<QualityInspectionAttributeValueInputDto> attributeValues)
+        {
+            if (attributeValues is null || attributeValues.Count == 0)
+                return false;
+
+            var definitions = await _attributeDefinitionRepository.GetAllAsync();
+
+            foreach (var input in attributeValues)
+            {
+                if (!input.WasMeasured)
+                    continue;
+
+                if (!input.ValueNumber.HasValue)
+                    continue;
+
+                var definition = definitions.FirstOrDefault(
+                    x => x.Id == input.AttributeDefinitionId);
+
+                if (definition is null)
+                    continue;
+
+                if (!string.Equals(definition.Code, WeightAttributeCode, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                if (!definition.HasRangeValidation || !definition.MinValue.HasValue)
+                    continue;
+
+                if (input.ValueNumber.Value < definition.MinValue.Value)
+                    return true;
+            }
+
+            return false;
+        }
+
         private static bool? CalculateOutOfRange(BarAttributeDefinition definition, QualityInspectionAttributeValueInputDto input)
         {
             if (!input.WasMeasured)

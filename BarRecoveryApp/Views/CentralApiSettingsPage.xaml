@@ -20,10 +20,8 @@
                 TextColor="Gray"
                 HorizontalTextAlignment="Center" />
 
-            <ActivityIndicator
-                IsRunning="{Binding IsBusy}"
-                IsVisible="{Binding IsBusy}"
-                HorizontalOptions="Center" />
+            <!-- ActivityIndicator quitado: bug de renderizado en Android,
+                 ver LoginPage.xaml para el detalle. -->
 
             <Border
                 IsVisible="{Binding HasError}"

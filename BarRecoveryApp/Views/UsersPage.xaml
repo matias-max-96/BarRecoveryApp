@@ -14,11 +14,9 @@
                 FontAttributes="Bold"
                 HorizontalOptions="Center" />
 
-            <ActivityIndicator
-                IsRunning="{Binding IsBusy}"
-                IsVisible="{Binding IsBusy}"
-                HorizontalOptions="Center" />
-            
+            <!-- ActivityIndicator quitado: bug de renderizado en Android,
+                 ver LoginPage.xaml para el detalle. -->
+
             <Border
                 IsVisible="{Binding HasError}"
                 Padding="12"
@@ -54,7 +52,7 @@
                     FontAttributes="Bold" />
 
             </Border>
-            
+
 
             <Label
                 Text="Crear nuevo usuario"

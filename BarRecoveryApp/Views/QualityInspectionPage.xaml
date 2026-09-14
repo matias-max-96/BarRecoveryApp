@@ -14,10 +14,8 @@
                 FontAttributes="Bold"
                 HorizontalOptions="Center" />
 
-            <ActivityIndicator
-                IsRunning="{Binding IsBusy}"
-                IsVisible="{Binding IsBusy}"
-                HorizontalOptions="Center" />
+            <!-- ActivityIndicator quitado: bug de renderizado en Android,
+                 ver LoginPage.xaml para el detalle. -->
 
             <!-- Mensaje de error -->
             <Border
@@ -202,7 +200,7 @@
                 Text="{Binding RecoveryCount}"
                 Placeholder="Recuperaciones acumuladas"
                 Keyboard="Numeric" />
-            
+
             <Label
                 Text="Atributos técnicos"
                 FontSize="20"
@@ -298,15 +296,34 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-            
+
             <Label
                 Text="Resultado de inspección"
                 FontSize="20"
                 FontAttributes="Bold" />
 
+            <Border
+                IsVisible="{Binding IsWeightBelowMinimum}"
+                Padding="12"
+                Margin="0,4"
+                Stroke="#B00020"
+                StrokeThickness="1"
+                BackgroundColor="#FFF0F0">
+
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+
+                <Label
+                    Text="El peso medido está bajo el mínimo permitido para esta planta/tipo de barra. La barra se dará de baja automáticamente — no es posible editar el resultado manualmente."
+                    TextColor="#B00020"
+                    FontAttributes="Bold" />
+            </Border>
+
             <HorizontalStackLayout Spacing="8">
                 <CheckBox
-                    IsChecked="{Binding CanBeRecovered}" />
+                    IsChecked="{Binding CanBeRecovered}"
+                    IsEnabled="{Binding CanEditDispositionCheckboxes}" />
 
                 <Label
                     Text="Puede recuperarse nuevamente"
@@ -315,7 +332,8 @@
 
             <HorizontalStackLayout Spacing="8">
                 <CheckBox
-                    IsChecked="{Binding IsApprovedForShipment}" />
+                    IsChecked="{Binding IsApprovedForShipment}"
+                    IsEnabled="{Binding CanEditDispositionCheckboxes}" />
 
                 <Label
                     Text="Aprobada para envío"
@@ -324,7 +342,8 @@
 
             <HorizontalStackLayout Spacing="8">
                 <CheckBox
-                    IsChecked="{Binding MustBeDisposed}" />
+                    IsChecked="{Binding MustBeDisposed}"
+                    IsEnabled="{Binding CanEditDispositionCheckboxes}" />
 
                 <Label
                     Text="Dar de baja"

@@ -6,6 +6,7 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations.DTOs
     public class ShipmentBarTargetDto : INotifyPropertyChanged
     {
         private bool _isSelected;
+        private string _weightKgText = string.Empty;
 
         public string BarId { get; set; } = string.Empty;
 
@@ -26,6 +27,21 @@ namespace BarRecoveryApp.ApplicationF.Services.Operations.DTOs
                     return;
 
                 _isSelected = value;
+                OnPropertyChanged();
+            }
+        }
+
+        // Solo lo usa BarReturnPage (pesaje obligatorio al recepcionar) —
+        // en ShipmentPage queda sin usar, sin efecto.
+        public string WeightKgText
+        {
+            get => _weightKgText;
+            set
+            {
+                if (_weightKgText == value)
+                    return;
+
+                _weightKgText = value;
                 OnPropertyChanged();
             }
         }

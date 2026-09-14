@@ -1,0 +1,21 @@
+authenticate_service_url: https://authenticate.pomerium.app
+
+programmatic_redirect_domain_whitelist:
+  - localhost
+
+routes:
+  - from: https://10.0.2.2:8443
+    to: http://echo:8080
+    policy:
+      - allow:
+          or:
+            - email:
+                is: matias.max@saalasti.com
+
+  - from: https://localhost:8443
+    to: http://echo:8080
+    policy:
+      - allow:
+          or:
+            - email:
+                is: matias.max@saalasti.com

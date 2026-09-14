@@ -14,10 +14,8 @@
                 FontAttributes="Bold"
                 HorizontalOptions="Center" />
 
-            <ActivityIndicator
-                IsRunning="{Binding IsBusy}"
-                IsVisible="{Binding IsBusy}"
-                HorizontalOptions="Center" />
+            <!-- ActivityIndicator quitado: bug de renderizado en Android,
+                 ver LoginPage.xaml para el detalle. -->
 
             <!-- Errores -->
             <Border
