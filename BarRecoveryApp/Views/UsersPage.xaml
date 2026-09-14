@@ -19,38 +19,20 @@
 
             <Border
                 IsVisible="{Binding HasError}"
-                Padding="12"
-                Margin="0,4"
-                Stroke="#DDDDDD"
-                StrokeThickness="1"
-                BackgroundColor="White">
+                Style="{StaticResource ErrorBanner}">
 
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8"/>
-                </Border.StrokeShape>
                 <Label
                     Text="{Binding ErrorMessage}"
-                    TextColor="#B00020"
-                    FontAttributes="Bold" />
+                    Style="{StaticResource ErrorBannerText}" />
             </Border>
 
             <Border
                 IsVisible="{Binding HasSuccess}"
-                Padding="12"
-                Margin="0,4"
-                Stroke="#2E7D32"
-                StrokeThickness="1"
-                BackgroundColor="#E8F5E9">
-
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8"/>
-                </Border.StrokeShape>
+                Style="{StaticResource SuccessBanner}">
 
                 <Label
                     Text="{Binding SuccessMessage}"
-                    TextColor="#2E7D32"
-                    FontAttributes="Bold" />
-
+                    Style="{StaticResource SuccessBannerText}" />
             </Border>
 
 

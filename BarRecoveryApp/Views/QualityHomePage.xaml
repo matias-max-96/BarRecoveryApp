@@ -41,8 +41,7 @@
             <Button
                Text="Cerrar sesión"
                 Clicked="OnLogoutClicked"
-                BackgroundColor="#DC3545"
-                TextColor="WhiteSmoke"/>
+                Style="{StaticResource DangerButton}"/>
 
         </VerticalStackLayout>
     </ScrollView>

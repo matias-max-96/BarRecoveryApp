@@ -24,11 +24,8 @@
                 HorizontalTextAlignment="Center" />
         </VerticalStackLayout>
 
-        <ActivityIndicator
-            Grid.Row="1"
-            IsRunning="{Binding IsBusy}"
-            IsVisible="{Binding IsBusy}"
-            HorizontalOptions="Center" />
+        <!-- ActivityIndicator quitado: bug de renderizado en Android,
+             ver LoginPage.xaml para el detalle. -->
 
         <VerticalStackLayout Grid.Row="2" Spacing="6">
             <Label
@@ -75,19 +72,15 @@
                 HorizontalTextAlignment="Center" />
         </VerticalStackLayout>
 
-        <Frame
+        <Border
             Grid.Row="5"
             IsVisible="{Binding HasError}"
-            BackgroundColor="#FDECEC"
-            BorderColor="#D9534F"
-            Padding="12"
-            CornerRadius="8">
+            Style="{StaticResource ErrorBanner}">
 
             <Label
                 Text="{Binding ErrorMessage}"
-                TextColor="#B00020"
-                FontAttributes="Bold" />
-        </Frame>
+                Style="{StaticResource ErrorBannerText}" />
+        </Border>
 
         <Grid
             Grid.Row="6"
@@ -99,15 +92,12 @@
                 Grid.Column="0"
                 Text="Limpiar"
                 Command="{Binding ClearCommand}"
-                BackgroundColor="#6C757D"
-                TextColor="White" />
+                Style="{StaticResource OutlineButton}" />
 
             <Button
                 Grid.Column="1"
                 Text="Cambiar PIN"
-                Command="{Binding ChangePinCommand}"
-                BackgroundColor="#0D6EFD"
-                TextColor="White" />
+                Command="{Binding ChangePinCommand}" />
         </Grid>
 
     </Grid>

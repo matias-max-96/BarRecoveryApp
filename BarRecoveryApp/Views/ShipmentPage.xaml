@@ -14,43 +14,25 @@
                 FontAttributes="Bold"
                 HorizontalOptions="Center" />
 
-            <ActivityIndicator
-                IsRunning="{Binding IsBusy}"
-                IsVisible="{Binding IsBusy}"
-                HorizontalOptions="Center" />
+            <!-- ActivityIndicator quitado: bug de renderizado en Android,
+                 ver LoginPage.xaml para el detalle. -->
 
             <Border
                 IsVisible="{Binding HasError}"
-                Padding="12"
-                Stroke="#D9534F"
-                StrokeThickness="1"
-                BackgroundColor="White">
-
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
-                </Border.StrokeShape>
+                Style="{StaticResource ErrorBanner}">
 
                 <Label
                     Text="{Binding ErrorMessage}"
-                    TextColor="#B00020"
-                    FontAttributes="Bold" />
+                    Style="{StaticResource ErrorBannerText}" />
             </Border>
 
             <Border
                 IsVisible="{Binding HasSuccess}"
-                Padding="12"
-                Stroke="#2E7D32"
-                StrokeThickness="1"
-                BackgroundColor="White">
-
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
-                </Border.StrokeShape>
+                Style="{StaticResource SuccessBanner}">
 
                 <Label
                     Text="{Binding SuccessMessage}"
-                    TextColor="#2E7D32"
-                    FontAttributes="Bold" />
+                    Style="{StaticResource SuccessBannerText}" />
             </Border>
 
             <Label
@@ -99,15 +81,12 @@
                     Grid.Column="0"
                     Text="Limpiar filtros"
                     Command="{Binding ClearFiltersCommand}"
-                    BackgroundColor="#6C757D"
-                    TextColor="White" />
+                    Style="{StaticResource OutlineButton}" />
 
                 <Button
                     Grid.Column="1"
                     Text="Buscar barras"
-                    Command="{Binding SearchCommand}"
-                    BackgroundColor="#0D6EFD"
-                    TextColor="White" />
+                    Command="{Binding SearchCommand}" />
 
             </Grid>
 
@@ -193,16 +172,7 @@
 
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Border
-                            Padding="12"
-                            Margin="0,4"
-                            Stroke="#198754"
-                            StrokeThickness="1"
-                            BackgroundColor="#F2FFF6">
-
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="8" />
-                            </Border.StrokeShape>
+                        <Border Style="{StaticResource SuccessBanner}">
 
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
 
@@ -222,8 +192,7 @@
                                     Grid.Column="1"
                                     Text="Quitar"
                                     Clicked="OnRemoveSelectedBarClicked"
-                                    BackgroundColor="#DC3545"
-                                    TextColor="White" />
+                                    Style="{StaticResource DangerButton}" />
 
                             </Grid>
                         </Border>
@@ -242,47 +211,34 @@
                     Grid.Column="0"
                     Text="Limpiar selección"
                     Command="{Binding ClearSelectionCommand}"
-                    BackgroundColor="#FFC107"
-                    TextColor="Black" />
+                    Style="{StaticResource OutlineButton}" />
 
                 <Button
                     Grid.Row="0"
                     Grid.Column="1"
                     Text="Limpiar todo"
                     Command="{Binding ClearAllCommand}"
-                    BackgroundColor="#6C757D"
-                    TextColor="White" />
+                    Style="{StaticResource OutlineButton}" />
 
                 <Button
                     Grid.Row="0"
                     Grid.Column="2"
                     Text="Crear envío"
-                    Command="{Binding SaveCommand}"
-                    BackgroundColor="#198754"
-                    TextColor="White" />
+                    Command="{Binding SaveCommand}" />
 
                 <Border
                     Grid.Row="1"
                     Grid.Column="0"
                     Grid.ColumnSpan="3"
                     IsVisible="{Binding HasTechnicalReport}"
-                    Padding="12"
-                    Margin="0,8"
-                    Stroke="#198754"
-                    StrokeThickness="1"
-                    BackgroundColor="#F2FFF6">
-
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="8" />
-                    </Border.StrokeShape>
+                    Style="{StaticResource SuccessBanner}">
 
                     <VerticalStackLayout Spacing="8">
 
                         <Label
                             Text="Reporte técnico generado"
                             FontSize="18"
-                            FontAttributes="Bold"
-                            TextColor="#198754" />
+                            Style="{StaticResource SuccessBannerText}" />
 
                         <Label
                             Text="{Binding LastTechnicalReportFileName}"
@@ -298,8 +254,7 @@
                         <Button
                             Text="Compartir reporte técnico"
                             Command="{Binding ShareTechnicalReportCommand}"
-                            BackgroundColor="#198754"
-                            TextColor="White" />
+                            Style="{StaticResource SecondaryButton}" />
 
                     </VerticalStackLayout>
                 </Border>

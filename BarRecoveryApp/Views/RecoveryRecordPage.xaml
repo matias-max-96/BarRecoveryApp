@@ -14,39 +14,23 @@
                 FontAttributes="Bold"
                 HorizontalOptions="Center" />
 
-            <ActivityIndicator
-                IsRunning="{Binding IsBusy}"
-                IsVisible="{Binding IsBusy}"
-                HorizontalOptions="Center" />
+            <!-- ActivityIndicator quitado: bug de renderizado en Android,
+                 ver LoginPage.xaml para el detalle. -->
 
             <Border
                 IsVisible="{Binding HasError}"
-                Padding="12"
-                Stroke="#D9534F"
-                StrokeThickness="1"
-                BackgroundColor="White">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
-                </Border.StrokeShape>
+                Style="{StaticResource ErrorBanner}">
                 <Label
                     Text="{Binding ErrorMessage}"
-                    TextColor="#B00020"
-                    FontAttributes="Bold" />
+                    Style="{StaticResource ErrorBannerText}" />
             </Border>
 
             <Border
                 IsVisible="{Binding HasSuccess}"
-                Padding="12"
-                Stroke="#2E7D32"
-                StrokeThickness="1"
-                BackgroundColor="White">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
-                </Border.StrokeShape>
+                Style="{StaticResource SuccessBanner}">
                 <Label
                     Text="{Binding SuccessMessage}"
-                    TextColor="#2E7D32"
-                    FontAttributes="Bold" />
+                    Style="{StaticResource SuccessBannerText}" />
             </Border>
 
             <Label
@@ -86,16 +70,13 @@
                 <Button
                     Grid.Column="0"
                     Text="Agregar insumo"
-                    Command="{Binding AddSupplyCommand}"
-                    BackgroundColor="#0D6EFD"
-                    TextColor="White" />
+                    Command="{Binding AddSupplyCommand}" />
 
                 <Button
                     Grid.Column="1"
                     Text="Quitar seleccionado"
                     Command="{Binding RemoveSupplyCommand}"
-                    BackgroundColor="#DC3545"
-                    TextColor="White" />
+                    Style="{StaticResource DangerButton}" />
             </Grid>
 
             <CollectionView
@@ -140,15 +121,12 @@
                     Grid.Column="0"
                     Text="Limpiar"
                     Command="{Binding ClearCommand}"
-                    BackgroundColor="#6C757D"
-                    TextColor="White" />
+                    Style="{StaticResource OutlineButton}" />
 
                 <Button
                     Grid.Column="1"
                     Text="Guardar"
-                    Command="{Binding SaveCommand}"
-                    BackgroundColor="#198754"
-                    TextColor="White" />
+                    Command="{Binding SaveCommand}" />
             </Grid>
 
         </VerticalStackLayout>

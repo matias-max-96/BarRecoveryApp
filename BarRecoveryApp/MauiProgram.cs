@@ -29,6 +29,8 @@ namespace BarRecoveryApp
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                    fonts.AddFont("Rouben-Regular.otf", "Rouben Regular");
+                    fonts.AddFont("Rouben-Bold.otf, Rouben Bold");
                 });
 
 #if DEBUG

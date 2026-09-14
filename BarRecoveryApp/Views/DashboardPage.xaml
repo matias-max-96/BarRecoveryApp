@@ -14,33 +14,21 @@
                 FontAttributes="Bold"
                 HorizontalOptions="Center" />
 
-            <ActivityIndicator
-                IsRunning="{Binding IsBusy}"
-                IsVisible="{Binding IsBusy}"
-                HorizontalOptions="Center" />
+            <!-- ActivityIndicator quitado: bug de renderizado en Android,
+                 ver LoginPage.xaml para el detalle. -->
 
             <Border
                 IsVisible="{Binding HasError}"
-                Padding="12"
-                Stroke="#D9534F"
-                StrokeThickness="1"
-                BackgroundColor="White">
-
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
-                </Border.StrokeShape>
+                Style="{StaticResource ErrorBanner}">
 
                 <Label
                     Text="{Binding ErrorMessage}"
-                    TextColor="#B00020"
-                    FontAttributes="Bold" />
+                    Style="{StaticResource ErrorBannerText}" />
             </Border>
 
             <Button
                 Text="Actualizar resumen"
-                Command="{Binding LoadCommand}"
-                BackgroundColor="#0D6EFD"
-                TextColor="White" />
+                Command="{Binding LoadCommand}" />
 
             <Label
                 Text="Barras"

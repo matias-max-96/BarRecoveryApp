@@ -23,9 +23,9 @@
     </Style>
 
     <Style TargetType="Button">
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource PrimaryDarkText}}" />
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
-        <Setter Property="FontFamily" Value="OpenSansRegular"/>
+        <Setter Property="TextColor" Value="{StaticResource White}" />
+        <Setter Property="BackgroundColor" Value="{StaticResource PrimaryNormal}" />
+        <Setter Property="FontFamily" Value="Rouben Bold"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="BorderWidth" Value="0"/>
         <Setter Property="CornerRadius" Value="8"/>
@@ -35,14 +35,27 @@
         <Setter Property="VisualStateManager.VisualStateGroups">
             <VisualStateGroupList>
                 <VisualStateGroup x:Name="CommonStates">
-                    <VisualState x:Name="Normal" />
-                    <VisualState x:Name="Disabled">
+                    <VisualState x:Name="Normal">
                         <VisualState.Setters>
-                            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gray950}, Dark={StaticResource Gray200}}" />
-                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}" />
+                            <Setter Property="BackgroundColor" Value="{StaticResource PrimaryNormal}" />
                         </VisualState.Setters>
                     </VisualState>
-                    <VisualState x:Name="PointerOver" />
+                    <VisualState x:Name="Pressed">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{StaticResource PrimaryPressed}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="PointerOver">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{StaticResource PrimaryHover}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <Setter Property="TextColor" Value="{StaticResource TextDisabled}" />
+                            <Setter Property="BackgroundColor" Value="{StaticResource PrimaryDisabled}" />
+                        </VisualState.Setters>
+                    </VisualState>
                 </VisualStateGroup>
             </VisualStateGroupList>
         </Setter>
@@ -375,7 +388,7 @@
             </VisualStateGroupList>
         </Setter>
     </Style>
-  
+
     <!--
     <Style TargetType="TitleBar">
         <Setter Property="MinimumHeightRequest" Value="32"/>
@@ -440,7 +453,7 @@
         <Setter Property="TextColor" Value="{StaticResource White}" />
         <Setter Property="CornerRadius" Value="8" />
         <Setter Property="Padding" Value="16,12" />
-        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="FontFamily" Value="Rouben Bold" />
         <Setter Property="FontSize" Value="16" />
 
         <Setter Property="VisualStateManager.VisualStateGroups">
@@ -501,7 +514,7 @@
         <Setter Property="TextColor" Value="{StaticResource White}" />
         <Setter Property="CornerRadius" Value="8" />
         <Setter Property="Padding" Value="16,12" />
-        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="FontFamily" Value="Rouben Bold" />
 
         <Setter Property="VisualStateManager.VisualStateGroups">
             <VisualStateGroupList>
@@ -551,6 +564,7 @@
         <Setter Property="BorderWidth" Value="2" />
         <Setter Property="CornerRadius" Value="8" />
         <Setter Property="Padding" Value="16,12" />
+        <Setter Property="FontFamily" Value="Rouben Bold" />
 
         <Setter Property="VisualStateManager.VisualStateGroups">
             <VisualStateGroupList>
@@ -594,5 +608,128 @@
                 </VisualStateGroup>
             </VisualStateGroupList>
         </Setter>
+    </Style>
+
+    <!-- Danger Button — acciones destructivas: cerrar sesión, eliminar, -->
+    <!-- quitar, desactivar. -->
+    <Style TargetType="Button" x:Key="DangerButton">
+        <Setter Property="BackgroundColor" Value="{StaticResource DangerNormal}" />
+        <Setter Property="TextColor" Value="{StaticResource White}" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="16,12" />
+        <Setter Property="FontFamily" Value="Rouben Bold" />
+
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{StaticResource DangerNormal}" />
+                            <Setter Property="Scale" Value="1.0" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Pressed">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{StaticResource DangerPressed}" />
+                            <Setter Property="Scale" Value="0.96" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Hover">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{StaticResource DangerHover}" />
+                            <Setter Property="Scale" Value="1.02" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Focused">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{StaticResource DangerFocused}" />
+                            <Setter Property="BorderColor" Value="{StaticResource Secondary}" />
+                            <Setter Property="BorderWidth" Value="3" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{StaticResource DangerDisabled}" />
+                            <Setter Property="TextColor" Value="{StaticResource TextDisabled}" />
+                            <Setter Property="Opacity" Value="0.6" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
+    </Style>
+
+    <!-- Banners de mensajes — reemplazan el patrón repetido a mano en cada
+         página (Border + Label con los mismos hex hardcodeados). -->
+
+    <Style TargetType="Border" x:Key="ErrorBanner">
+        <Setter Property="Padding" Value="12" />
+        <Setter Property="Margin" Value="0,4" />
+        <Setter Property="Stroke" Value="{StaticResource ErrorBannerBorder}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="BackgroundColor" Value="{StaticResource ErrorBannerBackground}" />
+        <Setter Property="StrokeShape">
+            <Setter.Value>
+                <RoundRectangle CornerRadius="8" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="Label" x:Key="ErrorBannerText">
+        <Setter Property="TextColor" Value="{StaticResource ErrorBannerText}" />
+        <Setter Property="FontFamily" Value="Rouben Bold" />
+    </Style>
+
+    <Style TargetType="Border" x:Key="SuccessBanner">
+        <Setter Property="Padding" Value="12" />
+        <Setter Property="Margin" Value="0,4" />
+        <Setter Property="Stroke" Value="{StaticResource SuccessBannerBorder}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="BackgroundColor" Value="{StaticResource SuccessBannerBackground}" />
+        <Setter Property="StrokeShape">
+            <Setter.Value>
+                <RoundRectangle CornerRadius="8" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="Label" x:Key="SuccessBannerText">
+        <Setter Property="TextColor" Value="{StaticResource SuccessBannerText}" />
+        <Setter Property="FontFamily" Value="Rouben Bold" />
+    </Style>
+
+    <Style TargetType="Border" x:Key="InfoBanner">
+        <Setter Property="Padding" Value="12" />
+        <Setter Property="Stroke" Value="{StaticResource InfoBannerBorder}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="BackgroundColor" Value="{StaticResource InfoBannerBackground}" />
+        <Setter Property="StrokeShape">
+            <Setter.Value>
+                <RoundRectangle CornerRadius="8" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="Label" x:Key="InfoBannerHeaderText">
+        <Setter Property="TextColor" Value="{StaticResource InfoBannerText}" />
+        <Setter Property="FontFamily" Value="Rouben Bold" />
+    </Style>
+
+    <Style TargetType="Border" x:Key="WarningBanner">
+        <Setter Property="Padding" Value="12" />
+        <Setter Property="Margin" Value="0,4" />
+        <Setter Property="Stroke" Value="{StaticResource WarningBannerBorder}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="BackgroundColor" Value="{StaticResource WarningBannerBackground}" />
+        <Setter Property="StrokeShape">
+            <Setter.Value>
+                <RoundRectangle CornerRadius="8" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="Label" x:Key="WarningBannerText">
+        <Setter Property="TextColor" Value="{StaticResource WarningBannerText}" />
+        <Setter Property="FontFamily" Value="Rouben Bold" />
     </Style>
 </ResourceDictionary>

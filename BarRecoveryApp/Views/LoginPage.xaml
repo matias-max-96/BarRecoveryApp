@@ -65,19 +65,15 @@
         </VerticalStackLayout>
 
         <!-- Error -->
-        <Frame
+        <Border
             Grid.Row="4"
             IsVisible="{Binding HasError}"
-            BackgroundColor="#FDECEC"
-            BorderColor="#D9534F"
-            Padding="12"
-            CornerRadius="8">
+            Style="{StaticResource ErrorBanner}">
 
             <Label
                 Text="{Binding ErrorMessage}"
-                TextColor="#B00020"
-                FontAttributes="Bold" />
-        </Frame>
+                Style="{StaticResource ErrorBannerText}" />
+        </Border>
 
         <!-- Button -->
         <Grid

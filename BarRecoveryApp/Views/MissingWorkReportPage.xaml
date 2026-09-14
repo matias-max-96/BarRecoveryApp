@@ -20,26 +20,16 @@
                 TextColor="Gray"
                 HorizontalTextAlignment="Center" />
 
-            <ActivityIndicator
-                IsRunning="{Binding IsBusy}"
-                IsVisible="{Binding IsBusy}"
-                HorizontalOptions="Center" />
+            <!-- ActivityIndicator quitado: bug de renderizado en Android,
+                 ver LoginPage.xaml para el detalle. -->
 
             <Border
                 IsVisible="{Binding HasError}"
-                Padding="12"
-                Stroke="#D9534F"
-                StrokeThickness="1"
-                BackgroundColor="White">
-
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
-                </Border.StrokeShape>
+                Style="{StaticResource ErrorBanner}">
 
                 <Label
                     Text="{Binding ErrorMessage}"
-                    TextColor="#B00020"
-                    FontAttributes="Bold" />
+                    Style="{StaticResource ErrorBannerText}" />
             </Border>
 
             <Label
@@ -77,15 +67,12 @@
                     Grid.Column="0"
                     Text="Limpiar"
                     Command="{Binding ClearCommand}"
-                    BackgroundColor="#6C757D"
-                    TextColor="White" />
+                    Style="{StaticResource OutlineButton}" />
 
                 <Button
                     Grid.Column="1"
                     Text="Buscar"
-                    Command="{Binding SearchCommand}"
-                    BackgroundColor="#FD7E14"
-                    TextColor="White" />
+                    Command="{Binding SearchCommand}" />
 
             </Grid>
 
@@ -116,16 +103,7 @@
 
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Border
-                            Padding="12"
-                            Margin="0,4"
-                            Stroke="#FD7E14"
-                            StrokeThickness="1"
-                            BackgroundColor="#FFF7ED">
-
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="8" />
-                            </Border.StrokeShape>
+                        <Border Style="{StaticResource WarningBanner}">
 
                             <VerticalStackLayout Spacing="4">
 
@@ -147,8 +125,7 @@
                                 <Label
                                     Text="No registró trabajo"
                                     FontSize="13"
-                                    TextColor="#B45309"
-                                    FontAttributes="Bold" />
+                                    Style="{StaticResource WarningBannerText}" />
 
                             </VerticalStackLayout>
                         </Border>

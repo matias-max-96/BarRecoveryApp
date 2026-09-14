@@ -20,47 +20,27 @@
                 TextColor="Gray"
                 HorizontalTextAlignment="Center" />
 
-            <ActivityIndicator
-                IsRunning="{Binding IsBusy}"
-                IsVisible="{Binding IsBusy}"
-                HorizontalOptions="Center" />
+            <!-- ActivityIndicator quitado: bug de renderizado en Android,
+                 ver LoginPage.xaml para el detalle. -->
 
             <!-- Error general -->
             <Border
                 IsVisible="{Binding HasError}"
-                Padding="12"
-                Margin="0,4"
-                Stroke="#D9534F"
-                StrokeThickness="1"
-                BackgroundColor="White">
-
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
-                </Border.StrokeShape>
+                Style="{StaticResource ErrorBanner}">
 
                 <Label
                     Text="{Binding ErrorMessage}"
-                    TextColor="#B00020"
-                    FontAttributes="Bold" />
+                    Style="{StaticResource ErrorBannerText}" />
             </Border>
 
             <!-- Éxito -->
             <Border
                 IsVisible="{Binding HasSuccess}"
-                Padding="12"
-                Margin="0,4"
-                Stroke="#2E7D32"
-                StrokeThickness="1"
-                BackgroundColor="White">
-
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
-                </Border.StrokeShape>
+                Style="{StaticResource SuccessBanner}">
 
                 <Label
                     Text="{Binding SuccessMessage}"
-                    TextColor="#2E7D32"
-                    FontAttributes="Bold" />
+                    Style="{StaticResource SuccessBannerText}" />
             </Border>
 
             <Label
@@ -119,15 +99,12 @@
                     Grid.Column="0"
                     Text="Limpiar"
                     Command="{Binding ClearCommand}"
-                    BackgroundColor="#6C757D"
-                    TextColor="White" />
+                    Style="{StaticResource OutlineButton}" />
 
                 <Button
                     Grid.Column="1"
                     Text="Seleccionar e importar"
-                    Command="{Binding PickAndImportCommand}"
-                    BackgroundColor="#0D6EFD"
-                    TextColor="White" />
+                    Command="{Binding PickAndImportCommand}" />
 
             </Grid>
 
@@ -162,24 +139,14 @@
 
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Border
-                            Padding="12"
-                            Margin="0,4"
-                            Stroke="#D9534F"
-                            StrokeThickness="1"
-                            BackgroundColor="White">
-
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="8" />
-                            </Border.StrokeShape>
+                        <Border Style="{StaticResource ErrorBanner}">
 
                             <VerticalStackLayout Spacing="4">
 
                                 <Label
                                     Text="{Binding RowNumber, StringFormat='Fila: {0}'}"
-                                    FontAttributes="Bold"
                                     FontSize="14"
-                                    TextColor="#B00020" />
+                                    Style="{StaticResource ErrorBannerText}" />
 
                                 <Label
                                     Text="{Binding BarNumber, StringFormat='Barra: {0}'}"
@@ -189,7 +156,7 @@
                                 <Label
                                     Text="{Binding Message}"
                                     FontSize="13"
-                                    TextColor="#B00020" />
+                                    Style="{StaticResource ErrorBannerText}" />
 
                             </VerticalStackLayout>
                         </Border>

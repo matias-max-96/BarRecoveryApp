@@ -20,20 +20,11 @@
             <!-- Errores -->
             <Border
                 IsVisible="{Binding HasError}"
-                Padding="12"
-                Margin="0,4"
-                Stroke="#D9534F"
-                StrokeThickness="1"
-                BackgroundColor="White">
-
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
-                </Border.StrokeShape>
+                Style="{StaticResource ErrorBanner}">
 
                 <Label
                     Text="{Binding ErrorMessage}"
-                    TextColor="#B00020"
-                    FontAttributes="Bold" />
+                    Style="{StaticResource ErrorBannerText}" />
             </Border>
 
             <!-- Filtros -->
@@ -166,23 +157,14 @@
                     FontSize="20"
                     FontAttributes="Bold" />
 
-                <Border
-                    Padding="12"
-                    Stroke="#0D6EFD"
-                    StrokeThickness="1"
-                    BackgroundColor="#EAF2FF">
-
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="8" />
-                    </Border.StrokeShape>
+                <Border Style="{StaticResource InfoBanner}">
 
                     <VerticalStackLayout Spacing="4">
 
                         <Label
                             Text="{Binding History.HeaderText}"
-                            FontAttributes="Bold"
-                            FontSize="18"
-                            TextColor="#0D6EFD" />
+                            Style="{StaticResource InfoBannerHeaderText}"
+                            FontSize="18" />
 
                         <Label
                             Text="{Binding History.SummaryText}"

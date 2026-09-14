@@ -20,39 +20,21 @@
             <!-- Mensaje de error -->
             <Border
                 IsVisible="{Binding HasError}"
-                Padding="12"
-                Margin="0,4"
-                Stroke="#D9534F"
-                StrokeThickness="1"
-                BackgroundColor="White">
-
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
-                </Border.StrokeShape>
+                Style="{StaticResource ErrorBanner}">
 
                 <Label
                     Text="{Binding ErrorMessage}"
-                    TextColor="#B00020"
-                    FontAttributes="Bold" />
+                    Style="{StaticResource ErrorBannerText}" />
             </Border>
 
             <!-- Mensaje de éxito -->
             <Border
                 IsVisible="{Binding HasSuccess}"
-                Padding="12"
-                Margin="0,4"
-                Stroke="#2E7D32"
-                StrokeThickness="1"
-                BackgroundColor="White">
-
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
-                </Border.StrokeShape>
+                Style="{StaticResource SuccessBanner}">
 
                 <Label
                     Text="{Binding SuccessMessage}"
-                    TextColor="#2E7D32"
-                    FontAttributes="Bold" />
+                    Style="{StaticResource SuccessBannerText}" />
             </Border>
 
             <!-- Filtros -->
@@ -301,20 +283,11 @@
 
             <Border
                 IsVisible="{Binding IsWeightBelowMinimum}"
-                Padding="12"
-                Margin="0,4"
-                Stroke="#B00020"
-                StrokeThickness="1"
-                BackgroundColor="#FFF0F0">
-
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
-                </Border.StrokeShape>
+                Style="{StaticResource ErrorBanner}">
 
                 <Label
                     Text="El peso medido está bajo el mínimo permitido para esta planta/tipo de barra. La barra se dará de baja automáticamente — no es posible editar el resultado manualmente."
-                    TextColor="#B00020"
-                    FontAttributes="Bold" />
+                    Style="{StaticResource ErrorBannerText}" />
             </Border>
 
             <HorizontalStackLayout Spacing="8">

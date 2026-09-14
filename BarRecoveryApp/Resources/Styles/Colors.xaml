@@ -56,6 +56,36 @@
     <Color x:Key="SecondaryFocused">#FC6327</Color>
     <Color x:Key="SecondaryDisabled">#FC632740</Color>
 
+    <!-- Danger Button (#C8102E) — para acciones destructivas: cerrar sesión,
+         eliminar, quitar, desactivar, etc. -->
+    <Color x:Key="DangerNormal">#C8102E</Color>
+    <Color x:Key="DangerPressed">#8F0B20</Color>
+    <Color x:Key="DangerHover">#E14060</Color>
+    <Color x:Key="DangerFocused">#C8102E</Color>
+    <Color x:Key="DangerDisabled">#C8102E40</Color>
+
+    <!-- Banners de mensajes — reusan Danger (error) y Primary (éxito/info)
+         en vez de rojos/verdes genéricos, para que hasta los mensajes de
+         estado se sientan parte de la misma identidad de marca. -->
+    <Color x:Key="ErrorBannerBackground">#FDECEC</Color>
+    <Color x:Key="ErrorBannerBorder">#C8102E</Color>
+    <Color x:Key="ErrorBannerText">#C8102E</Color>
+
+    <Color x:Key="SuccessBannerBackground">#EAF3EE</Color>
+    <Color x:Key="SuccessBannerBorder">#1B4533</Color>
+    <Color x:Key="SuccessBannerText">#1B4533</Color>
+
+    <Color x:Key="InfoBannerBackground">#EAF3EE</Color>
+    <Color x:Key="InfoBannerBorder">#1B4533</Color>
+    <Color x:Key="InfoBannerText">#1B4533</Color>
+
+    <!-- PLACEHOLDER: usa el ámbar que ya tenía la app, no el Yellow real de
+         marca (no lo tenemos definido todavía). Reemplazar cuando se
+         confirme el hex oficial. -->
+    <Color x:Key="WarningBannerBackground">#FFF3CD</Color>
+    <Color x:Key="WarningBannerBorder">#856404</Color>
+    <Color x:Key="WarningBannerText">#856404</Color>
+
     <!-- Outline Button -->
     <Color x:Key="OutlineBorderNormal">#1B4533</Color>
     <Color x:Key="OutlineBorderPressed">#0F2A1F</Color>
@@ -64,6 +94,6 @@
 
     <!-- State Text -->
     <Color x:Key="TextDisabled">#1B453360</Color>
-    
+
 
 </ResourceDictionary>

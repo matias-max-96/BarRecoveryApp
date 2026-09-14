@@ -20,26 +20,16 @@
                 TextColor="Gray"
                 HorizontalTextAlignment="Center" />
 
-            <ActivityIndicator
-                IsRunning="{Binding IsBusy}"
-                IsVisible="{Binding IsBusy}"
-                HorizontalOptions="Center" />
+            <!-- ActivityIndicator quitado: bug de renderizado en Android,
+                 ver LoginPage.xaml para el detalle. -->
 
             <Border
                 IsVisible="{Binding HasError}"
-                Padding="12"
-                Stroke="#D9534F"
-                StrokeThickness="1"
-                BackgroundColor="White">
-
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
-                </Border.StrokeShape>
+                Style="{StaticResource ErrorBanner}">
 
                 <Label
                     Text="{Binding ErrorMessage}"
-                    TextColor="#B00020"
-                    FontAttributes="Bold" />
+                    Style="{StaticResource ErrorBannerText}" />
             </Border>
 
             <Entry
@@ -52,15 +42,12 @@
                     Grid.Column="0"
                     Text="Limpiar"
                     Command="{Binding ClearCommand}"
-                    BackgroundColor="#6C757D"
-                    TextColor="White" />
+                    Style="{StaticResource OutlineButton}" />
 
                 <Button
                     Grid.Column="1"
                     Text="Buscar"
-                    Command="{Binding SearchCommand}"
-                    BackgroundColor="#0D6EFD"
-                    TextColor="White" />
+                    Command="{Binding SearchCommand}" />
 
             </Grid>
 

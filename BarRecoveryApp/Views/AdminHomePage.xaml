@@ -49,38 +49,33 @@
                     Text="Exportar Auditoría"
                     Clicked="OnAuditLogClicked"
                     IsVisible="False"
-                    BackgroundColor="#6F42C1"
-                    TextColor="WhiteSmoke"/>
+                    Style="{StaticResource OutlineButton}"/>
 
             <Button
                 x:Name="SyncButton"
                 Text="Sincronización"
                 Clicked="OnSyncClicked"
                 IsVisible="False"
-                BackgroundColor="#0DCAF0"
-                TextColor="Black"/>
+                Style="{StaticResource OutlineButton}"/>
 
             <Button
                 x:Name="SyncConfigButton"
                 Text="Configuración de sincronización"
                 Clicked="OnSyncSettingsClicked"
                 IsVisible="False"
-                BackgroundColor="#20C997"
-                TextColor="Black"/>
+                Style="{StaticResource OutlineButton}"/>
 
             <Button
                 x:Name="ApiSettingsButton"
                 Text="Configuración de backend central"
                 Clicked="OnCentralApiSettingsClicked"
                 IsVisible="False"
-                BackgroundColor="#6610F2"
-                TextColor="White"/>
+                Style="{StaticResource OutlineButton}"/>
 
             <Button
                 Text="Cerrar sesión"
                 Clicked="OnLogoutClicked"
-                BackgroundColor="#DC3545"
-                TextColor="WhiteSmoke"/>
+                Style="{StaticResource DangerButton}"/>
 
 
         </VerticalStackLayout>
