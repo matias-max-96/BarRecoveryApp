@@ -1,4 +1,5 @@
-﻿using BarRecoveryApp.ApplicationF.Services.Operations;
+﻿using BarRecoveryApp.ApplicationF.Services.Catalogs;
+using BarRecoveryApp.ApplicationF.Services.Operations;
 using BarRecoveryApp.ApplicationF.Services.Operations.DTOs;
 using BarRecoveryApp.Models.Catalogs;
 using BarRecoveryApp.Models.Enums;
@@ -13,6 +14,14 @@ namespace BarRecoveryApp.ViewModels
 
         private const int DefaultMaxResults = 200;
 
+        // Code con el que se identifica el atributo "Peso" — el admin debe
+        // crear un BarAttributeDefinition con este Code exacto (mayúsculas,
+        // se normaliza igual que el resto de los atributos técnicos) por
+        // cada combinación Planta+TipoBarra que necesite su propio umbral.
+        private const string WeightAttributeCode = "PESO";
+
+        private List<BarType> _allBarTypes = new();
+
         private Plant? _selectedPlant;
         private BarType? _selectedBarType;
         private BarInspectionTargetDto? _selectedBar;
@@ -26,6 +35,8 @@ namespace BarRecoveryApp.ViewModels
         private bool _mustBeDisposed;
         private bool _isApprovedForShipment;
         private string _notes = string.Empty;
+
+        private bool _isWeightBelowMinimum;
 
         private string _resultCountText = string.Empty;
 
@@ -69,6 +80,7 @@ namespace BarRecoveryApp.ViewModels
             {
                 if (SetProperty(ref _selectedPlant, value))
                 {
+                    ApplyBarTypeFilter();
                     ClearMessages();
                     RefreshCommands();
                 }
@@ -183,6 +195,18 @@ namespace BarRecoveryApp.ViewModels
             }
         }
 
+        // Cuando el peso medido está bajo el mínimo del atributo "PESO",
+        // la baja pasa a ser automática y obligatoria — el inspector ya no
+        // puede editar estos 3 checkboxes manualmente. Bindear a IsEnabled
+        // en el XAML.
+        public bool IsWeightBelowMinimum
+        {
+            get => _isWeightBelowMinimum;
+            private set => SetProperty(ref _isWeightBelowMinimum, value);
+        }
+
+        public bool CanEditDispositionCheckboxes => !IsWeightBelowMinimum;
+
         public bool IsApprovedForShipment
         {
             get => _isApprovedForShipment;
@@ -272,6 +296,7 @@ namespace BarRecoveryApp.ViewModels
                 Plants.Clear();
                 BarTypes.Clear();
                 Bars.Clear();
+                _allBarTypes.Clear();
 
                 SelectedPlant = null;
                 SelectedBarType = null;
@@ -291,8 +316,10 @@ namespace BarRecoveryApp.ViewModels
 
                 foreach (var barType in barTypes.OrderBy(x => x.Name))
                 {
-                    BarTypes.Add(barType);
+                    _allBarTypes.Add(barType);
                 }
+
+                ApplyBarTypeFilter();
 
                 ResultCountText = "Seleccione filtros o busque por número de barra.";
             }
@@ -466,8 +493,23 @@ namespace BarRecoveryApp.ViewModels
                    && !(MustBeDisposed && IsApprovedForShipment);
         }
 
+        private void ApplyBarTypeFilter()
+        {
+            var filtered = PlantBarTypeRestriction.Filter(SelectedPlant, _allBarTypes);
+
+            BarTypes.Clear();
+            foreach (var barType in filtered)
+                BarTypes.Add(barType);
+
+            if (SelectedBarType is not null && !BarTypes.Any(x => x.Id == SelectedBarType.Id))
+            {
+                SelectedBarType = null;
+            }
+        }
+
         private async Task LoadSelectedBarAsync()
         {
+            UnsubscribeTechnicalAttributes();
             TechnicalAttributes.Clear();
 
             if (SelectedBar is null)
@@ -491,16 +533,74 @@ namespace BarRecoveryApp.ViewModels
 
                 foreach (var definition in definitions)
                 {
-                    TechnicalAttributes.Add(new QualityInspectionAttributeItemViewModel
+                    var item = new QualityInspectionAttributeItemViewModel
                     {
                         Definition = definition,
                         WasMeasured = definition.IsRequired
+                    };
 
-                    });
+                    item.PropertyChanged += OnTechnicalAttributePropertyChanged;
+
+                    TechnicalAttributes.Add(item);
                 }
             }
 
+            RefreshWeightBelowMinimumState();
+
             OnPropertyChanged(nameof(SelectedBarInfo));
+        }
+
+        // Se dispara cada vez que cambia cualquier propiedad de cualquier
+        // atributo técnico medido — solo nos importa cuando es el atributo
+        // "PESO" y cambió algo que pueda afectar si quedó bajo el mínimo.
+        private void OnTechnicalAttributePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(QualityInspectionAttributeItemViewModel.IsBelowMinimum) &&
+                e.PropertyName != nameof(QualityInspectionAttributeItemViewModel.WasMeasured) &&
+                e.PropertyName != nameof(QualityInspectionAttributeItemViewModel.ValueText))
+            {
+                return;
+            }
+
+            RefreshWeightBelowMinimumState();
+        }
+
+        private void RefreshWeightBelowMinimumState()
+        {
+            var weightAttribute = TechnicalAttributes.FirstOrDefault(
+                x => x.Code == WeightAttributeCode);
+
+            var wasBelowMinimum = IsWeightBelowMinimum;
+            var isBelowMinimumNow = weightAttribute?.IsBelowMinimum ?? false;
+
+            IsWeightBelowMinimum = isBelowMinimumNow;
+
+            if (isBelowMinimumNow)
+            {
+                // Regla dura: no es una sugerencia, se fuerza la baja y se
+                // bloquean los checkboxes (ver CanEditDispositionCheckboxes
+                // en el XAML) para que no se pueda revertir manualmente.
+                MustBeDisposed = true;
+                CanBeRecovered = false;
+                IsApprovedForShipment = false;
+            }
+            else if (wasBelowMinimum)
+            {
+                // Volvió a estar en rango (ej. el inspector corrigió un
+                // valor mal tipeado) — se desbloquea, pero no se decide
+                // nada por el inspector, vuelve a quedar en sus manos.
+                MustBeDisposed = false;
+            }
+
+            OnPropertyChanged(nameof(CanEditDispositionCheckboxes));
+        }
+
+        private void UnsubscribeTechnicalAttributes()
+        {
+            foreach (var item in TechnicalAttributes)
+            {
+                item.PropertyChanged -= OnTechnicalAttributePropertyChanged;
+            }
         }
 
         private void ClearInspectionFormOnly()
@@ -511,7 +611,12 @@ namespace BarRecoveryApp.ViewModels
             MustBeDisposed = false;
             IsApprovedForShipment = false;
             Notes = string.Empty;
+
+            UnsubscribeTechnicalAttributes();
             TechnicalAttributes.Clear();
+
+            IsWeightBelowMinimum = false;
+            OnPropertyChanged(nameof(CanEditDispositionCheckboxes));
 
             OnPropertyChanged(nameof(SelectedBarInfo));
         }

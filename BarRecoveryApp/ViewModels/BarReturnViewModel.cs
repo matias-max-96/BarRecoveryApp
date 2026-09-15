@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
+using BarRecoveryApp.ApplicationF.Services.Catalogs;
 using BarRecoveryApp.ApplicationF.Services.Operations;
 using BarRecoveryApp.ApplicationF.Services.Operations.DTOs;
 using BarRecoveryApp.Models.Catalogs;
@@ -11,6 +12,8 @@ namespace BarRecoveryApp.ViewModels
         private readonly IBarReturnService _barReturnService;
 
         private const int DefaultMaxResults = 200;
+
+        private List<BarType> _allBarTypes = new();
 
         private Plant? _selectedPlant;
         private BarType? _selectedBarType;
@@ -63,6 +66,7 @@ namespace BarRecoveryApp.ViewModels
             {
                 if (SetProperty(ref _selectedPlant, value))
                 {
+                    ApplyBarTypeFilter();
                     ClearMessages();
                     RefreshCommands();
                 }
@@ -189,8 +193,8 @@ namespace BarRecoveryApp.ViewModels
                 foreach (var plant in plants.OrderBy(x => x.Name))
                     Plants.Add(plant);
 
-                foreach (var barType in barTypes.OrderBy(x => x.Name))
-                    BarTypes.Add(barType);
+                _allBarTypes = barTypes.OrderBy(x => x.Name).ToList();
+                ApplyBarTypeFilter();
 
                 ResultCountText = "Seleccione filtros o busque por número de barra.";
                 UpdateSelectedCountText();
@@ -393,6 +397,20 @@ namespace BarRecoveryApp.ViewModels
             {
                 IsBusy = false;
                 RefreshCommands();
+            }
+        }
+
+        private void ApplyBarTypeFilter()
+        {
+            var filtered = PlantBarTypeRestriction.Filter(SelectedPlant, _allBarTypes);
+
+            BarTypes.Clear();
+            foreach (var barType in filtered)
+                BarTypes.Add(barType);
+
+            if (SelectedBarType is not null && !BarTypes.Any(x => x.Id == SelectedBarType.Id))
+            {
+                SelectedBarType = null;
             }
         }
 

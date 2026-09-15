@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using BarRecoveryApp.ApplicationF.Services.Catalogs;
 using BarRecoveryApp.ApplicationF.Services.Operations;
 using BarRecoveryApp.Models.Catalogs;
 using BarRecoveryApp.ViewModels.Items;
@@ -8,6 +9,8 @@ namespace BarRecoveryApp.ViewModels
     public class BarsViewModel : BaseViewModel
     {
         private readonly IBarService _barService;
+
+        private List<BarType> _allBarTypes = new();
 
         private BarItemViewModel? _selectedBar;
         private Plant? _selectedPlant;
@@ -65,6 +68,7 @@ namespace BarRecoveryApp.ViewModels
             {
                 if (SetProperty(ref _selectedPlant, value))
                 {
+                    ApplyBarTypeFilter();
                     ClearMessages();
                     RefreshCommands();
                 }
@@ -153,8 +157,8 @@ namespace BarRecoveryApp.ViewModels
                 foreach (var plant in plants)
                     Plants.Add(plant);
 
-                foreach (var barType in barTypes)
-                    BarTypes.Add(barType);
+                _allBarTypes = barTypes;
+                ApplyBarTypeFilter();
 
                 foreach (var bar in bars)
                 {
@@ -316,6 +320,20 @@ namespace BarRecoveryApp.ViewModels
             ClearFormFieldsOnly();
 
             OnPropertyChanged(nameof(SaveButtonText));
+        }
+
+        private void ApplyBarTypeFilter()
+        {
+            var filtered = PlantBarTypeRestriction.Filter(SelectedPlant, _allBarTypes);
+
+            BarTypes.Clear();
+            foreach (var barType in filtered)
+                BarTypes.Add(barType);
+
+            if (SelectedBarType is not null && !BarTypes.Any(x => x.Id == SelectedBarType.Id))
+            {
+                SelectedBarType = null;
+            }
         }
 
         private void ClearFormFieldsOnly()

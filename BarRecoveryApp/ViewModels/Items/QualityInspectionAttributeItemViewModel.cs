@@ -66,6 +66,7 @@ namespace BarRecoveryApp.ViewModels.Items
                 if (SetProperty(ref _valueText, value))
                 {
                     OnPropertyChanged(nameof(IsOutOfRange));
+                    OnPropertyChanged(nameof(IsBelowMinimum));
                     OnPropertyChanged(nameof(StatusText));
                     OnPropertyChanged(nameof(StatusColor));
                     OnPropertyChanged(nameof(HasValue));
@@ -89,6 +90,7 @@ namespace BarRecoveryApp.ViewModels.Items
                     OnPropertyChanged(nameof(ShowNumericInput));
                     OnPropertyChanged(nameof(ShowBooleanInput));
                     OnPropertyChanged(nameof(IsOutOfRange));
+                    OnPropertyChanged(nameof(IsBelowMinimum));
                     OnPropertyChanged(nameof(StatusText));
                     OnPropertyChanged(nameof(StatusColor));
                     OnPropertyChanged(nameof(HasValue));
@@ -149,6 +151,33 @@ namespace BarRecoveryApp.ViewModels.Items
                     return true;
 
                 return false;
+            }
+        }
+
+        // Distinto de IsOutOfRange: ese da true tanto bajo el mínimo como
+        // sobre el máximo. Esta propiedad identifica específicamente el
+        // caso "bajo el mínimo", que es el único que dispara la baja
+        // automática (el máximo solo muestra la alerta visual existente).
+        public bool IsBelowMinimum
+        {
+            get
+            {
+                if (!WasMeasured)
+                    return false;
+
+                if (!HasRangeValidation)
+                    return false;
+
+                if (!IsNumeric)
+                    return false;
+
+                if (!MinValue.HasValue)
+                    return false;
+
+                if (!TryGetNumericValue(out var numericValue))
+                    return false;
+
+                return numericValue < MinValue.Value;
             }
         }
 

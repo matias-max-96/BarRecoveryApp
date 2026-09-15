@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using BarRecoveryApp.ApplicationF.Services.Catalogs;
 using BarRecoveryApp.ApplicationF.Services.Operations;
 using BarRecoveryApp.ApplicationF.Services.Operations.DTOs;
 using BarRecoveryApp.Models.Catalogs;
@@ -10,6 +11,8 @@ namespace BarRecoveryApp.ViewModels
         private readonly IBarHistoryService _service;
 
         private const int DefaultMaxResults = 200;
+
+        private List<BarType> _allBarTypes = new();
 
         private Plant? _selectedPlant;
         private BarType? _selectedBarType;
@@ -54,6 +57,7 @@ namespace BarRecoveryApp.ViewModels
             {
                 if (SetProperty(ref _selectedPlant, value))
                 {
+                    ApplyBarTypeFilter();
                     ClearError();
                     RefreshCommands();
                 }
@@ -173,8 +177,8 @@ namespace BarRecoveryApp.ViewModels
                 foreach (var plant in plants)
                     Plants.Add(plant);
 
-                foreach (var barType in barTypes)
-                    BarTypes.Add(barType);
+                _allBarTypes = barTypes;
+                ApplyBarTypeFilter();
 
                 ResultCountText = "Seleccione filtros o busque por número de barra.";
             }
@@ -270,6 +274,20 @@ namespace BarRecoveryApp.ViewModels
             RefreshCommands();
 
             return Task.CompletedTask;
+        }
+
+        private void ApplyBarTypeFilter()
+        {
+            var filtered = PlantBarTypeRestriction.Filter(SelectedPlant, _allBarTypes);
+
+            BarTypes.Clear();
+            foreach (var barType in filtered)
+                BarTypes.Add(barType);
+
+            if (SelectedBarType is not null && !BarTypes.Any(x => x.Id == SelectedBarType.Id))
+            {
+                SelectedBarType = null;
+            }
         }
 
         private bool CanLoadHistory()
