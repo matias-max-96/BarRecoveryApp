@@ -73,21 +73,34 @@ namespace BarRecoveryApp
             builder.Services.AddSingleton<ISyncCredentialStore, SecureStorageSyncCredentialStore>();
 
 #if DEBUG
-            //  SOLO para pruebas locales contra Pomerium en Docker con
-            // certificado autofirmado. NUNCA debe compilarse así en Release
-
+            // SOLO para pruebas locales contra Pomerium en Docker con
+            // certificado autofirmado. NUNCA debe compilarse así en Release.
+            //
+            // Se usa SocketsHttpHandler (el stack de red ADMINISTRADO de
+            // .NET) en vez de HttpClientHandler, porque en Android el
+            // HttpClientHandler por defecto delega en el stack NATIVO
+            // (com.android.okhttp) — y ese stack aplica una verificación de
+            // nombre de host SEPARADA de la validación de confianza del
+            // certificado, que el ServerCertificateCustomValidationCallback
+            // no siempre logra suprimir del todo cuando el certificado no
+            // incluye la IP literal (10.0.2.2) como nombre válido.
+            // SocketsHttpHandler evita ese problema por completo.
             builder.Services.AddHttpClient<IPomeriumProgrammaticAuthService, PomeriumProgrammaticAuthService>()
-                .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+                .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
                 {
-                    ServerCertificateCustomValidationCallback =
-                        HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                    SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+                    {
+                        RemoteCertificateValidationCallback = (sender, cert, chain, errors) => true
+                    }
                 });
 
             builder.Services.AddHttpClient<ISyncApiClient, PomeriumSyncApiClient>()
-                .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+                .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
                 {
-                    ServerCertificateCustomValidationCallback =
-                        HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                    SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+                    {
+                        RemoteCertificateValidationCallback = (sender, cert, chain, errors) => true
+                    }
                 });
 #else
             builder.Services.AddHttpClient<IPomeriumProgrammaticAuthService, PomeriumProgrammaticAuthService>();

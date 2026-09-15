@@ -44,7 +44,7 @@ namespace BarRecoveryApp.Infrastructure.Persistence.Seed
             await EnsureRoleAsync(
                 db,
                 SuperAdminRoleCode,
-                "Stefan Ronning",
+                "Super Admin",
                 "Rol principal con control total del sistema.",
                 true);
 
@@ -271,6 +271,7 @@ namespace BarRecoveryApp.Infrastructure.Persistence.Seed
             var superAdminRole = await GetRoleAsync(db, SuperAdminRoleCode);
 
             var superAdminId = Guid.NewGuid().ToString();
+            var superAdminId1 = Guid.NewGuid().ToString();
             var pin = PinHashHelper.CreateHash(DefaultSuperAdminPin);
 
             var user = new User
@@ -290,7 +291,24 @@ namespace BarRecoveryApp.Infrastructure.Persistence.Seed
                 UpdatedAtUtc = DateTime.Now
             };
 
+            var user1 = new User
+            {
+                Id = superAdminId1,
+                Username = "superadmin_",
+                DisplayName = "Matías Max",
+                RoleId = superAdminRole.Id,
+                PinHash = pin.Hash,
+                PinSalt = pin.Salt,
+                IsPinEnabled= true,
+                MustChangePin= true,
+                IsActive= true,
+                CreatedByUserId = superAdminId1,
+                UpdatedByUserId = null,
+                CreatedAtUtc= DateTime.Now,
+                UpdatedAtUtc= DateTime.Now
+            };
             await db.InsertAsync(user);
+            await db.InsertAsync(user1);
         }
 
         private static async Task SeedPlantsAsync(SQLiteAsyncConnection db)
@@ -449,21 +467,6 @@ namespace BarRecoveryApp.Infrastructure.Persistence.Seed
                 toleranceText: "193,5 - 194",
                 appliesToPlantCode: "MAPA",
                 appliesToBarTypeCode: "MAPA");
-
-            await EnsureBarAttributeDefinitionAsync(
-                db,
-                "ALTO",
-                "Alto",
-                BarRecoveryApp.Models.Enums.AttributeDataType.Decimal,
-                "mm",
-                displayOrder: 1,
-                isRequired: true,
-                hasRangeValidation: true,
-                minValue: 137.5,
-                maxValue: 139,
-                toleranceText: "137,5 - 139",
-                appliesToPlantCode: "SANTA_FE",
-                appliesToBarTypeCode: "90");
 
             await EnsureBarAttributeDefinitionAsync(
                 db,
