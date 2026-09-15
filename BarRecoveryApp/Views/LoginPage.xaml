@@ -17,7 +17,7 @@
         <!-- Title -->
         <VerticalStackLayout Grid.Row="0" Spacing="4">
 
-            <Label Text="recuperación de Barras"
+            <Label Text="Recuperación de Barras"
                    FontFamily="Rouben Regular"
                    FontSize="28"
                    FontAttributes="Bold"
